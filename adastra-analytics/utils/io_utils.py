@@ -52,5 +52,5 @@ def get_config(config_name):
     return configs[config_name]
 
 def get_wordcloud_list():
-    config_path = '../configs/wordcloud_list.yml'
+    config_path = '../configs/wordclouds.yml'
     return _load_yaml(config_path)
