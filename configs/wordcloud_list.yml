@@ -1,0 +1,140 @@
+# Individual characters
+- query: "speaker == 'alexios'"
+  subfolder: sprites/alexios
+  images:
+    - alexios.png
+    - alexios-vshocked-e.png
+    - alexios-shocked.png
+    - alexios-embarrassed.png
+    - alexios-angry-e-u.png
+
+- query: "speaker == 'amicus'"
+  subfolder: sprites/amicus
+  images:
+    - amicus.png
+    - amicus-tears.png
+    - amicus-smile.png
+    - amicus-shocked.png
+    - amicus-crossed-serious.png
+    - amicus-angry-n.png
+
+- query: "speaker == 'cassius'"
+  subfolder: sprites/cassius
+  images:
+    - cassius.png
+    - cassius-angry-u.png
+    - cassius-paw.png
+    - cassius-furious.png
+    - cassius-disappointed-u.png
+
+- query: "speaker == 'cato'"
+  subfolder: sprites/cato
+  images:
+    - cato.png
+    - cato-bow-v.png
+    - cato-angry-u.png
+
+- query: "speaker == 'neferu'"
+  subfolder: sprites/neferu
+  images:
+    - neferu.png
+    - neferu-wink-f.png
+    - neferu-talking-n.png
+    - neferu-talking-a.png
+    - neferu-silly-f-n.png
+    - neferu-shocked.png
+    - neferu-fury.png
+
+- query: "speaker == 'virginia'"
+  subfolder: sprites/virginia
+  images:
+    - virginia.png
+    - virginia-tilt-p.png
+    - virginia-annoyed.png
+
+- query: "speaker == 'meera'"
+  subfolder: illustrations
+  images:
+    - meera.png
+
+- query: "speaker == 'monitor'"
+  subfolder: illustrations
+  images:
+    - monitor.png
+
+
+# Character interactions
+- query: "speaker.isin(['cassius', 'alexios'])"
+  subfolder: illustrations
+  images:
+    - poisoned.png
+    - alexandcassius.PNG
+    - alexandcassiuskiss.PNG
+
+- query: "speaker.isin(['cato', 'neferu'])"
+  subfolder: illustrations
+  images:
+    - nefandcat1.PNG
+    - nefandcat2.PNG
+
+- query: "speaker.isin(['amicus', 'neferu'])"
+  subfolder: illustrations
+  images:
+    - amicusandneferu1.png
+    - amicusandneferu2.png
+    - amicusandneferu3.png
+    - backoff2.PNG
+    - backoff3.PNG
+
+# Scenes
+- query: "speaker == 'amicus'"
+  subfolder: illustrations
+  images:
+    - sleep.png
+    - amicusend.png
+    - introspection.png
+    - dinner1.PNG
+    - dinner2.PNG
+    - dinner3.PNG
+    - dinner4.PNG
+  
+- query: "speaker == 'virginia'"
+  subfolder: illustrations
+  images:
+    - archives1.png
+
+- query: "~speaker.isnull()"
+  subfolder: illustrations
+  images:
+    - adastra.png
+    - Adastranl.png
+
+- query: "file == 'end_game1' & speaker.isin(['amicus', 'marco'])"
+  subfolder: illustrations
+  images:
+    - farewell1.png
+    - farewell3.png
+    - wemadeit1.PNG
+    - wemadeit4.PNG
+
+- query: "file == 'a3s2'"
+  subfolder: illustrations
+  images:
+    - lastmoment.png
+
+- query: "file == 'a3s2' & speaker.isin(['amicus', 'internal', 'monitor'])"
+  subfolder: illustrations
+  images:
+    - finalspace.png
+    - finalspace2.png
+    - watching.PNG
+
+- query: "speaker.isin(['amicus', 'marco', 'internal']) & is_optional"
+  subfolder: illustrations
+  images:
+    - amiscene1.png
+    - amiscene3.png
+    - ss1.png
+    - ss3.png
+    - 2ss.png
+    - 2ss3.png
