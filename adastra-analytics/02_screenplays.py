@@ -1,9 +1,15 @@
 import os
+import sys
 
-from utils.screenplay_utils import dataframe_to_script_lines, row_to_script_lines_v3
+from utils.screenplay_utils import dataframe_to_script_lines
 from utils.io_utils import get_config, read_dataframe, save_lines
 
 def main():
+    try:
+        version = int(sys.argv[1])
+    except:
+        print("No version specified! Defaulting to version 3!")
+        version = 3
 
     data_dir = get_config('data_dir')   
     cleaned_data_path = os.path.join(data_dir, 'adastra.json')
@@ -20,7 +26,7 @@ def main():
         file_df = df[df['file'] == file]
 
         # Read the contents as scripted lines.
-        script_lines = dataframe_to_script_lines(file_df, row_to_script_lines_v3)
+        script_lines = dataframe_to_script_lines(file_df, version)
         script_lines = map(lambda x: x + '\n', script_lines)  # Add another whitespace to improve readability.
 
         screenplays_dir = get_config('screenplays_dir')

@@ -1,28 +1,10 @@
 import textwrap
 
 
-def dataframe_to_script_lines(df, script_method):
-    """
-    Convert a cleaned Adastra DF to lines to be printed.
-    """
-    
-    script_lines = []
-    
-    prev_row = {}  # Hold onto the previous row each loop (used for v3 formatting).
-    for _, row in df.iterrows():
-        
-        script_lines.append(
-            script_method(row, prev_row)
-        )
-        prev_row = row
-        
-    return script_lines
-
-
 def row_to_script_lines_v1(row, prev_row=None):
     """
     Abstracted method to print rows in book-form.
-    (Designed around The Cursed Child.)
+    (Designed around The Cursed Child, at least initially.)
     """
     # Account for optional content and branching when displaying.
     if row['is_optional']:
@@ -133,3 +115,34 @@ def row_to_script_lines_v3(row, prev_row, justify_size=75, dialogue_size=45):
         ) + '\n'
 
     return script_line
+
+
+
+def dataframe_to_script_lines(data, version):
+    """
+    Convert a cleaned Adastra DF to lines to be printed.
+    """
+    versions_func_map = {
+        1: row_to_script_lines_v1,
+        2: row_to_script_lines_v2,
+        3: row_to_script_lines_v3,
+    }
+
+    if version not in versions_func_map:
+        raise Exception(f"Version {version} is undefined!")
+    
+    versions_map_func = versions_func_map[version]
+
+    
+    
+    script_lines = []
+    
+    prev_row = {}  # Hold onto the previous row each loop (used for v3 formatting).
+    for _, row in data.iterrows():
+        
+        script_lines.append(
+            versions_map_func(row, prev_row)
+        )
+        prev_row = row
+        
+    return script_lines
