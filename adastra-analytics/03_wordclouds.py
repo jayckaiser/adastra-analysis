@@ -34,9 +34,7 @@ def main():
     # Iterate the wordcloud params.
     # Create wordclouds based on an input filename and TF filter statements.
     for wordcloud_params in wordcloud_list:
-
-        images_subdir = wordcloud_params['subfolder']
-        filter_query  = wordcloud_params['query']
+        filter_query = wordcloud_params['filter']
         images_to_do  = wordcloud_params['images']
 
         # Note: a query can be applied here to specify a specific character, file, or scene.
@@ -46,7 +44,7 @@ def main():
         for image_file in images_to_do:
 
             try:
-                image_path = os.path.join(images_dir, images_subdir, image_file)
+                image_path = os.path.join(images_dir, image_file)
                 
                 # Create the actual wordcloud.
                 # Note: All kwargs go into wordcloud.WordCloud init.
@@ -61,7 +59,7 @@ def main():
                 )
 
                 # Save the wordcloud to disk, and delete the object to save memory.
-                output_path = os.path.join(wordclouds_dir, images_subdir, image_file)
+                output_path = os.path.join(wordclouds_dir, image_file)
                 save_wordcloud(wc, output_path)
 
                 print(f"Saved wordcloud for {image_file}")
