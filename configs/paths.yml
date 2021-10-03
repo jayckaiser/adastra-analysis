@@ -2,3 +2,4 @@ adastra_dir: /home/jayckaiser/adastra/Adastra-17-linux
 data_dir: /home/jayckaiser/adastra/data
 screenplays_dir: /home/jayckaiser/adastra/screenplays
 wordclouds_dir: /home/jayckaiser/adastra/wordclouds
+analytics_dir: /home/jayckaiser/adastra/analytics
