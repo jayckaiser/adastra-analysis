@@ -1,0 +1,45 @@
+characters:
+  alexios : '#65ca68'
+  amicus  : '#ff3333'
+  cassius : '#FFFFFF'  # '#ffffff' 
+  cato    : '#7a7a7a'
+  marco   : '#0000FF'  # '#FFFFFF'
+  neferu  : '#ffcc00'
+  virginia: '#8e389c'
+
+graphs:
+  sentiment:
+    - a1s1
+    - a1s2
+    - a1s3
+    - a1s4
+    - a1s5
+    - a1s6
+    - a1s7
+    - a2s1
+    - a2s2
+    - a2s3
+    - a3s1
+    - a3s2
+    - end_game1
+    - end_game2
+
+  aggregates:
+    lines_per_character:
+      agg: count(*)
+      alias: num_lines
+    proportion_lines_per_character:
+      agg: count(*)
+      alias: proportion_lines
+      proportion: True
+    words_per_character:
+      agg: sum(num_words)
+      alias: sum_words
+    proportion_words_per_character:
+      agg: count(*)
+      alias: proportion_words
+      proportion: True
+    avg_sentiment_per_character:
+      agg: avg(sentiment)
+      alias: avg_sentiment 
+      axhline: 0.0
