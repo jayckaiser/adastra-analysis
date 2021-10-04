@@ -1,7 +1,7 @@
 import gc
 import os
 
-from utils.io_utils import get_config, get_wordcloud_list, read_dataframe, save_wordcloud 
+from utils.io_utils import get_config, load_data, save_wordcloud, load_yaml
 from utils.nlp_utils import lines_to_tfs, get_queried_tf_word_frequencies
 from utils.wordcloud_utils import make_wordcloud_image
 
@@ -14,10 +14,8 @@ def main():
     images_dir = os.path.join(adastra_dir, 'game', 'images')
     wordclouds_dir = get_config('wordclouds_dir')
 
-    # Read in the NLP dataframe, and filter to only read text.
-    cleaned_data_path = os.path.join(data_dir, 'adastra_nlp.json')
-    df = read_dataframe(cleaned_data_path)
-    df = df.query('is_read == True')
+    # Load the cleaned NLP dataframe, filtering to only read text.
+    df = load_data(data_dir, nlp=True, is_read=True)
 
     # Extract the Term Frequencies, then filter and normalize.
     # Note: I'm using non-stop words here; use `doc_col='line'` to use the cleaned text.
@@ -29,7 +27,8 @@ def main():
 
 
     # Read in the YAML list of wordclouds to make.
-    wordcloud_list = get_wordcloud_list()
+    wordclouds_config_path = '../configs/wordclouds.yml'
+    wordcloud_list = load_yaml(wordclouds_config_path)
 
     # Iterate the wordcloud params.
     # Create wordclouds based on an input filename and TF filter statements.

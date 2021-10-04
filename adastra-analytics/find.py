@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import sys
 
-from utils.io_utils import get_config, read_dataframe
+from utils.io_utils import get_config, load_data
 
 pd.set_option('display.max_rows'    , None)
 pd.set_option('display.max_columns' , None)
@@ -17,10 +17,11 @@ def main():
     except:
         print("No query provided! Add a collocation as an argument!")
 
-    # Read in the NLP dataframe, and filter to only read text.
+    # Read in the cleaned dataframe, and filter to only read text.
     data_dir = get_config('data_dir')
-    cleaned_data_path = os.path.join(data_dir, 'adastra.json')
-    df = read_dataframe(cleaned_data_path)
+    df = load_data(data_dir, nlp=False, is_read=False)
+    
+    # Filter the dataframe to non-renpy lines (this keeps `is_choice == True` rows).
     df = df.query('is_renpy == False')
 
     found_rows = df[(

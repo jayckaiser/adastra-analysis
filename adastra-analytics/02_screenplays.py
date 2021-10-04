@@ -2,18 +2,19 @@ import os
 import sys
 
 from utils.screenplay_utils import dataframe_to_script_lines
-from utils.io_utils import get_config, read_dataframe, save_lines
+from utils.io_utils import get_config, load_data, save_lines
 
 def main():
+    # Retrieve the optional version argument.
     try:
         version = int(sys.argv[1])
     except:
         print("No version specified! Defaulting to version 3!")
         version = 3
 
-    data_dir = get_config('data_dir')   
-    cleaned_data_path = os.path.join(data_dir, 'adastra.json')
-    df = read_dataframe(cleaned_data_path)
+    # Load the cleaned dataframe.
+    data_dir = get_config('data_dir')
+    df = load_data(data_dir, nlp=False, is_read=False)
 
     # Narrow the data to non-renpy text.
     df = df.query('is_renpy == False')
