@@ -22,7 +22,7 @@ graphs:
         inner join characters using(speaker)
         group by 1, 2
         order by 1, 2
-    kwargs:
+    graph_args:
       x: file
       y: num_lines
       hue: speaker
@@ -46,7 +46,7 @@ graphs:
             ) using(file)
         group by 1, 2
         order by 1, 2
-    kwargs:
+    graph_args:
       x: file
       y: proportion_lines
       hue: speaker
@@ -63,7 +63,7 @@ graphs:
         inner join characters using(speaker)
         group by 1, 2
         order by 1, 2
-    kwargs:
+    graph_args:
       x: file
       y: num_words
       hue: speaker
@@ -87,7 +87,7 @@ graphs:
             ) using(file)
         group by 1, 2
         order by 1, 2
-    kwargs:
+    graph_args:
       x: file
       y: proportion_words
       hue: speaker
@@ -105,7 +105,7 @@ graphs:
         group by 1, 2
         order by 1, 2
     axhline: 0.0
-    kwargs:
+    graph_args:
       x: file
       y: avg_sentiment
       hue: speaker
@@ -128,7 +128,7 @@ graphs:
         where file = 'a1s1'
     axhline: 0.0
     remove_outliers: True
-    kwargs:
+    graph_args:
       x: line_idx
       y: rolling_sentiment
       hue: speaker
@@ -150,7 +150,7 @@ graphs:
         where file = 'a1s2'
     axhline: 0.0
     remove_outliers: True
-    kwargs:
+    graph_args:
       x: line_idx
       y: rolling_sentiment
       hue: speaker
@@ -172,7 +172,7 @@ graphs:
         where file = 'a1s3'
     axhline: 0.0
     remove_outliers: True
-    kwargs:
+    graph_args:
       x: line_idx
       y: rolling_sentiment
       hue: speaker
@@ -194,7 +194,7 @@ graphs:
         where file = 'a1s4'
     axhline: 0.0
     remove_outliers: True
-    kwargs:
+    graph_args:
       x: line_idx
       y: rolling_sentiment
       hue: speaker
@@ -216,7 +216,7 @@ graphs:
         where file = 'a1s5'
     axhline: 0.0
     remove_outliers: True
-    kwargs:
+    graph_args:
       x: line_idx
       y: rolling_sentiment
       hue: speaker
@@ -238,7 +238,7 @@ graphs:
         where file = 'a1s6'
     axhline: 0.0
     remove_outliers: True
-    kwargs:
+    graph_args:
       x: line_idx
       y: rolling_sentiment
       hue: speaker
@@ -260,7 +260,7 @@ graphs:
         where file = 'a1s7'
     axhline: 0.0
     remove_outliers: True
-    kwargs:
+    graph_args:
       x: line_idx
       y: rolling_sentiment
       hue: speaker
@@ -282,7 +282,7 @@ graphs:
         where file = 'a2s1'
     axhline: 0.0
     remove_outliers: True
-    kwargs:
+    graph_args:
       x: line_idx
       y: rolling_sentiment
       hue: speaker
@@ -304,7 +304,7 @@ graphs:
         where file = 'a2s2'
     axhline: 0.0
     remove_outliers: True
-    kwargs:
+    graph_args:
       x: line_idx
       y: rolling_sentiment
       hue: speaker
@@ -326,7 +326,7 @@ graphs:
         where file = 'a2s3'
     axhline: 0.0
     remove_outliers: True
-    kwargs:
+    graph_args:
       x: line_idx
       y: rolling_sentiment
       hue: speaker
@@ -348,7 +348,7 @@ graphs:
         where file = 'a3s1'
     axhline: 0.0
     remove_outliers: True
-    kwargs:
+    graph_args:
       x: line_idx
       y: rolling_sentiment
       hue: speaker
@@ -370,7 +370,7 @@ graphs:
         where file = 'a3s2'
     axhline: 0.0
     remove_outliers: True
-    kwargs:
+    graph_args:
       x: line_idx
       y: rolling_sentiment
       hue: speaker
@@ -392,7 +392,7 @@ graphs:
         where file = 'end_game1'
     axhline: 0.0
     remove_outliers: True
-    kwargs:
+    graph_args:
       x: line_idx
       y: rolling_sentiment
       hue: speaker
@@ -414,7 +414,7 @@ graphs:
         where file = 'end_game2'
     axhline: 0.0
     remove_outliers: True
-    kwargs:
+    graph_args:
       x: line_idx
       y: rolling_sentiment
       hue: speaker
