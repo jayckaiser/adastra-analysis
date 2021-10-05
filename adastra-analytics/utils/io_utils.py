@@ -4,14 +4,10 @@ import pandas as pd
 import yaml
 
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 
 # Data Input helpers
-# def _read_dataframe(filepath):
-    # return pd.read_json(filepath)
-
-def load_data(data_dir, nlp=False, is_read=False):
+def load_data(data_dir, nlp=False, is_read=False, drop_lists=False):
     """
     Standardized method for loading cleaned data.
     """
@@ -23,10 +19,14 @@ def load_data(data_dir, nlp=False, is_read=False):
 
     # Load the dataframe, and filter on optional flags.
     filepath = os.path.join(data_dir, filename)
-    df = pd.read_json(filepath)
+    df = pd.read_json(filepath, orient='records', lines=True)
 
     if is_read:
         df = df.query('is_read')
+
+    # Note! PandasSQL does not support ListTypes. Manually remove these columns!
+    if nlp and drop_lists:
+        df = df.drop(['sentences', 'words', 'content_words'], axis=1)
 
     return df
 
@@ -43,7 +43,15 @@ def save_dataframe(dataframe, filepath):
     Standardized method to write a Pandas DataFrame to disk.
     """
     _make_dir(filepath)
-    dataframe.to_json(filepath)
+    dataframe.to_json(filepath, orient='records', lines=True)
+
+
+def save_tsv(dataframe, filepath):
+    """
+    Standardized method to write a Pandas DataFrame to disk as TSV.
+    """
+    _make_dir(filepath)
+    dataframe.to_csv(filepath, sep='\t', index=False)
 
 
 def save_lines(lines, filepath):
@@ -63,44 +71,14 @@ def save_wordcloud(wc, filepath):
     wc.to_file(filepath)
 
 
-def save_plot(
-    data,
-    filepath,
-    x, y, hue,
-    palette,
-    kind = 'scatter',
-    figsize=(16,10),
-    axhline = None,
-    **kwargs
-):
-    # Set to darkgrid (to see Cassius).
-    sns.set_theme(style='darkgrid')
-
-    # Make the directory if non-existent.
-    _make_dir(filepath)
-
-    # Create the figure, using kwargs for customization.
-    plt.figure()
-    sns.relplot(
-        x=x, y=y,
-        hue=hue,
-        palette=palette,
-        kind=kind,
-        data=data,
-        **kwargs
-    )
-
-    # Add a custom horizontal line if specified.
-    if axhline is not None:
-        plt.axhline(axhline, linestyle='--', color='black', alpha=0.5)
-
-    fig = plt.gcf()
-    fig.set_size_inches(*figsize)
+def save_figure(fig, filepath):
+    """
+    
+    """
     fig.savefig(filepath, bbox_inches='tight')
-
-    # Force garbage collection (idk pyplot doesn't release memory?)
     plt.close('all')
     gc.collect()
+
 
 
 

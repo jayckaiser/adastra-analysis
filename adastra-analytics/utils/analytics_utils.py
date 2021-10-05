@@ -2,85 +2,49 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-import pandasql as psql
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
-def build_grouped_graph_data(data, agg, alias, proportion=False):
+def build_dataset(dataset_params):
     """
-    Standardized method to apply an aggregate by character and file.
+    Standardized method to build helper tables.
     """
-    # Standardize the data name to pass to pSQL.
-    passed_dataframe = data
+    columns = dataset_params['columns']
+    data    = dataset_params['data']
 
-    # There is different logic for a proportional aggregate.
-    if proportion:
-        file_counts = psql.sqldf(f"""
-            select
-                file,
-                cast({agg} as float) as {alias}_by_file
-            from passed_dataframe
-            group by 1
-            order by 1
-        """)
-
-        grouped = psql.sqldf(f"""
-            select
-                file,
-                speaker,
-                {agg} / {alias}_by_file as {alias}
-            from passed_dataframe
-                inner join file_counts using(file)
-            group by 1, 2
-            order by 1, 2
-        """)
-
-    else:
-        grouped = psql.sqldf(f"""
-            select
-                file,
-                speaker,
-                {agg} as {alias}
-            from passed_dataframe
-            group by 1, 2
-            order by 1, 2
-        """)
-
-    return grouped
+    return pd.DataFrame(list(data.items()), columns=columns)
 
 
-def build_sentiment_graph_data(data, file=None, window_lines=9, col_name='rolling_sentiment'):
+def build_figure(data, figsize, axhline, remove_outliers, **kwargs):
     """
-    Standardized method to aggregate sentiment by file.
+    Standardized method to build a Seaborn figure.
     """
-    # Standardize the data name to pass to pSQL.
-    passed_dataframe = data
+    # Establish the size of the figure.
+    if figsize is None:
+        figsize = (16,10)
 
-    # Add a file filter if provided.
-    if file == 'all' or not file:
-        where_clause = ""
-    else:
-        where_clause = f"where file = '{file}'"
+    # Remove outliers if option marked.
+    if remove_outliers:
+        y = kwargs['y']
+        data = data[
+            (np.abs(stats.zscore(data[y])) < 3)
+        ]
 
-    # Run the sentiment query on the data.
-    df = psql.sqldf(f"""
-        select
-            file,
-            line_idx,
-            speaker,
-            avg(sentiment) over (
-                partition by file, speaker
-                order by line_idx
-                rows between {window_lines} preceding and current row
-            ) as {col_name}
+    # Set to darkgrid (to see Cassius).
+    sns.set_theme(style='darkgrid')
 
-        from passed_dataframe
+    plt.figure()
+    sns.relplot(
+        data=data,
+        **kwargs
+    )
 
-        {where_clause}
-    """)
-    
-    # Remove huge outliers typical at beginning and end of window.
-    df = df[
-        (np.abs(stats.zscore(df['rolling_sentiment'])) < 3)
-    ]
+     # Add a custom horizontal line if specified.
+    if axhline is not None:
+        plt.axhline(axhline, linestyle='--', color='black', alpha=0.5)
 
-    return df
+    fig = plt.gcf()
+    fig.set_size_inches(*figsize)
+
+    return fig
