@@ -1,6 +1,6 @@
-adastra_dir: /home/jayckaiser/adastra/Adastra-17-linux
-data_dir: /home/jayckaiser/adastra/data
-screenplays_dir: /home/jayckaiser/adastra/screenplays
-wordclouds_dir: /home/jayckaiser/adastra/wordclouds
-analytics_dir: /home/jayckaiser/adastra/analytics
-queries_dir: /home/jayckaiser/adastra/queries
+adastra_dir: /home/{your-profile}/adastra/Adastra-17-linux
+data_dir: /home/{your-profile}/adastra/data
+screenplays_dir: /home/{your-profile}/adastra/screenplays
+wordclouds_dir: /home/{your-profile}/adastra/wordclouds
+analytics_dir: /home/{your-profile}/adastra/analytics
+queries_dir: /home/{your-profile}/adastra/queries
