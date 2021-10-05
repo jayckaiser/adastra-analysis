@@ -3,3 +3,4 @@ data_dir: /home/jayckaiser/adastra/data
 screenplays_dir: /home/jayckaiser/adastra/screenplays
 wordclouds_dir: /home/jayckaiser/adastra/wordclouds
 analytics_dir: /home/jayckaiser/adastra/analytics
+queries_dir: /home/jayckaiser/adastra/queries
