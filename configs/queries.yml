@@ -1,41 +1,71 @@
-lines_per_file:
-  sql: >
-    select
-      file,
-      count(*) as num_lines
-    from data
-    group by 1
-    order by 1
+settings:
 
-lines_per_speaker:
-  sql: >
-    select
-      speaker,
-      count(*) as num_lines
-    from data
-    group by 1
-    order by 1
+  # Specify where the 'adastra' JSONL datasets are stored.
+  data_dir: /home/jayckaiser/adastra/data
 
-words_per_file:
-  sql: >
-    select
-      file,
-      sum(num_words) as sum_words
-    from data
-    group by 1
-    order by 1
+  # Specify where the queries output should be saved.
+  queries_dir: /home/jayckaiser/adastra/queries
 
-words_per_speaker:
-  sql: >
-    select
-      speaker,
-      sum(num_words) as sum_words
-    from data
-    group by 1
-    order by 1
+  # Specify whether the 'adastra.json' or 'adastra_nlp.json' dataset is used here.
+  dataset: adastra
 
-total_words:
-  sql: >
-    select
-      sum(num_words) as total_words
-    from data
+
+# Define additional datasets not present in the main data.
+# - These must have a 'columns' key and a dictionary structure under the 'data' key.
+datasets:
+  # Define a custom set of characters to filter on, as well as the colors to display them with.
+  characters:
+    columns: [speaker, color]
+    data:
+      alexios : '#65ca68'
+      amicus  : '#ff3333'
+      cassius : '#FFFFFF'  # '#ffffff' 
+      cato    : '#7a7a7a'
+      marco   : '#0000FF'  # '#FFFFFF'
+      neferu  : '#ffcc00'
+      virginia: '#8e389c'
+
+
+# Define queries to run and save to each file.
+queries:
+  lines_per_file:
+    sql: >
+      select
+        file,
+        count(*) as num_lines
+      from data
+      group by 1
+      order by 1
+
+  lines_per_speaker:
+    sql: >
+      select
+        speaker,
+        count(*) as num_lines
+      from data
+      group by 1
+      order by 1
+
+  words_per_file:
+    sql: >
+      select
+        file,
+        sum(num_words) as sum_words
+      from data
+      group by 1
+      order by 1
+
+  words_per_speaker:
+    sql: >
+      select
+        speaker,
+        sum(num_words) as sum_words
+      from data
+      group by 1
+      order by 1
+
+  total_words:
+    sql: >
+      select
+        sum(num_words) as total_words
+      from data
