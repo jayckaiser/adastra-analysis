@@ -11,413 +11,362 @@ datasets:
       neferu  : '#ffcc00'
       virginia: '#8e389c'
 
-graphs:
-  lines_per_character:
-    sql: >
-        select
-            file,
-            speaker,
-            count(*) as num_lines
-        from adastra
-        inner join characters using(speaker)
-        group by 1, 2
-        order by 1, 2
-    graph_args:
-      x: file
-      y: num_lines
-      hue: speaker
-      kind: line
-      palette: *characters_palette
+analytics:
+  plot_args:
+    hue: speaker
+    kind: line
+    palette: *characters_palette
+    
+  plots:
+    lines_per_character:
+      plot_args:
+        x: file
+        y: num_lines
+      sql: >
+          select
+              file,
+              speaker,
+              count(*) as num_lines
+          from adastra
+          inner join characters using(speaker)
+          group by 1, 2
+          order by 1, 2
+    
+    proportion_lines_per_character:
+      plot_args:
+        x: file
+        y: proportion_lines
+      sql: >
+          select
+              file,
+              speaker,
+              count(*) / num_lines_by_file as proportion_lines
+          from adastra
+              inner join characters using(speaker)
+              inner join (
+                  select
+                      file,
+                      cast(count(*) as float) as num_lines_by_file
+                  from adastra
+                  group by 1
+              ) using(file)
+          group by 1, 2
+          order by 1, 2
 
-  proportion_lines_per_character:
-    sql: >
-        select
-            file,
-            speaker,
-            count(*) / num_lines_by_file as proportion_lines
-        from adastra
-            inner join characters using(speaker)
-            inner join (
-                select
-                    file,
-                    cast(count(*) as float) as num_lines_by_file
-                from adastra
-                group by 1
-            ) using(file)
-        group by 1, 2
-        order by 1, 2
-    graph_args:
-      x: file
-      y: proportion_lines
-      hue: speaker
-      kind: line
-      palette: *characters_palette
+    words_per_character:
+      plot_args:
+        x: file
+        y: num_words
+      sql: >
+          select
+              file,
+              speaker,
+              sum(num_words) as num_words
+          from adastra_nlp
+          inner join characters using(speaker)
+          group by 1, 2
+          order by 1, 2
+      
 
-  words_per_character:
-    sql: >
-        select
-            file,
-            speaker,
-            sum(num_words) as num_words
-        from adastra_nlp
-        inner join characters using(speaker)
-        group by 1, 2
-        order by 1, 2
-    graph_args:
-      x: file
-      y: num_words
-      hue: speaker
-      kind: line
-      palette: *characters_palette
+    proportion_words_per_character:
+      plot_args:
+        x: file
+        y: proportion_words
+      sql: >
+          select
+              file,
+              speaker,
+              sum(num_words) / num_words_by_file as proportion_words
+          from adastra_nlp
+              inner join characters using(speaker)
+              inner join (
+                  select
+                      file,
+                      cast(sum(num_words) as float) as num_words_by_file
+                  from adastra_nlp
+                  group by 1
+              ) using(file)
+          group by 1, 2
+          order by 1, 2
 
-  proportion_words_per_character:
-    sql: >
-        select
-            file,
-            speaker,
-            sum(num_words) / num_words_by_file as proportion_words
-        from adastra_nlp
-            inner join characters using(speaker)
-            inner join (
-                select
-                    file,
-                    cast(sum(num_words) as float) as num_words_by_file
-                from adastra_nlp
-                group by 1
-            ) using(file)
-        group by 1, 2
-        order by 1, 2
-    graph_args:
-      x: file
-      y: proportion_words
-      hue: speaker
-      kind: line
-      palette: *characters_palette
+    average_sentiment_per_character:
+      plot_args:
+        x: file
+        y: avg_sentiment
+      axhline: 0.0
+      sql: >
+          select
+              file,
+              speaker,
+              avg(sentiment) as avg_sentiment
+          from adastra_nlp
+              inner join characters using(speaker)
+          group by 1, 2
+          order by 1, 2
 
-  average_sentiment_per_character:
-    sql: >
-        select
-            file,
-            speaker,
-            avg(sentiment) as avg_sentiment
-        from adastra_nlp
-            inner join characters using(speaker)
-        group by 1, 2
-        order by 1, 2
-    axhline: 0.0
-    graph_args:
-      x: file
-      y: avg_sentiment
-      hue: speaker
-      kind: line
-      palette: *characters_palette
-  
-  # Sentiment graphs, one per file.
-  sentiment/a1s1:
-    sql: >
-        select
-            line_idx,
-            speaker,
-            avg(sentiment) over (
-                partition by speaker
-                order by line_idx
-                rows between 9 preceding and current row
-            ) as rolling_sentiment
-        from adastra_nlp
-            inner join characters using(speaker)
-        where file = 'a1s1'
-    axhline: 0.0
-    remove_outliers: True
-    graph_args:
-      x: line_idx
-      y: rolling_sentiment
-      hue: speaker
-      kind: line
-      palette: *characters_palette
+    # Sentiment graphs, one per file.
+    sentiment/a1s1:
+      plot_args:
+        x: line_idx
+        y: rolling_sentiment
+      axhline: 0.0
+      remove_outliers: True
+      sql: >
+          select
+              line_idx,
+              speaker,
+              avg(sentiment) over (
+                  partition by speaker
+                  order by line_idx
+                  rows between 9 preceding and current row
+              ) as rolling_sentiment
+          from adastra_nlp
+              inner join characters using(speaker)
+          where file = 'a1s1'
 
-  sentiment/a1s2:
-    sql: >
-        select
-            line_idx,
-            speaker,
-            avg(sentiment) over (
-                partition by speaker
-                order by line_idx
-                rows between 9 preceding and current row
-            ) as rolling_sentiment
-        from adastra_nlp
-            inner join characters using(speaker)
-        where file = 'a1s2'
-    axhline: 0.0
-    remove_outliers: True
-    graph_args:
-      x: line_idx
-      y: rolling_sentiment
-      hue: speaker
-      kind: line
-      palette: *characters_palette
+    sentiment/a1s2:
+      plot_args:
+        x: line_idx
+        y: rolling_sentiment
+      axhline: 0.0
+      remove_outliers: True
+      sql: >
+          select
+              line_idx,
+              speaker,
+              avg(sentiment) over (
+                  partition by speaker
+                  order by line_idx
+                  rows between 9 preceding and current row
+              ) as rolling_sentiment
+          from adastra_nlp
+              inner join characters using(speaker)
+          where file = 'a1s2'
 
-  sentiment/a1s3:
-    sql: >
-        select
-            line_idx,
-            speaker,
-            avg(sentiment) over (
-                partition by speaker
-                order by line_idx
-                rows between 9 preceding and current row
-            ) as rolling_sentiment
-        from adastra_nlp
-            inner join characters using(speaker)
-        where file = 'a1s3'
-    axhline: 0.0
-    remove_outliers: True
-    graph_args:
-      x: line_idx
-      y: rolling_sentiment
-      hue: speaker
-      kind: line
-      palette: *characters_palette
-  
-  sentiment/a1s4:
-    sql: >
-        select
-            line_idx,
-            speaker,
-            avg(sentiment) over (
-                partition by speaker
-                order by line_idx
-                rows between 9 preceding and current row
-            ) as rolling_sentiment
-        from adastra_nlp
-            inner join characters using(speaker)
-        where file = 'a1s4'
-    axhline: 0.0
-    remove_outliers: True
-    graph_args:
-      x: line_idx
-      y: rolling_sentiment
-      hue: speaker
-      kind: line
-      palette: *characters_palette
-  
-  sentiment/a1s5:
-    sql: >
-        select
-            line_idx,
-            speaker,
-            avg(sentiment) over (
-                partition by speaker
-                order by line_idx
-                rows between 9 preceding and current row
-            ) as rolling_sentiment
-        from adastra_nlp
-            inner join characters using(speaker)
-        where file = 'a1s5'
-    axhline: 0.0
-    remove_outliers: True
-    graph_args:
-      x: line_idx
-      y: rolling_sentiment
-      hue: speaker
-      kind: line
-      palette: *characters_palette
-  
-  sentiment/a1s6:
-    sql: >
-        select
-            line_idx,
-            speaker,
-            avg(sentiment) over (
-                partition by speaker
-                order by line_idx
-                rows between 9 preceding and current row
-            ) as rolling_sentiment
-        from adastra_nlp
-            inner join characters using(speaker)
-        where file = 'a1s6'
-    axhline: 0.0
-    remove_outliers: True
-    graph_args:
-      x: line_idx
-      y: rolling_sentiment
-      hue: speaker
-      kind: line
-      palette: *characters_palette
-  
-  sentiment/a1s7:
-    sql: >
-        select
-            line_idx,
-            speaker,
-            avg(sentiment) over (
-                partition by speaker
-                order by line_idx
-                rows between 9 preceding and current row
-            ) as rolling_sentiment
-        from adastra_nlp
-            inner join characters using(speaker)
-        where file = 'a1s7'
-    axhline: 0.0
-    remove_outliers: True
-    graph_args:
-      x: line_idx
-      y: rolling_sentiment
-      hue: speaker
-      kind: line
-      palette: *characters_palette
-  
-  sentiment/a2s1:
-    sql: >
-        select
-            line_idx,
-            speaker,
-            avg(sentiment) over (
-                partition by speaker
-                order by line_idx
-                rows between 9 preceding and current row
-            ) as rolling_sentiment
-        from adastra_nlp
-            inner join characters using(speaker)
-        where file = 'a2s1'
-    axhline: 0.0
-    remove_outliers: True
-    graph_args:
-      x: line_idx
-      y: rolling_sentiment
-      hue: speaker
-      kind: line
-      palette: *characters_palette
-  
-  sentiment/a2s2:
-    sql: >
-        select
-            line_idx,
-            speaker,
-            avg(sentiment) over (
-                partition by speaker
-                order by line_idx
-                rows between 9 preceding and current row
-            ) as rolling_sentiment
-        from adastra_nlp
-            inner join characters using(speaker)
-        where file = 'a2s2'
-    axhline: 0.0
-    remove_outliers: True
-    graph_args:
-      x: line_idx
-      y: rolling_sentiment
-      hue: speaker
-      kind: line
-      palette: *characters_palette
-  
-  sentiment/a2s3:
-    sql: >
-        select
-            line_idx,
-            speaker,
-            avg(sentiment) over (
-                partition by speaker
-                order by line_idx
-                rows between 9 preceding and current row
-            ) as rolling_sentiment
-        from adastra_nlp
-            inner join characters using(speaker)
-        where file = 'a2s3'
-    axhline: 0.0
-    remove_outliers: True
-    graph_args:
-      x: line_idx
-      y: rolling_sentiment
-      hue: speaker
-      kind: line
-      palette: *characters_palette
-  
-  sentiment/a3s1:
-    sql: >
-        select
-            line_idx,
-            speaker,
-            avg(sentiment) over (
-                partition by speaker
-                order by line_idx
-                rows between 9 preceding and current row
-            ) as rolling_sentiment
-        from adastra_nlp
-            inner join characters using(speaker)
-        where file = 'a3s1'
-    axhline: 0.0
-    remove_outliers: True
-    graph_args:
-      x: line_idx
-      y: rolling_sentiment
-      hue: speaker
-      kind: line
-      palette: *characters_palette
-  
-  sentiment/a3s2:
-    sql: >
-        select
-            line_idx,
-            speaker,
-            avg(sentiment) over (
-                partition by speaker
-                order by line_idx
-                rows between 9 preceding and current row
-            ) as rolling_sentiment
-        from adastra_nlp
-            inner join characters using(speaker)
-        where file = 'a3s2'
-    axhline: 0.0
-    remove_outliers: True
-    graph_args:
-      x: line_idx
-      y: rolling_sentiment
-      hue: speaker
-      kind: line
-      palette: *characters_palette
-  
-  sentiment/end_game1:
-    sql: >
-        select
-            line_idx,
-            speaker,
-            avg(sentiment) over (
-                partition by speaker
-                order by line_idx
-                rows between 9 preceding and current row
-            ) as rolling_sentiment
-        from adastra_nlp
-            inner join characters using(speaker)
-        where file = 'end_game1'
-    axhline: 0.0
-    remove_outliers: True
-    graph_args:
-      x: line_idx
-      y: rolling_sentiment
-      hue: speaker
-      kind: line
-      palette: *characters_palette
-  
-  sentiment/end_game2:
-    sql: >
-        select
-            line_idx,
-            speaker,
-            avg(sentiment) over (
-                partition by speaker
-                order by line_idx
-                rows between 9 preceding and current row
-            ) as rolling_sentiment
-        from adastra_nlp
-            inner join characters using(speaker)
-        where file = 'end_game2'
-    axhline: 0.0
-    remove_outliers: True
-    graph_args:
-      x: line_idx
-      y: rolling_sentiment
-      hue: speaker
-      kind: line
-      palette: *characters_palette
-  
+    sentiment/a1s3:
+      plot_args:
+        x: line_idx
+        y: rolling_sentiment
+      axhline: 0.0
+      remove_outliers: True
+      sql: >
+          select
+              line_idx,
+              speaker,
+              avg(sentiment) over (
+                  partition by speaker
+                  order by line_idx
+                  rows between 9 preceding and current row
+              ) as rolling_sentiment
+          from adastra_nlp
+              inner join characters using(speaker)
+          where file = 'a1s3'
+
+    sentiment/a1s4:
+      plot_args:
+        x: line_idx
+        y: rolling_sentiment
+      axhline: 0.0
+      remove_outliers: True
+      sql: >
+          select
+              line_idx,
+              speaker,
+              avg(sentiment) over (
+                  partition by speaker
+                  order by line_idx
+                  rows between 9 preceding and current row
+              ) as rolling_sentiment
+          from adastra_nlp
+              inner join characters using(speaker)
+          where file = 'a1s4'
+
+    sentiment/a1s5:
+      plot_args:
+        x: line_idx
+        y: rolling_sentiment
+      axhline: 0.0
+      remove_outliers: True
+      sql: >
+          select
+              line_idx,
+              speaker,
+              avg(sentiment) over (
+                  partition by speaker
+                  order by line_idx
+                  rows between 9 preceding and current row
+              ) as rolling_sentiment
+          from adastra_nlp
+              inner join characters using(speaker)
+          where file = 'a1s5'
+
+    sentiment/a1s6:
+      plot_args:
+        x: line_idx
+        y: rolling_sentiment
+      axhline: 0.0
+      remove_outliers: True
+      sql: >
+          select
+              line_idx,
+              speaker,
+              avg(sentiment) over (
+                  partition by speaker
+                  order by line_idx
+                  rows between 9 preceding and current row
+              ) as rolling_sentiment
+          from adastra_nlp
+              inner join characters using(speaker)
+          where file = 'a1s6'
+
+    sentiment/a1s7:
+      plot_args:
+        x: line_idx
+        y: rolling_sentiment
+      axhline: 0.0
+      remove_outliers: True
+      sql: >
+          select
+              line_idx,
+              speaker,
+              avg(sentiment) over (
+                  partition by speaker
+                  order by line_idx
+                  rows between 9 preceding and current row
+              ) as rolling_sentiment
+          from adastra_nlp
+              inner join characters using(speaker)
+          where file = 'a1s7'
+
+    sentiment/a2s1:
+      plot_args:
+        x: line_idx
+        y: rolling_sentiment
+      axhline: 0.0
+      remove_outliers: True
+      sql: >
+          select
+              line_idx,
+              speaker,
+              avg(sentiment) over (
+                  partition by speaker
+                  order by line_idx
+                  rows between 9 preceding and current row
+              ) as rolling_sentiment
+          from adastra_nlp
+              inner join characters using(speaker)
+          where file = 'a2s1'
+
+    sentiment/a2s2:
+      plot_args:
+        x: line_idx
+        y: rolling_sentiment
+      axhline: 0.0
+      remove_outliers: True
+      sql: >
+          select
+              line_idx,
+              speaker,
+              avg(sentiment) over (
+                  partition by speaker
+                  order by line_idx
+                  rows between 9 preceding and current row
+              ) as rolling_sentiment
+          from adastra_nlp
+              inner join characters using(speaker)
+          where file = 'a2s2'
+
+    sentiment/a2s3:
+      plot_args:
+        x: line_idx
+        y: rolling_sentiment
+      axhline: 0.0
+      remove_outliers: True
+      sql: >
+          select
+              line_idx,
+              speaker,
+              avg(sentiment) over (
+                  partition by speaker
+                  order by line_idx
+                  rows between 9 preceding and current row
+              ) as rolling_sentiment
+          from adastra_nlp
+              inner join characters using(speaker)
+          where file = 'a2s3'
+
+    sentiment/a3s1:
+      plot_args:
+        x: line_idx
+        y: rolling_sentiment
+      axhline: 0.0
+      remove_outliers: True
+      sql: >
+          select
+              line_idx,
+              speaker,
+              avg(sentiment) over (
+                  partition by speaker
+                  order by line_idx
+                  rows between 9 preceding and current row
+              ) as rolling_sentiment
+          from adastra_nlp
+              inner join characters using(speaker)
+          where file = 'a3s1'
+
+    sentiment/a3s2:
+      plot_args:
+        x: line_idx
+        y: rolling_sentiment
+      axhline: 0.0
+      remove_outliers: True
+      sql: >
+          select
+              line_idx,
+              speaker,
+              avg(sentiment) over (
+                  partition by speaker
+                  order by line_idx
+                  rows between 9 preceding and current row
+              ) as rolling_sentiment
+          from adastra_nlp
+              inner join characters using(speaker)
+          where file = 'a3s2'
+
+    sentiment/end_game1:
+      plot_args:
+        x: line_idx
+        y: rolling_sentiment
+      axhline: 0.0
+      remove_outliers: True
+      sql: >
+          select
+              line_idx,
+              speaker,
+              avg(sentiment) over (
+                  partition by speaker
+                  order by line_idx
+                  rows between 9 preceding and current row
+              ) as rolling_sentiment
+          from adastra_nlp
+              inner join characters using(speaker)
+          where file = 'end_game1'
+
+    sentiment/end_game2:
+      plot_args:
+        x: line_idx
+        y: rolling_sentiment
+      axhline: 0.0
+      remove_outliers: True
+      sql: >
+          select
+              line_idx,
+              speaker,
+              avg(sentiment) over (
+                  partition by speaker
+                  order by line_idx
+                  rows between 9 preceding and current row
+              ) as rolling_sentiment
+          from adastra_nlp
+              inner join characters using(speaker)
+          where file = 'end_game2'
