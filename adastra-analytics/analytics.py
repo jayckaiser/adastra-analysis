@@ -35,7 +35,7 @@ def main():
         for filename, graph_params in graphs.items():
 
             sql_query = graph_params['sql']
-            graph_kwargs = graph_params['kwargs']
+            graph_kwargs = graph_params['graph_args']
 
             # These are optional meta-params that influence the final plot.
             figsize = graph_params.get('figsize')
