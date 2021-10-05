@@ -1,3 +1,20 @@
+settings:
+
+  # Specify the path to the unzipped Adastra folder.
+  adastra_dir: /home/jayckaiser/adastra/Adastra-17-linux
+
+  # Specify where the 'adastra' JSONL datasets are stored.
+  data_dir: /home/jayckaiser/adastra/data
+
+  # Specify where the plots should be saved.
+  analytics_dir: /home/jayckaiser/adastra/analytics
+
+  # Specify whether the 'adastra.json' or 'adastra_nlp.json' dataset is used here.
+  dataset: adastra
+
+
+# Define additional datasets not present in the main data.
+# - These must have a 'columns' key and a dictionary structure under the 'data' key.
 datasets:
   # Define a custom set of characters to filter on, as well as the colors to display them with.
   characters:
@@ -11,12 +28,15 @@ datasets:
       neferu  : '#ffcc00'
       virginia: '#8e389c'
 
+
 analytics:
+  # Define universal plot params here. They can be overwritten in any plot below.
   plot_args:
     hue: speaker
     kind: line
     palette: *characters_palette
     
+  # Create one plot per image.
   plots:
     lines_per_character:
       plot_args:
