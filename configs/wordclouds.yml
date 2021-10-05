@@ -1,118 +1,226 @@
-# Specify the filter on the dataset (using Pandas syntax).
-# By default, 'file', 'line_idx', 'speaker', and 'is_optional' are filterable.
-# 
-# Specify the paths to the images in `{adastra_dir}/game/images`.
-# These will be saved with identical pathing in `{wordclouds_dir}`.
+settings:
 
-- filter: "speaker == 'alexios'"
-  images: 
-    - sprites/alexios/alexios.png
-    - sprites/alexios/alexios-vshocked-e.png
-    - sprites/alexios/alexios-shocked.png
-    - sprites/alexios/alexios-embarrassed.png
-    - sprites/alexios/alexios-angry-e-u.png
+  # Specify the path to the unzipped Adastra folder.
+  adastra_dir: /home/jayckaiser/adastra/Adastra-17-linux
 
-- filter: "speaker == 'amicus'"
+  # Specify where the 'adastra' JSONL datasets are stored.
+  data_dir: /home/jayckaiser/adastra/data
+
+  # Specify where the wordclouds should be saved.
+  wordclouds_dir: /home/jayckaiser/adastra/wordclouds
+
+  # Specify whether the 'adastra.json' or 'adastra_nlp.json' dataset is used here.
+  dataset: adastra_nlp
+
+  # Specify which column in the dataframe will be used to populate the wordclouds.
+  # - List columns are automatically joined before processing.
+  # - Good options are 'line', 'words', or 'content_words'.
+  #   * 'line' is the cleaned text of the line.
+  #   * 'words' removes punctuation.
+  #   * 'content_words' removes punctuation and stop-words, and converts to lowercase.
+  text_column: content_words
+
+  # Specify which columns are queryable.
+  index_columns:
+    - file
+    - line_idx
+    - speaker
+    - is_optional
+
+
+wordclouds:
+  # Define universal wordcloud params here. They can be overwritten in any image below.
+  wordcloud_args:
+    max_words: 2000
+    max_font_size: 40
+    mode: RBG
+    background_color: black
+    repeat: True
+    relative_scaling: 0.5
+    random_state: 42
+
+  # Create one wordcloud per image.
+  # - By default, the key is the name of both the input and output image.
+  #   (If the input image is different, specify a 'file' subkey.)
   images:
-    - sprites/amicus/amicus.png
-    - sprites/amicus/amicus-tears.png
-    - sprites/amicus/amicus-smile.png
-    - sprites/amicus/amicus-shocked.png
-    - sprites/amicus/amicus-crossed-serious.png
-    - sprites/amicus/amicus-angry-n.png
-    - illustrations/sleep.png
-    - illustrations/amicusend.png
-    - illustrations/introspection.png
-    - illustrations/dinner1.PNG
-    - illustrations/dinner2.PNG
-    - illustrations/dinner3.PNG
-    - illustrations/dinner4.PNG
 
-- filter: "speaker == 'cassius'"
-  images:
-    - sprites/cassius/cassius.png
-    - sprites/cassius/cassius-angry-u.png
-    - sprites/cassius/cassius-paw.png
-    - sprites/cassius/cassius-furious.png
-    - sprites/cassius/cassius-disappointed-u.png
+    # Alexios
+    sprites/alexios/alexios:
+      where: "speaker = 'alexios'"
+    sprites/alexios/alexios-vshocked-e:
+      where: "speaker = 'alexios'"
+    sprites/alexios/alexios-shocked:
+      where: "speaker = 'alexios'"
+    sprites/alexios/alexios-embarrassed:
+      where: "speaker = 'alexios'"
+    sprites/alexios/alexios-angry-e-u:
+      where: "speaker = 'alexios'"
 
-- filter: "speaker == 'cato'"
-  images:
-    - sprites/cato/cato.png
-    - sprites/cato/cato-bow-v.png
-    - sprites/cato/cato-angry-u.png
+    # Amicus
+    sprites/amicus/amicus:
+      where: "speaker = 'amicus'"
+    sprites/amicus/amicus-tears:
+      where: "speaker = 'amicus'"
+    sprites/amicus/amicus-smile:
+      where: "speaker = 'amicus'"
+    sprites/amicus/amicus-shocked:
+      where: "speaker = 'amicus'"
+    sprites/amicus/amicus-crossed-serious:
+      where: "speaker = 'amicus'"
+    sprites/amicus/amicus-angry-n:
+      where: "speaker = 'amicus'"
+    illustrations/sleep:
+      where: "speaker = 'amicus'"
+    illustrations/amicusend:
+      where: "speaker = 'amicus'"
+    illustrations/introspection:
+      where: "speaker = 'amicus'"
+    illustrations/dinner1:
+      where: "speaker = 'amicus'"
+    illustrations/dinner2:
+      where: "speaker = 'amicus'"
+    illustrations/dinner3:
+      where: "speaker = 'amicus'"
+    illustrations/dinner4:
+      where: "speaker = 'amicus'"
 
-- filter: "speaker == 'neferu'"
-  images:
-    - sprites/neferu/neferu.png
-    - sprites/neferu/neferu-wink-f.png
-    - sprites/neferu/neferu-talking-n.png
-    - sprites/neferu/neferu-talking-a.png
-    - sprites/neferu/neferu-silly-f-n.png
-    - sprites/neferu/neferu-shocked.png
-    - sprites/neferu/neferu-fury.png
+    # Cassius
+    sprites/cassius/cassius:
+      where: "speaker = 'cassius'"
+    sprites/cassius/cassius-angry-u:
+      where: "speaker = 'cassius'"
+    sprites/cassius/cassius-paw:
+      where: "speaker = 'cassius'"
+    sprites/cassius/cassius-furious:
+      where: "speaker = 'cassius'"
+    sprites/cassius/cassius-disappointed-u:
+      where: "speaker = 'cassius'"
 
-- filter: "speaker == 'virginia'"
-  images:
-    - sprites/virginia/virginia.png
-    - sprites/virginia/virginia-tilt-p.png
-    - sprites/virginia/virginia-annoyed.png
-    - illustrations/archives1.png
+    # Cato
+    sprites/cato/cato:
+      where: "speaker = 'cato'"
+    sprites/cato/cato-bow-v:
+      where: "speaker = 'cato'"
+    sprites/cato/cato-angry-u:
+      where: "speaker = 'cato'"
 
-- filter: "speaker == 'meera'"
-  images: 
-    - illustrations/meera.png
+    # Neferu
+    sprites/neferu/neferu:
+      where: "speaker = 'neferu'"
+    sprites/neferu/neferu-wink-f:
+      where: "speaker = 'neferu'"
+    sprites/neferu/neferu-talking-n:
+      where: "speaker = 'neferu'"
+    sprites/neferu/neferu-talking-a:
+      where: "speaker = 'neferu'"
+    sprites/neferu/neferu-silly-f-n:
+      where: "speaker = 'neferu'"
+    sprites/neferu/neferu-shocked:
+      where: "speaker = 'neferu'"
+    sprites/neferu/neferu-fury:
+      where: "speaker = 'neferu'"
 
-- filter: "speaker == 'monitor'"
-  images:
-    - illustrations/monitor.png
+    # Virginia
+    sprites/virginia/virginia:
+      where: "speaker = 'virginia'"
+    sprites/virginia/virginia-tilt-p:
+      where: "speaker = 'virginia'"
+    sprites/virginia/virginia-annoyed:
+      where: "speaker = 'virginia'"
+    illustrations/archives1:
+      where: "speaker = 'virginia'"
 
-- filter: "speaker.isin(['cassius', 'alexios'])"
-  images:
-    - illustrations/poisoned.png
-    - illustrations/alexandcassius.PNG
-    - illustrations/alexandcassiuskiss.PNG
+    # Meera 
+    illustrations/meera:
+      where: "speaker = 'meera'"
 
-- filter: "speaker.isin(['cato', 'neferu'])"
-  images:
-    - illustrations/nefandcat1.PNG
-    - illustrations/nefandcat2.PNG
+    # Monitor
+    illustrations/monitor:
+      where: "speaker == 'monitor'"
 
-- filter: "speaker.isin(['amicus', 'neferu'])"
-  images:
-    - illustrations/amicusandneferu1.png
-    - illustrations/amicusandneferu2.png
-    - illustrations/amicusandneferu3.png
-    - illustrations/backoff2.PNG
-    - illustrations/backoff3.PNG
+    # Cassius and Alexios
+    illustrations/poisoned:
+      where: "speaker IN ('cassius', 'alexios')"
+    illustrations/alexandcassius:
+      where: "speaker IN ('cassius', 'alexios')"
+    illustrations/alexandcassiuskiss:
+      where: "speaker IN ('cassius', 'alexios')"
 
-- filter: "~speaker.isnull()"
-  images:
-    - illustrations/adastra.png
-    - illustrations/Adastranl.png
+    # Cato and Neferu
+    illustrations/nefandcat1:
+      where: "speaker IN ('cato', 'neferu')"
+    illustrations/nefandcat2:
+      where: "speaker IN ('cato', 'neferu')"
 
-- filter: "file == 'end_game1' & speaker.isin(['amicus', 'marco'])"
-  images:
-    - illustrations/farewell1.png
-    - illustrations/farewell3.png
-    - illustrations/wemadeit1.PNG
-    - illustrations/wemadeit4.PNG
+    # Amicus and Neferu
+    illustrations/amicusandneferu1:
+      where: "speaker IN ('amicus', 'neferu')"
+    illustrations/amicusandneferu2:
+      where: "speaker IN ('amicus', 'neferu')"
+    illustrations/amicusandneferu3:
+      where: "speaker IN ('amicus', 'neferu')"
+    illustrations/backoff2:
+      where: "speaker IN ('amicus', 'neferu')"
+    illustrations/backoff3:
+      where: "speaker IN ('amicus', 'neferu')"
 
-- filter: "file == 'a3s2'"
-  images:
-    - illustrations/lastmoment.png
+    # All text
+    illustrations/adastra:
+      where: "speaker IS NOT NULL"
+    illustrations/Adastranl:
+      where: "speaker IS NOT NULL"
 
-- filter: "file == 'a3s2' & speaker.isin(['amicus', 'internal', 'monitor'])"
-  images:
-    - illustrations/finalspace.png
-    - illustrations/finalspace2.png
-    - illustrations/watching.PNG
+    # Amicus and Marco in end-game
+    illustrations/farewell1:
+      where: "file = 'end_game1' AND speaker IN ('amicus', 'marco')"
+    illustrations/farewell3:
+      where: "file = 'end_game1' AND speaker IN ('amicus', 'marco')"
+    illustrations/wemadeit1:
+      where: "file = 'end_game1' AND speaker IN ('amicus', 'marco')"
+    illustrations/wemadeit4:
+      where: "file = 'end_game1' AND speaker IN ('amicus', 'marco')"
 
-- filter: "speaker.isin(['amicus', 'marco', 'internal']) & is_optional"
-  images:
-    - illustrations/amiscene1.png
-    - illustrations/amiscene3.png
-    - illustrations/ss1.png
-    - illustrations/ss3.png
-    - illustrations/2ss.png
-    - illustrations/2ss3.png
+    # In Act 3 Scene 2
+    illustrations/lastmoment:
+      where: "file = 'a3s2'"
+
+    # Amicus & Internal Narration & Monitor in Act 3 Scene 2
+    # (This could be better filtered by line number.)
+    illustrations/finalspace:
+      where: "file = 'a3s2' AND speaker IN ('amicus', 'internal', 'monitor')"
+      wordcloud_args:
+        background_color: white
+    illustrations/finalspace2:
+      where: "file = 'a3s2' AND speaker IN ('amicus', 'internal', 'monitor')"
+      wordcloud_args:
+        background_color: white
+    illustrations/watching:
+      where: "file = 'a3s2' AND speaker IN ('amicus', 'internal', 'monitor')"
+      wordcloud_args:
+        background_color: white
+
+    # Amicus & Marco & Internal Narration in optional paths ;)
+    illustrations/amiscene1:
+      where: "speaker IN ('amicus', 'marco', 'internal') AND is_optional"
+      wordcloud_args:
+        background_color: white
+    illustrations/amiscene3:
+      where: "speaker IN ('amicus', 'marco', 'internal') AND is_optional"
+      wordcloud_args:
+        background_color: white
+    illustrations/ss1:
+      where: "speaker IN ('amicus', 'marco', 'internal') AND is_optional"
+      wordcloud_args:
+        background_color: white
+    illustrations/ss3:
+      where: "speaker IN ('amicus', 'marco', 'internal') AND is_optional"
+      wordcloud_args:
+        background_color: white
+    illustrations/2ss:
+      where: "speaker IN ('amicus', 'marco', 'internal') AND is_optional"
+      wordcloud_args:
+        background_color: white
+    illustrations/2ss3:
+      where: "speaker IN ('amicus', 'marco', 'internal') AND is_optional"
+      wordcloud_args:
+        background_color: white
