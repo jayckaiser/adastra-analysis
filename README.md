@@ -56,6 +56,7 @@ There are a number of script files present, each of which has distinct functiona
 
 - ***00_cleaning.py***   
 Read the unzipped script files and save as a cleaned DataFrame to `{data_dir}/adastra.json`. Note: this must be run before any other scripts!
+
 | Column | Type | Description |
 | ------ | ---- | ----------- |
 | file | str | name of source file |
@@ -74,6 +75,7 @@ Read the unzipped script files and save as a cleaned DataFrame to `{data_dir}/ad
 
 - ***01_nlp.py***  
 Extend the cleaned dataframe with additional NLP fields and save to `{data_dir}/adastra_nlp.json`. Tokenization and content-word extraction use `spaCy` and its smallest model (`en_core_web_sm`); sentiment and subjectivity use `textblob`. Note: several other scripts are dependent on the output of this!
+
 | Column | Type | Description |
 | ------ | ---- | ----------- |
 | sentiment | [-1, 1] | sentiment of the line (negative to positive) |
