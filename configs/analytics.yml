@@ -1,8 +1,5 @@
 settings:
 
-  # Specify the path to the unzipped Adastra folder.
-  adastra_dir: /home/jayckaiser/adastra/Adastra-17-linux
-
   # Specify where the 'adastra' JSONL datasets are stored.
   data_dir: /home/jayckaiser/adastra/data
 
