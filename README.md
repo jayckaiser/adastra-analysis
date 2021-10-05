@@ -57,35 +57,35 @@ There are a number of script files present, each of which has distinct functiona
 - ***00_cleaning.py***   
 Read the unzipped script files and save as a cleaned DataFrame to `{data_dir}/adastra.json`. Note: this must be run before any other scripts!
 
-| Column | Type | Description |
-| ------ | ---- | ----------- |
-| file | str | name of source file |
-| line_idx | int | line number of file |
-| category | enum | line category (predefined set) |
-| speaker | str | character/source of the line (includes 'internal' and 'unspecified') |
-| line | str | cleaned text of the line |
-| is_renpy | bool | is the line internal Ren'Py-logic? |
-| is_choice | bool | is the line a split to multiple paths (a player choice or conditional Python logic)? |
-| is_read | bool | is the line read as text by the player? |
-| has_speaker | bool | is the line spoken by a named speaker (not internal or unspecified)? |
-| is_optional | bool | is the line an optional path (delineated by a choice)? |
-| raw | str | raw text of the line |
+  | Column | Type | Description |
+  | ------ | ---- | ----------- |
+  | file | str | name of source file |
+  | line_idx | int | line number of file |
+  | category | enum | line category (predefined set) |
+  | speaker | str | character/source of the line (includes 'internal' and 'unspecified') |
+  | line | str | cleaned text of the line |
+  | is_renpy | bool | is the line internal Ren'Py-logic? |
+  | is_choice | bool | is the line a split to multiple paths (a player choice or conditional Python logic)? |
+  | is_read | bool | is the line read as text by the player? |
+  | has_speaker | bool | is the line spoken by a named speaker (not internal or unspecified)? |
+  | is_optional | bool | is the line an optional path (delineated by a choice)? |
+  | raw | str | raw text of the line |
 
 
 
 - ***01_nlp.py***  
 Extend the cleaned dataframe with additional NLP fields and save to `{data_dir}/adastra_nlp.json`. Tokenization and content-word extraction use `spaCy` and its smallest model (`en_core_web_sm`); sentiment and subjectivity use `textblob`. Note: several other scripts are dependent on the output of this!
 
-| Column | Type | Description |
-| ------ | ---- | ----------- |
-| sentiment | [-1, 1] | sentiment of the line (negative to positive) |
-| subjectivity | [0, 1] | subjectivity (strength) of the sentiment |
-| sentences | List[str] | sentences in the line |
-| num_sentences | int | number of sentences |
-| words | List[str] | non-punctuation words in the line |
-| num_words | int | number of extracted words |
-| content_words | List[str] | non-stop/filler words in the line |
-| num_content_words | int | number of extracted content words |
+  | Column | Type | Description |
+  | ------ | ---- | ----------- |
+  | sentiment | [-1, 1] | sentiment of the line (negative to positive) |
+  | subjectivity | [0, 1] | subjectivity (strength) of the sentiment |
+  | sentences | List[str] | sentences in the line |
+  | num_sentences | int | number of sentences |
+  | words | List[str] | non-punctuation words in the line |
+  | num_words | int | number of extracted words |
+  | content_words | List[str] | non-stop/filler words in the line |
+  | num_content_words | int | number of extracted content words |
 
 
 - ***find.py***  
