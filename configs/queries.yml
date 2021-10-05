@@ -1,0 +1,41 @@
+lines_per_file:
+  sql: >
+    select
+      file,
+      count(*) as num_lines
+    from data
+    group by 1
+    order by 1
+
+lines_per_speaker:
+  sql: >
+    select
+      speaker,
+      count(*) as num_lines
+    from data
+    group by 1
+    order by 1
+
+words_per_file:
+  sql: >
+    select
+      file,
+      sum(num_words) as sum_words
+    from data
+    group by 1
+    order by 1
+
+words_per_speaker:
+  sql: >
+    select
+      speaker,
+      sum(num_words) as sum_words
+    from data
+    group by 1
+    order by 1
+
+total_words:
+  sql: >
+    select
+      sum(num_words) as total_words
+    from data
