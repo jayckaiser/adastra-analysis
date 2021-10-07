@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 
 
 # Data Input helpers
+def load_dataframe(filepath):
+    return pd.read_json(filepath, orient='records', lines=True)
+
 def load_data(data_dir, nlp=False, is_read=False, drop_lists=False):
     """
     Standardized method for loading cleaned data.

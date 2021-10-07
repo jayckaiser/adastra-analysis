@@ -1,3 +1,4 @@
+# Main parameters that affect the run of the script.
 settings:
 
   # Specify the path to the unzipped Adastra folder.
