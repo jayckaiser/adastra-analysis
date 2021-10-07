@@ -8,22 +8,30 @@ class Dataset:
     """
     def __init__(
         self,
-        filepath=None,
-        data=None, columns=None,
+        data, columns=None,
         filters=None,
     ):
-        # Either create the dataset or load it from disk.
-        if filepath is None:
+        # Create the DataFrame, depending on type of input.
+
+        # Pandas DataFrame is given.
+        if isinstance(data, pd.DataFrame):
+            self.data = data
+        
+        # Local filepath is given.
+        elif isinstance(data, 'str'):
+            self.data = pd.read_json(
+                data,
+                orient='records',
+                lines=True
+            )
+        
+        # Dictionary and column names are given.
+        else: 
             self.data = pd.DataFrame(
                 list(data.to_dict()),
                 columns=columns
             )
-        else:
-            self.data = pd.read_json(
-                filepath,
-                orient='records',
-                lines=True
-            )
+            
 
         # Apply optional where-clauses to the dataset using PandaSQL.
         self.data = self.filter_where(filters)

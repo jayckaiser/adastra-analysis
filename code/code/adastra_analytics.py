@@ -1,6 +1,11 @@
 import os
 import yaml
 
+from dataset import Dataset
+
+from adastra_dataset import build_adastra_dataset
+from adastra_nlp_dataset import add_nlp_to_adastra_dataset
+
 
 class AdastraAnalytics:
     CONFIGS_FILEPATH = '../configs.yml'
@@ -9,16 +14,19 @@ class AdastraAnalytics:
         self.yaml_configs = self.load_yaml(configs_filepath)
         
         # Reset the string to follow.
-        self.run_variables = self.get_universal_configs()
+        self.get_universal_configs()
 
         # Create the dataset if manually triggered.
-        adastra_datapath = self.run_variables.get('adastra_datapath')
+        adastra_datapath  = self.adastra_datapath
 
         if build_dataset is True:
-            adastra_dataset = cleaning.build_adastra_dataset(adastra_datapath)
+            self.adastra_dataset = build_adastra_dataset(self.adastra_directory)
+
+            if self.use_nlp:
+                self.adastra_dataset = add_nlp_to_adastra_dataset(self.adastra_dataset)
 
         else:
-            adastra_dataset = Dataset(adastra_datapath)
+            self.adastra_dataset = Dataset(self.adastra_datapath)
         
         # Declare all potential config options.
         self.query_configs = None
@@ -52,9 +60,9 @@ class AdastraAnalytics:
         self.output_directory  = self.get('data_directory')
         
         # Save the filepath to save/load the cleaned data.
-        use_nlp = self.get('use_nlp')
+        self.use_nlp = self.get('use_nlp', False)
 
-        if use_nlp:
+        if self.use_nlp:
             filename = 'adastra_nlp.jsonl'
         else:
             filename = 'adastra.jsonl'

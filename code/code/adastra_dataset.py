@@ -3,6 +3,8 @@ import re
 
 import pandas as pd
 
+from dataset import Dataset
+
 
 ADASTRA_RENPY_SCRIPT_FILES = [
     'a1s1', 'a1s2', 'a1s3', 'a1s4', 'a1s5', 'a1s6', 'a1s7',
@@ -55,7 +57,9 @@ def build_adastra_dataset(
         'raw',
     ]
 
-    return data[final_select]
+    return Dataset(
+        data[final_select]
+    )
 
 
 
