@@ -3,20 +3,20 @@ import re
 
 import pandas as pd
 
-from dataset import Dataset
-
 
 ADASTRA_RENPY_SCRIPT_FILES = [
-    'a1s1', 'a1s2', 'a1s3', 'a1s4', 'a1s5', 'a1s6', 'a1s7',
-    'a2s1', 'a2s2', 'a2s3',
-    'a3s1', 'a3s2',
-    'end_game1', 'end_game2',
+    'a1s1.rpy', 'a1s2.rpy', 'a1s3.rpy', 'a1s4.rpy',
+    'a1s5.rpy', 'a1s6.rpy', 'a1s7.rpy',
+    'a2s1.rpy', 'a2s2.rpy', 'a2s3.rpy',
+    'a3s1.rpy', 'a3s2.rpy',
+    'end_game1.rpy', 'end_game2.rpy',
 ]
 
 
-def build_adastra_dataset(
+def build_adastra_data(
         adastra_directory,
-        renpy_script_files=ADASTRA_RENPY_SCRIPT_FILES
+        renpy_script_files=ADASTRA_RENPY_SCRIPT_FILES,
+        main_character='Marco',
     ):
     """
     Load the DataFrame from text and complete all transformations.
@@ -30,13 +30,13 @@ def build_adastra_dataset(
     
     # Categorize the text, extract the speaker (if present), and cleanse the line.
     data[['category', 'speaker', 'line']] = data.apply(
-        lambda x: extract_text_information(x['raw']),
+        lambda x: extract_text_information(x['raw'], main_character=main_character),
         axis=1,
         result_type='expand'
     )
 
     # Add logic flags to allow cleaner filtering later.
-    data[['is_renpy', 'is_choice', 'is_read', 'has_speaker', 'is_optional']] = data.apply(
+    data[['is_renpy', 'is_choice', 'is_read', 'has_speaker', 'is_branch']] = data.apply(
         lambda x: add_filter_flags(x['category'], x['raw']),
         axis=1,
         result_type='expand'
@@ -44,7 +44,7 @@ def build_adastra_dataset(
     
     # Convert character aliases to their actual names.
     data['speaker'] = data.apply(
-        lambda x: conform_speaker(x['speaker']),
+        lambda x: conform_speaker(x['speaker'], main_character=main_character),
         axis=1
     )
     
@@ -53,13 +53,12 @@ def build_adastra_dataset(
         'file', 'line_idx',
         'category', 'speaker',
         'line',
-        'is_renpy', 'is_choice', 'is_read', 'is_spoken', 'is_optional',
+        'is_renpy', 'is_choice', 'is_read', 'has_speaker', 'is_branch',
         'raw',
     ]
+    data = data[final_select]
 
-    return Dataset(
-        data[final_select]
-    )
+    return data
 
 
 
@@ -106,7 +105,7 @@ def renpy_files_to_dataframe(adastra_directory, renpy_filenames):
 
 
 ######### FUNCTIONS FOR CLEANING
-def _cleanse_line(line):
+def _cleanse_line(line, main_character):
     """
     Cleanse the extracted lines to remove formatting.
     """
@@ -114,14 +113,14 @@ def _cleanse_line(line):
     line = line.strip()
     
     # Clean up formatting characters.
-    line = line.replace('\\'  , ''       )  # Remove escape characters.
-    line = line.replace('[mc]', 'Marco'  )  # Standardize MC name.
+    line = line.replace('\\'  , '')  # Remove escape characters.
+    line = line.replace('[mc]', main_character)  # Standardize MC name.
     line = re.sub(r'{/?i}'    , '*', line)  # Convert italics to Markdown.
     line = re.sub(r'{cps=\d+}', '' , line)  # Remove scroll speed formatting.
     
     return line
 
-def extract_text_information(text):
+def extract_text_information(text, main_character):
     """
     Categorize each line based on rules involving special characters, keywords, and regex matches.
     Extract relevant metadata and clean the lines as needed.
@@ -145,7 +144,7 @@ def extract_text_information(text):
 
 
     ### Standardize formatting to make the extraction process easier.
-    text = _cleanse_line(text)
+    text = _cleanse_line(text, main_character=main_character)
     
     ### Create categories and isolate speaker for each line.
     category = 'unknown'
@@ -180,11 +179,11 @@ def extract_text_information(text):
             line     = is_dialogue_name_match.group('line')
             category = 'dialogue_name'
         elif is_dialogue_unspecified_match:
-            speaker  = 'Unspecified'
+            speaker  = 'speaker_unspecified'
             line     = is_dialogue_unspecified_match.group('line')
             category = 'dialogue_unspecified'
         elif is_dialogue_internal_match:
-            speaker  = 'Internal'
+            speaker  = 'internal_narration'
             line     = is_dialogue_internal_match.group('line')
             category = 'dialogue_internal'
         elif is_choice_player_match:
@@ -199,7 +198,7 @@ def add_filter_flags(category, text):
     Add flag columns for easier filtering downstream.
     """    
     # Specify if a line is internal to Renpy.
-    is_renpy = category.startswith('renpy')
+    is_renpy = category.startswith('renpy_')
     
     # Specify which lines indicate a crossroads.
     is_choice = category.startswith('choice_')
@@ -208,25 +207,25 @@ def add_filter_flags(category, text):
     is_read = category.startswith('dialogue_')
     
     # Specify when a character actually speaks the line.
-    is_spoken = is_read and category not in ('dialogue_unspecified', 'dialogue_internal')
+    has_speaker = is_read and category not in ('dialogue_unspecified', 'dialogue_internal')
     
     # Optional (branching) content is tab-indented.
         # Note: This is custom to Adastra, not all RenPy games!
         # * conditional   = 0 space indent; branch content = 4 space indent
         # * player_choice = 4 space indent; branch content = 8 space indent
-    is_optional = text.startswith(' ' * 4) and not is_choice
+    is_branch = text.startswith(' ' * 4) and not is_choice
     
-    return (is_renpy, is_choice, is_read, is_spoken, is_optional)
+    return (is_renpy, is_choice, is_read, has_speaker, is_branch)
 
 
-def conform_speaker(speaker):
+def conform_speaker(speaker, main_character):
     """
     Normalize speaker names using the predefined map.
     """
 
     CHARACTERS_MAP = {
         'a'  : 'amicus',
-        'm'  : 'marco',
+        'm'  : main_character,
         'unk': '?????',
         'com': 'computer',
         'c'  : 'cassius',
@@ -243,4 +242,4 @@ def conform_speaker(speaker):
     if speaker is None:
         return None
 
-    return CHARACTERS_MAP.get(speaker, speaker.lower()) 
+    return CHARACTERS_MAP.get(speaker, speaker).lower() 

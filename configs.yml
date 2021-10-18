@@ -1,71 +1,84 @@
 # Main parameters that affect the run of the script.
-configs:
+dataset_configs:
 
   # Specify the path to the unzipped Adastra folder.
   adastra_directory: /home/jayckaiser/adastra/Adastra-17-linux
 
-  # Specify where the 'adastra' JSONL dataset(s) are stored.
-  data_directory: /home/jayckaiser/adastra/data
+  # Specify where the 'adastra' JSONL dataset is stored.
+  adastra_datapath: /home/jayckaiser/adastra/data/adastra.jsonl
 
-  # Complete NLP processing.
-  # (This is not required for any script, but extends potential functionality.)
-  use_nlp: True
+  # What do you want the main character to be called?
+  # ('Marco' is the default.)
+  main_character: Marco
 
 
+# These are defined variables used across multiple scripts.
+# (These are only passed around the yaml file, not used in Python.)
+definitions:
 
+  # Filter used across script.
+  is_read: &is_read "is_read is True"
+
+  # Long identical SQL query used across 14 relplots.
+  rolling_sentiment: &rolling_sentiment |
+      select
+          line_idx,
+          speaker,
+          avg(sentiment) over (
+              partition by speaker
+              order by line_idx
+              rows between 9 preceding and current row
+          ) as rolling_sentiment
+      from adastra
+          inner join characters using(speaker)
+
+  # Repeated where-clauses used across wordclouds.
+  is_alexios : &is_alexios  "speaker = 'alexios'"
+  is_amicus  : &is_amicus   "speaker = 'amicus'"
+  is_cassius : &is_cassius  "speaker = 'cassius'"
+  is_cato    : &is_cato     "speaker = 'cato'"
+  is_marco   : &is_marco    "speaker = 'marco'"
+  is_neferu  : &is_neferu   "speaker = 'neferu'"
+  is_virginia: &is_virginia "speaker = 'virginia'"
+
+
+# Define additional datasets not present in the main data.
+# These must have a 'columns' key and a dictionary structure under the 'data' key.
+datasets:
+
+  # Define a custom set of characters to filter on, as well as the colors to display them with.
+  - name: characters
+    columns: [speaker, color]
+    data: &characters_palette  # This dictionary is passed to `relplots` as well.
+      alexios : '#65ca68'
+      amicus  : '#ff3333'
+      cassius : '#FFFFFF'
+      cato    : '#7a7a7a'
+      marco   : '#0000FF'
+      neferu  : '#ffcc00'
+      virginia: '#8e389c'
+
+
+# Main configs for all output runs.
 adastra_analytics:
-  # Define additional datasets not present in the main data.
-  # These must be dictionaries. Define the `columns` and the `data`.
-  # - These must have a 'columns' key and a dictionary structure under the 'data' key.
-  datasets:
-
-    # Define a custom set of characters to filter on, as well as the colors to display them with.
-    characters:
-      columns: [speaker, color]
-      data: &characters_palette  # Pass this dictionary to `analytics` as well.
-        alexios : '#65ca68'
-        amicus  : '#ff3333'
-        cassius : '#FFFFFF'  # '#ffffff' 
-        cato    : '#7a7a7a'
-        marco   : '#0000FF'  # '#FFFFFF'
-        neferu  : '#ffcc00'
-        virginia: '#8e389c'
-
-
-  # Define SQL queries potentially used across multiple scripts.
-  # (These are only passed around the yaml file, not used in Python.)
-  predefined_queries:
-    rolling_sentiment: &rolling_sentiment >
-        select
-            line_idx,
-            speaker,
-            avg(sentiment) over (
-                partition by speaker
-                order by line_idx
-                rows between 9 preceding and current row
-            ) as rolling_sentiment
-        from adastra
-            inner join characters using(speaker)
-
-
 
   # Run `queries.py` to run SQL queries and save outputs to JSONL files.
   queries:
 
     # Specify where the queries output should be saved.
-    output_dir: /home/jayckaiser/adastra/queries
+    output_directory: /home/jayckaiser/adastra/queries
 
     # Provide the dataset alias used in all query scripts.
     dataset_alias: adastra
 
-    # Define a where-clause to apply before every query.
-    where: 'is_read is True'
+    # Define a where-clause to apply before every query (optional).
+    where: *is_read
 
     # Create one output per key.
-    files:
+    queries:
 
-      lines_per_file:
-        sql: >
+      - name: lines_per_file.jsonl
+        sql: |
             select
               file,
               count(*) as num_lines
@@ -73,8 +86,8 @@ adastra_analytics:
             group by 1
             order by 1
 
-      lines_per_speaker:
-        sql: >
+      - name: lines_per_speaker.jsonl
+        sql: |
             select
               speaker,
               count(*) as num_lines
@@ -82,8 +95,8 @@ adastra_analytics:
             group by 1
             order by 1
 
-      words_per_file:
-        sql: >
+      - name: words_per_file.jsonl
+        sql: |
             select
               file,
               sum(num_words) as sum_words
@@ -91,8 +104,8 @@ adastra_analytics:
             group by 1
             order by 1
 
-      words_per_speaker:
-        sql: >
+      - name: words_per_speaker.jsonl
+        sql: |
             select
               speaker,
               sum(num_words) as sum_words
@@ -100,47 +113,46 @@ adastra_analytics:
             group by 1
             order by 1
 
-      total_lines:
-        sql: >
+      - name: total_lines.jsonl
+        sql: |
             select
               count(*) as total_words
             from adastra
 
-      total_words:
-        sql: >
+      - name: total_words.jsonl
+        sql: |
             select
               sum(num_words) as total_words
             from adastra
 
 
 
-
-  # Run `analytics.py` to run SQL queries to create Seaborn relplots .
-  analytics:
+  # Run `relplots.py` to run SQL queries to create Seaborn relplots.
+  relplots:
 
     # Specify where the plots should be saved.
-    output_dir : /home/jayckaiser/adastra/analytics
+    output_directory: /home/jayckaiser/adastra/relplots
 
     # Provide the dataset alias used in all query scripts.
     dataset_alias: adastra
 
     # Define a where-clause to apply before every query.
-    where: 'is_read is True'
+    where: *is_read
 
     # Define universal plot params here. They can be overwritten in any plot below.
-    plot_args:
+    relplot_args:
       hue: speaker
       kind: line
       palette: *characters_palette
       
     # Create one plot per key.
-    plots:
+    relplots:
 
-      lines_per_character:
-        plot_args:
+      - name: lines_per_character.png
+        relplot_args:
           x: file
           y: num_lines
-        sql: >
+        sql: |
             select
                 file,
                 speaker,
@@ -150,11 +162,11 @@ adastra_analytics:
             group by 1, 2
             order by 1, 2
       
-      proportion_lines_per_character:
-        plot_args:
+      - name: proportion_lines_per_character.png
+        relplot_args:
           x: file
           y: proportion_lines
-        sql: >
+        sql: |
             select
                 file,
                 speaker,
@@ -171,11 +183,11 @@ adastra_analytics:
             group by 1, 2
             order by 1, 2
 
-      words_per_character:
-        plot_args:
+      - name: words_per_character.png
+        relplot_args:
           x: file
           y: num_words
-        sql: >
+        sql: |
             select
                 file,
                 speaker,
@@ -185,17 +197,16 @@ adastra_analytics:
             group by 1, 2
             order by 1, 2
         
-
-      proportion_words_per_character:
-        plot_args:
+      - name: proportion_words_per_character.png
+        relplot_args:
           x: file
           y: proportion_words
-        sql: >
+        sql: |
             select
                 file,
                 speaker,
                 sum(num_words) / num_words_by_file as proportion_words
-            from adastra_nlp
+            from adastra
                 inner join characters using(speaker)
                 inner join (
                     select
@@ -207,149 +218,147 @@ adastra_analytics:
             group by 1, 2
             order by 1, 2
 
-        average_sentiment_per_character:
-          plot_args:
-            x: file
-            y: avg_sentiment
-          axhline: 0.0
-          sql: >
-              select
-                  file,
-                  speaker,
-                  avg(sentiment) as avg_sentiment
-              from adastra
-                  inner join characters using(speaker)
-              group by 1, 2
-              order by 1, 2
+      - name: average_sentiment_per_character.png
+        relplot_args:
+          x: file
+          y: avg_sentiment
+        axhline: 0.0
+        sql: |
+            select
+                file,
+                speaker,
+                avg(sentiment) as avg_sentiment
+            from adastra
+                inner join characters using(speaker)
+            group by 1, 2
+            order by 1, 2
 
-        # Sentiment graphs, one per file.
-        sentiment/a1s1:
-          plot_args:
-            x: line_idx
-            y: rolling_sentiment
-          axhline: 0.0
-          remove_outliers: True
-          where: "file = 'a1s1'"
-          sql: *rolling_sentiment
+      # Sentiment graphs, one per file.
+      - name: sentiment/a1s1.png
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        axhline: 0.0
+        remove_outliers: True
+        where: "file = 'a1s1'"
+        sql: *rolling_sentiment
 
-        sentiment/a1s2:
-          plot_args:
-            x: line_idx
-            y: rolling_sentiment
-          axhline: 0.0
-          remove_outliers: True
-          where: "file = 'a1s2'"
-          sql: *rolling_sentiment
+      - name: sentiment/a1s2.png
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        axhline: 0.0
+        remove_outliers: True
+        where: "file = 'a1s2'"
+        sql: *rolling_sentiment
 
-        sentiment/a1s3:
-          plot_args:
-            x: line_idx
-            y: rolling_sentiment
-          axhline: 0.0
-          remove_outliers: True
-          where: "file = 'a1s3'"
-          sql: *rolling_sentiment
+      - name: sentiment/a1s3.png
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        axhline: 0.0
+        remove_outliers: True
+        where: "file = 'a1s3'"
+        sql: *rolling_sentiment
 
-        sentiment/a1s4:
-          plot_args:
-            x: line_idx
-            y: rolling_sentiment
-          axhline: 0.0
-          remove_outliers: True
-          where: "file = 'a1s4'"
-          sql: *rolling_sentiment
+      - name: sentiment/a1s4.png
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        axhline: 0.0
+        remove_outliers: True
+        where: "file = 'a1s4'"
+        sql: *rolling_sentiment
 
-        sentiment/a1s5:
-          plot_args:
-            x: line_idx
-            y: rolling_sentiment
-          axhline: 0.0
-          remove_outliers: True
-          where: "file = 'a1s5'"
-          sql: *rolling_sentiment
+      - name: sentiment/a1s5.png
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        axhline: 0.0
+        remove_outliers: True
+        where: "file = 'a1s5'"
+        sql: *rolling_sentiment
 
-        sentiment/a1s6:
-          plot_args:
-            x: line_idx
-            y: rolling_sentiment
-          axhline: 0.0
-          remove_outliers: True
-          where: "file = 'a1s6'"
-          sql: *rolling_sentiment
+      - name: sentiment/a1s6.png
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        axhline: 0.0
+        remove_outliers: True
+        where: "file = 'a1s6'"
+        sql: *rolling_sentiment
 
-        sentiment/a1s7:
-          plot_args:
-            x: line_idx
-            y: rolling_sentiment
-          axhline: 0.0
-          remove_outliers: True
-          where: "file = 'a1s7'"
-          sql: *rolling_sentiment
+      - name: sentiment/a1s7.png
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        axhline: 0.0
+        remove_outliers: True
+        where: "file = 'a1s7'"
+        sql: *rolling_sentiment
 
-        sentiment/a2s1:
-          plot_args:
-            x: line_idx
-            y: rolling_sentiment
-          axhline: 0.0
-          remove_outliers: True
-          where: "file = 'a2s1'"
-          sql: *rolling_sentiment
+      - name: sentiment/a2s1.png
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        axhline: 0.0
+        remove_outliers: True
+        where: "file = 'a2s1'"
+        sql: *rolling_sentiment
 
-        sentiment/a2s2:
-          plot_args:
-            x: line_idx
-            y: rolling_sentiment
-          axhline: 0.0
-          remove_outliers: True
-          where: "file = 'a2s2'"
-          sql: *rolling_sentiment
+      - name: sentiment/a2s2.png
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        axhline: 0.0
+        remove_outliers: True
+        where: "file = 'a2s2'"
+        sql: *rolling_sentiment
 
-        sentiment/a2s3:
-          plot_args:
-            x: line_idx
-            y: rolling_sentiment
-          axhline: 0.0
-          remove_outliers: True
-          where: "file = 'a2s3'"
-          sql: *rolling_sentiment
+      - name: sentiment/a2s3.png
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        axhline: 0.0
+        remove_outliers: True
+        where: "file = 'a2s3'"
+        sql: *rolling_sentiment
 
-        sentiment/a3s1:
-          plot_args:
-            x: line_idx
-            y: rolling_sentiment
-          axhline: 0.0
-          remove_outliers: True
-          where: "file = 'a3s1'"
-          sql: *rolling_sentiment
+      - name: sentiment/a3s1.png
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        axhline: 0.0
+        remove_outliers: True
+        where: "file = 'a3s1'"
+        sql: *rolling_sentiment
 
-        sentiment/a3s2:
-          plot_args:
-            x: line_idx
-            y: rolling_sentiment
-          axhline: 0.0
-          remove_outliers: True
-          where: "file = 'a3s2'"
-          sql: *rolling_sentiment
+      - name: sentiment/a3s2.png
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        axhline: 0.0
+        remove_outliers: True
+        where: "file = 'a3s2'"
+        sql: *rolling_sentiment
 
-        sentiment/end_game1:
-          plot_args:
-            x: line_idx
-            y: rolling_sentiment
-          axhline: 0.0
-          remove_outliers: True
-          where: "file = 'end_game1'"
-          sql: *rolling_sentiment
+      - name: sentiment/end_game1.png
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        axhline: 0.0
+        remove_outliers: True
+        where: "file = 'end_game1'"
+        sql: *rolling_sentiment
 
-        sentiment/end_game2:
-          plot_args:
-            x: line_idx
-            y: rolling_sentiment
-          axhline: 0.0
-          remove_outliers: True
-          where: "file = 'end_game2'"
-          sql: *rolling_sentiment
-
-
+      - name: sentiment/end_game2.png
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        axhline: 0.0
+        remove_outliers: True
+        where: "file = 'end_game2'"
+        sql: *rolling_sentiment
 
 
 
@@ -357,211 +366,361 @@ adastra_analytics:
   wordclouds:
 
     # Specify where the wordclouds should be saved.
-    output_dir: /home/jayckaiser/adastra/wordclouds
+    output_directory: /home/jayckaiser/adastra/wordclouds
 
     # Define a where-clause to apply before every query.
-    where: 'is_read is True'
+    where: *is_read
+
 
     # Specify which column in the dataframe will be used to populate the wordclouds.
-    # - List columns are automatically joined before processing.
-    # - Good options are 'line', 'words', or 'content_words'.
+    # - Prebuilt options are 'line', 'words', or 'content_words'.
     #   * 'line' is the cleaned text of the line.
     #   * 'words' removes punctuation.
     #   * 'content_words' removes punctuation and stop-words, and converts to lowercase.
-    use_column: content_words
+    documents_column: content_words
+
+    # Specify which columns can be used in filters for any wordclouds.
+    filter_columns:
+      - file
+      - line_idx
+      - speaker
+      - is_branch
+
+    # Define arguments to be used when calculating TF-IDF.
+    tfidf_args:
+      stop_words: english
+      ngram_range: [1, 1]
+      max_df: 0.3
+      min_df: 5
 
     # Define universal wordcloud params here. They can be overwritten in any image below.
     wordcloud_args:
-      max_words: 2000
-      max_font_size: 40
-      mode: RBG
+      max_words: 2500
+      max_font_size: 30
+      mode: RGB
       background_color: black
       repeat: True
       relative_scaling: 0.5
       random_state: 42
 
     # Create one wordcloud per image.
+    # - By default, use images found in `{adastra_directory}/game/images`.
+    #   (If the input image is different, specify an 'image_filepath' subkey.)
     # - By default, the key is the name of both the input and output image.
-    #   (If the input image is different, specify a 'file' subkey.)
-    images:
+    wordclouds:
 
       # Alexios
-      sprites/alexios/alexios:
-        where: "speaker = 'alexios'"
-      sprites/alexios/alexios-vshocked-e:
-        where: "speaker = 'alexios'"
-      sprites/alexios/alexios-shocked:
-        where: "speaker = 'alexios'"
-      sprites/alexios/alexios-embarrassed:
-        where: "speaker = 'alexios'"
-      sprites/alexios/alexios-angry-e-u:
-        where: "speaker = 'alexios'"
+      - name: sprites/alexios/alexios.png
+        where: *is_alexios
+      - name: sprites/alexios/alexios-vshocked-e.png
+        where: *is_alexios
+      - name: sprites/alexios/alexios-shocked.png
+        where: *is_alexios
+      - name: sprites/alexios/alexios-embarrassed.png
+        where: *is_alexios
+      - name: sprites/alexios/alexios-angry-e-u.png
+        where: *is_alexios
 
       # Amicus
-      sprites/amicus/amicus:
-        where: "speaker = 'amicus'"
-      sprites/amicus/amicus-tears:
-        where: "speaker = 'amicus'"
-      sprites/amicus/amicus-smile:
-        where: "speaker = 'amicus'"
-      sprites/amicus/amicus-shocked:
-        where: "speaker = 'amicus'"
-      sprites/amicus/amicus-crossed-serious:
-        where: "speaker = 'amicus'"
-      sprites/amicus/amicus-angry-n:
-        where: "speaker = 'amicus'"
-      illustrations/sleep:
-        where: "speaker = 'amicus'"
-      illustrations/amicusend:
-        where: "speaker = 'amicus'"
-      illustrations/introspection:
-        where: "speaker = 'amicus'"
-      illustrations/dinner1:
-        where: "speaker = 'amicus'"
-      illustrations/dinner2:
-        where: "speaker = 'amicus'"
-      illustrations/dinner3:
-        where: "speaker = 'amicus'"
-      illustrations/dinner4:
-        where: "speaker = 'amicus'"
+      - name: sprites/amicus/amicus.png
+        where: *is_amicus
+      - name: sprites/amicus/amicus-tears.png
+        where: *is_amicus
+      - name: sprites/amicus/amicus-smile.png
+        where: *is_amicus
+      - name: sprites/amicus/amicus-shocked.png
+        where: *is_amicus
+      - name: sprites/amicus/amicus-crossed-serious.png
+        where: *is_amicus
+      - name: sprites/amicus/amicus-angry-n.png
+        where: *is_amicus
+      - name: illustrations/sleep.png
+        where: *is_amicus
+      - name: illustrations/amicusend.png
+        where: *is_amicus
+      - name: illustrations/introspection.png
+        where: *is_amicus
+      - name: illustrations/dinner1.PNG
+        where: *is_amicus
+      - name: illustrations/dinner2.PNG
+        where: *is_amicus
+      - name: illustrations/dinner3.PNG
+        where: *is_amicus
+      - name: illustrations/dinner4.PNG
+        where: *is_amicus
 
       # Cassius
-      sprites/cassius/cassius:
-        where: "speaker = 'cassius'"
-      sprites/cassius/cassius-angry-u:
-        where: "speaker = 'cassius'"
-      sprites/cassius/cassius-paw:
-        where: "speaker = 'cassius'"
-      sprites/cassius/cassius-furious:
-        where: "speaker = 'cassius'"
-      sprites/cassius/cassius-disappointed-u:
-        where: "speaker = 'cassius'"
+      - name: sprites/cassius/cassius.png
+        where: *is_cassius
+      - name: sprites/cassius/cassius-angry-u.png
+        where: *is_cassius
+      - name: sprites/cassius/cassius-paw.png
+        where: *is_cassius
+      - name: sprites/cassius/cassius-furious.png
+        where: *is_cassius
+      - name: sprites/cassius/cassius-disappointed-u.png
+        where: *is_cassius
 
       # Cato
-      sprites/cato/cato:
-        where: "speaker = 'cato'"
-      sprites/cato/cato-bow-v:
-        where: "speaker = 'cato'"
-      sprites/cato/cato-angry-u:
-        where: "speaker = 'cato'"
+      - name: sprites/cato/cato.png
+        where: *is_cato
+      - name: sprites/cato/cato-bow-v.png
+        where: *is_cato
+      - name: sprites/cato/cato-angry-u.png
+        where: *is_cato
 
       # Neferu
-      sprites/neferu/neferu:
-        where: "speaker = 'neferu'"
-      sprites/neferu/neferu-wink-f:
-        where: "speaker = 'neferu'"
-      sprites/neferu/neferu-talking-n:
-        where: "speaker = 'neferu'"
-      sprites/neferu/neferu-talking-a:
-        where: "speaker = 'neferu'"
-      sprites/neferu/neferu-silly-f-n:
-        where: "speaker = 'neferu'"
-      sprites/neferu/neferu-shocked:
-        where: "speaker = 'neferu'"
-      sprites/neferu/neferu-fury:
-        where: "speaker = 'neferu'"
+      - name: sprites/neferu/neferu.png
+        where: *is_neferu
+      - name: sprites/neferu/neferu-wink-f.png
+        where: *is_neferu
+      - name: sprites/neferu/neferu-talking-n.png
+        where: *is_neferu
+      - name: sprites/neferu/neferu-talking-a.png
+        where: *is_neferu
+      - name: sprites/neferu/neferu-silly-f-n.png
+        where: *is_neferu
+      - name: sprites/neferu/neferu-shocked.png
+        where: *is_neferu
+      - name: sprites/neferu/neferu-fury.png
+        where: *is_neferu
 
       # Virginia
-      sprites/virginia/virginia:
-        where: "speaker = 'virginia'"
-      sprites/virginia/virginia-tilt-p:
-        where: "speaker = 'virginia'"
-      sprites/virginia/virginia-annoyed:
-        where: "speaker = 'virginia'"
-      illustrations/archives1:
-        where: "speaker = 'virginia'"
+      - name: sprites/virginia/virginia.png
+        where: *is_virginia
+      - name: sprites/virginia/virginia-tilt-p.png
+        where: *is_virginia
+      - name: sprites/virginia/virginia-annoyed.png
+        where: *is_virginia
+      - name: illustrations/archives1.png
+        where: *is_virginia
 
       # Meera 
-      illustrations/meera:
+      - name: illustrations/meera.png
         where: "speaker = 'meera'"
 
       # Monitor
-      illustrations/monitor:
-        where: "speaker == 'monitor'"
+      - name: illustrations/monitor.png
+        where: "speaker = 'monitor'"
 
       # Cassius and Alexios
-      illustrations/poisoned:
+      - name: illustrations/poisoned.png
         where: "speaker IN ('cassius', 'alexios')"
-      illustrations/alexandcassius:
+      - name: illustrations/alexandcassius.PNG
         where: "speaker IN ('cassius', 'alexios')"
-      illustrations/alexandcassiuskiss:
+      - name: illustrations/alexandcassiuskiss.PNG
         where: "speaker IN ('cassius', 'alexios')"
 
       # Cato and Neferu
-      illustrations/nefandcat1:
+      - name: illustrations/nefandcat1.PNG
         where: "speaker IN ('cato', 'neferu')"
-      illustrations/nefandcat2:
+      - name: illustrations/nefandcat2.PNG
         where: "speaker IN ('cato', 'neferu')"
 
       # Amicus and Neferu
-      illustrations/amicusandneferu1:
+      - name: illustrations/amicusandneferu1.png
         where: "speaker IN ('amicus', 'neferu')"
-      illustrations/amicusandneferu2:
+      - name: illustrations/amicusandneferu2.png
         where: "speaker IN ('amicus', 'neferu')"
-      illustrations/amicusandneferu3:
+      - name: illustrations/amicusandneferu3.png
         where: "speaker IN ('amicus', 'neferu')"
-      illustrations/backoff2:
+      - name: illustrations/backoff2.PNG
         where: "speaker IN ('amicus', 'neferu')"
-      illustrations/backoff3:
+      - name: illustrations/backoff3.PNG
         where: "speaker IN ('amicus', 'neferu')"
 
       # All text
-      illustrations/adastra:
-        where: "speaker IS NOT NULL"
-      illustrations/Adastranl:
-        where: "speaker IS NOT NULL"
+      - name: illustrations/adastra.png
+        where: "TRUE"
+      - name: illustrations/Adastranl.png
+        where: "TRUE"
 
       # Amicus and Marco in end-game
-      illustrations/farewell1:
+      - name: illustrations/farewell1.png
         where: "file = 'end_game1' AND speaker IN ('amicus', 'marco')"
-      illustrations/farewell3:
+      - name: illustrations/farewell3.png
         where: "file = 'end_game1' AND speaker IN ('amicus', 'marco')"
-      illustrations/wemadeit1:
+      - name: illustrations/wemadeit1.PNG
         where: "file = 'end_game1' AND speaker IN ('amicus', 'marco')"
-      illustrations/wemadeit4:
+      - name: illustrations/wemadeit4.PNG
         where: "file = 'end_game1' AND speaker IN ('amicus', 'marco')"
 
       # In Act 3 Scene 2
-      illustrations/lastmoment:
+      - name: illustrations/lastmoment.png
         where: "file = 'a3s2'"
 
       # Amicus & Internal Narration & Monitor in Act 3 Scene 2
       # (This could be better filtered by line number.)
-      illustrations/finalspace:
-        where: "file = 'a3s2' AND speaker IN ('amicus', 'internal', 'monitor')"
-        wordcloud_args:
-          background_color: white
-      illustrations/finalspace2:
-        where: "file = 'a3s2' AND speaker IN ('amicus', 'internal', 'monitor')"
-        wordcloud_args:
-          background_color: white
-      illustrations/watching:
-        where: "file = 'a3s2' AND speaker IN ('amicus', 'internal', 'monitor')"
-        wordcloud_args:
-          background_color: white
+      - name: illustrations/finalspace.png
+        where: "file = 'a3s2' AND speaker IN ('amicus', 'internal_narration', 'monitor')"
+      - name: illustrations/finalspace2.png
+        where: "file = 'a3s2' AND speaker IN ('amicus', 'internal_narration', 'monitor')"
+      - name: illustrations/watching.PNG
+        where: "file = 'a3s2' AND speaker IN ('amicus', 'internal_narration', 'monitor')"
 
       # Amicus & Marco & Internal Narration in optional paths ;)
-      illustrations/amiscene1:
-        where: "speaker IN ('amicus', 'marco', 'internal') AND is_optional"
-        wordcloud_args:
-          background_color: white
-      illustrations/amiscene3:
-        where: "speaker IN ('amicus', 'marco', 'internal') AND is_optional"
-        wordcloud_args:
-          background_color: white
-      illustrations/ss1:
-        where: "speaker IN ('amicus', 'marco', 'internal') AND is_optional"
-        wordcloud_args:
-          background_color: white
-      illustrations/ss3:
-        where: "speaker IN ('amicus', 'marco', 'internal') AND is_optional"
-        wordcloud_args:
-          background_color: white
-      illustrations/2ss:
-        where: "speaker IN ('amicus', 'marco', 'internal') AND is_optional"
-        wordcloud_args:
-          background_color: white
-      illustrations/2ss3:
-        where: "speaker IN ('amicus', 'marco', 'internal') AND is_optional"
-        wordcloud_args:
-          background_color: white
+      - name: illustrations/amiscene1.png
+        where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
+      - name: illustrations/amiscene3.png
+        where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
+      - name: illustrations/ss1.png
+        where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
+      - name: illustrations/ss3.png
+        where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
+      - name: illustrations/2ss.png
+        where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
+      - name: illustrations/2ss3.png
+        where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
+
+
+
+  # Run `screenplays.py` to create normalized text of the game in a specified format.
+  screenplays:
+
+    # Specify where the screenplays should be saved.
+    output_directory: /home/jayckaiser/adastra/screenplays
+
+    # Define a where-clause to apply before every query.
+    where: "is_read is True or is_choice is True"
+
+    # Define screenplay params here.
+    screenplays:
+
+      # Emulates 'The Cursed Child'
+      - name: style1
+        justify: 75
+        line_sep: "\n\n"
+        formats:
+
+          # Player/game choice between branches.
+          - where: "is_choice IS TRUE"
+            parts:
+              - name: line
+                prefix: '['
+                postfix: ']'
+
+          # Dialogue explicitly spoken by speaker in branch.
+          - where: "is_branch IS TRUE AND has_speaker IS TRUE"
+            style: "{speaker}\n{line}"
+            textwrap_offset: 8
+            parts:
+              - name: speaker
+                offset: 8
+                upper: True
+              - name: line
+                offset: 2
+
+          # Internal narration and unspecified speaker in branch.
+          - where: "is_branch IS TRUE AND has_speaker IS FALSE"
+            textwrap_offset: 8
+            parts:
+              - name: line
+                offset: 8
+
+          # Dialogue explicitly spoken by speaker.
+          - where: "is_branch IS FALSE AND has_speaker IS TRUE"
+            style: "{speaker}\n{line}"
+            parts:
+              - name: speaker
+                upper: True
+              - name: line
+                offset: 2
+
+          # Internal narration and unspecified speaker.
+          - where: "is_branch IS FALSE AND has_speaker IS FALSE"
+            parts:
+              - name: line
+
+
+      # Custom format
+      - name: style2
+        justify: 75
+        line_sep: "\n\n"
+        formats:
+
+          # Player/game choice between branches.
+          - where: "is_choice IS TRUE"
+            parts:
+              - name: line
+                prefix: "[BRANCH]: "
+
+          # Dialogue explicitly spoken by speaker in branch.
+          - where: "is_branch IS TRUE AND has_speaker IS TRUE"
+            style: "{speaker}: {line}"
+            textwrap_offset: 8
+            parts:
+              - name: speaker
+                offset: 4
+                upper: True
+              - name: line
+
+          # Internal narration and unspecified speaker in branch.
+          - where: "is_branch IS TRUE AND has_speaker IS FALSE"
+            textwrap_offset: 4
+            parts:
+              - name: line
+                offset: 4
+
+          # Dialogue explicitly spoken by speaker.
+          - where: "is_branch IS FALSE AND has_speaker IS TRUE"
+            style: "{speaker}: {line}"
+            textwrap_offset: 4
+            parts:
+              - name: speaker
+                upper: True
+              - name: line
+
+          # Internal narration and unspecified speaker.
+          - where: "is_branch IS FALSE AND has_speaker IS FALSE"
+            parts:
+              - name: line
+
+
+      # Emulates an actual movie screenplay.
+      - name: style3
+        justify: 75
+        line_sep: "\n\n"
+
+        # Add additional columns to the dataset to allow deeper formatting.
+        add_columns:
+          - 'LAG(is_branch, 1) OVER (ORDER BY file, line_idx) AS prev_line_is_branch'
+
+        formats:
+
+          # Player/game choice between branches.
+          - where: "is_choice IS TRUE"
+            add_bar: True
+            parts: 
+              - name: line
+                prefix: "[BRANCH]: "
+
+          # Dialogue explicitly spoken by speaker.
+          - where: "has_speaker IS TRUE"
+            justify: 60 
+            textwrap_offset: 15
+            style: "{speaker}\n{line}"
+            parts:
+              - name: speaker
+                offset: 15
+                upper: True
+              - name: line
+                # strip_quotes: True
+
+          # Internal narration and unspecified speaker.
+          - where: "has_speaker IS FALSE AND speaker = 'internal_narration'"
+            parts: 
+              - name: line
+
+          # Internal narration and unspecified speaker.
+          - where: "has_speaker IS FALSE AND speaker = 'speaker_unspecified'"
+            justify: 60
+            textwrap_offset: 15
+            parts: 
+              - name: line
+                offset: 15
+                # strip_quotes: True
+
+          - where: "prev_line_is_branch IS TRUE AND is_branch IS FALSE"
+            add_bar: True
+            parts: 
+              - name: line
