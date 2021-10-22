@@ -33,9 +33,16 @@ class Configs(dict):
             return default
 
         if isinstance(_value, dict):
-            return Configs(_value)
-        elif isinstance(_value, list) and all(isinstance(x, dict) for x in _value):
-            return [Configs(x) for x in _value]
+            _dict = {
+                k: Configs(v) if isinstance(v, dict) else v
+                for k, v in _value.items()
+            }
+            return Configs(_dict)
+        elif isinstance(_value, list):
+            return [
+                Configs(x) if isinstance(x, dict) else x
+                for x in _value
+            ]
         else:
             return _value
 

@@ -3,15 +3,14 @@ import sys
 
 from utils.utils import merge_dicts
 
-from configs import Configs
-from dataset import Dataset
-from relplot import Relplot
-from wordcloud_image import WordcloudImage
+from classes.configs import Configs
+from classes.dataset import Dataset
 
-from utils.adastra_dataset_utils import build_adastra_data
-from utils.adastra_nlp_dataset_utils import nlp_augment_adastra_data
-from utils.tfidf_utils import get_term_freqs, filter_term_freqs, build_filtered_tfidf_word_freqs
-from utils.screenplay_utils import format_rows_to_lines
+from utils.tfidf_utils import get_term_freqs
+
+from adastra_dataset import build_adastra_data
+from adastra_nlp_dataset import nlp_augment_adastra_data
+from adastra_analytics_mains import query_main, relplot_main, screenplay_main, wordcloud_main
 
 
 class AdastraAnalytics:
@@ -100,294 +99,308 @@ class AdastraAnalytics:
         # 
         datasets = {}
 
-        for dataset_configs in datasets_configs:
+        for dataset_name, dataset_configs in datasets_configs.items():
 
-            # Verify all required keys are present in each dataset.
+            # Verify all required keys are present, then build the dataset.
             dataset_configs.check_keys(
-                ['name', 'columns', 'data']
+                ['columns', 'data']
             )
+            columns = dataset_configs.get('columns') 
+            data    = dataset_configs.get('data') 
+
+            dataset = Dataset(data, columns=columns)
 
             # 
-            dataset = Dataset(
-                dataset_configs.get('data'),
-                columns=dataset_configs.get('columns')
-            )
-
-            # 
-            name = dataset_configs.get('name')
-            datasets[name] = dataset
-            print(f"* `{name}` dataset built.")
+            datasets[dataset_name] = dataset
+            print(f"* `{dataset_name}` dataset built.")
 
         return datasets
     
 
 
-    def run_queries(self):
+    def run_queries(self, queries=None):
         """
         
         """
         print("\nProcessing queries from `adastra_analytics.queries`.")
 
-        # 
+        # Retrieve the queries configs to process from the Configs.
         global_configs = self.yaml_configs.get('adastra_analytics').get('queries')
         if global_configs is None:
             print("No queries found!")
             return
 
-        # 
+        # Verify required arguments are defined, then retrieve all.
         global_configs.check_keys(
             ['output_directory', 'dataset_alias', 'queries']
         )
+        output_directory = global_configs.get('output_directory')
+        dataset_alias    = global_configs.get('dataset_alias')
+        defined_queries  = global_configs.get('queries')
+        _global_where    = global_configs.get('where')
+        
 
         # Filter the adastra dataset further if specified.
         _adastra_dataset = Dataset(self.adastra_dataset) \
-            .filter_where(global_configs.get('where'))
+            .filter_where(_global_where)
+
+        # Verify selected queries are present, if provided.
+        if queries:
+            defined_queries.check_keys(queries)
 
         # Iterate and build each query.
-        for query_configs in global_configs.get('queries'):
+        for query_name, query_configs in defined_queries.items():
+            
+            # Process selected queries if specified. Otherwise, run all.
+            if queries and query_name not in queries:
+                continue
 
-            # 
+            # Verify required arguments are defined, then retrieve all.
             query_configs.check_keys(
-                ['name', 'sql']
+                ['file', 'sql']
+            )
+            file  = query_configs.get('file')
+            sql   = query_configs.get('sql')
+            _where = query_configs.get('where')
+
+            output_filepath = os.path.join(output_directory, file)
+
+            query_main(
+                query_name,
+
+                adastra_dataset=_adastra_dataset,
+                dataset_alias=dataset_alias,
+                where=_where,
+                datasets=self.datasets,
+                sql=sql,
+
+                output_file=output_filepath,
             )
 
-            # Filter the adastra dataset further if specified.
-            # Add to the dictionary of datasets.
-            datasets = self.datasets.copy()
-
-            dataset_alias = global_configs.get('dataset_alias') 
-            datasets[dataset_alias] = Dataset(_adastra_dataset) \
-                .filter_where(query_configs.get('where'))
-
-            # 
-            output_dataset = Dataset.query_psql(
-                datasets,
-                sql_query=query_configs.get('sql')
-            )
-
-            # 
-            output_directory = global_configs.get('output_directory')
-            output_file      = query_configs.get('name')
-            output_filepath  = os.path.join(output_directory, output_file)
-            output_dataset.to_jsonl(output_filepath)
-
-            print(f"* Query results saved to `{output_filepath}`.")
 
 
-
-    def run_relplots(self):
+    def run_relplots(self, relplots=None):
         """
         
         """
         print("\nBuilding relplots from `adastra_analytics.relplots`.")
 
-        # 
+        #  Retrieve the relplots configs to process from the Configs.
         global_configs = self.yaml_configs.get('adastra_analytics').get('relplots')
         if global_configs is None:
             print("* No relplots found!")
             return
 
-        # 
+        # Verify required arguments are defined, then retrieve all.
         global_configs.check_keys(
             ['output_directory', 'dataset_alias', 'relplot_args', 'relplots']
         )
+        output_directory    = global_configs.get('output_directory')
+        dataset_alias       = global_configs.get('dataset_alias')
+        global_relplot_args = global_configs.get('relplot_args')
+        defined_relplots    = global_configs.get('relplots')
+        _global_where       = global_configs.get('where')
         
         # Filter the adastra dataset further if specified.
         _adastra_dataset = Dataset(self.adastra_dataset) \
-            .filter_where(global_configs.get('where'))
+            .filter_where(_global_where)
 
-        # Iterate and build each query.
-        for relplot_configs in global_configs.get('relplots'):
+        # Verify selected relplots are present, if provided.
+        if relplots:
+            defined_relplots.check_keys(relplots)
 
-            # 
+        # Iterate and build each relplot.
+        for relplot_name, relplot_configs in defined_relplots.items():
+
+            # Process selected relplots if specified. Otherwise, run all.
+            if relplots and relplot_name not in relplots:
+                continue
+            
+            # Verify required arguments are defined, then retrieve all.
             relplot_configs.check_keys(
-                ['name', 'sql']
+                ['file', 'sql']
             )
-
-            # Filter the adastra dataset further if specified.
-            # Add to the dictionary of datasets.
-            datasets = self.datasets.copy()
-
-            dataset_alias = global_configs.get('dataset_alias')
-            datasets[dataset_alias] = Dataset(_adastra_dataset) \
-                .filter_where(relplot_configs.get('where'))
-
-            # 
-            output_dataset = Dataset.query_psql(
-                datasets,
-                sql_query=relplot_configs.get('sql')
-            )
+            file             = relplot_configs.get('file')
+            sql              = relplot_configs.get('sql')
+            _where           = relplot_configs.get('where')
+            _relplot_args    = relplot_configs.get('relplot_args')
+            _figsize         = relplot_configs.get('figsize')
+            _axhline         = relplot_configs.get('axhline')
+            _remove_outliers = relplot_configs.get('remove_outliers')
 
             # Combine the relplot args of each config with the global args.
             relplot_args = merge_dicts(
-                global_configs.get('relplot_args'),
-                relplot_configs.get('relplot_args')
+                global_relplot_args,
+                _relplot_args
             )
 
-            output_relplot = Relplot(
-                output_dataset,
+            output_filepath = os.path.join(output_directory, file)
+
+            relplot_main(
+                relplot_name,
+
+                adastra_dataset=_adastra_dataset,
+                dataset_alias=dataset_alias,
+                where=_where,
+                datasets=self.datasets,
+                sql=sql,
+
                 relplot_args=relplot_args,
-                figsize=relplot_configs.get('figsize'),
-                axhline=relplot_configs.get('axhline'),
-                remove_outliers=relplot_configs.get('remove_outliers')
+                figsize=_figsize,
+                axhline=_axhline,
+                remove_outliers=_remove_outliers,
+
+                output_file=output_filepath,
             )
 
-            # 
-            output_directory = global_configs.get('output_directory')
-            output_file = relplot_configs.get('name')
-            output_filepath = os.path.join(output_directory, output_file)
-            output_relplot.to_disk(output_filepath)
 
-            print(f"* Relplot saved to `{output_filepath}`.")
+    
+    def run_screenplays(self, screenplays=None):
+        """
+        
+        """
+        print("\nProcessing screenplays from `adastra_analytics.screenplays`.")
+
+        # Retrieve the relplots configs to process from the Configs.
+        global_configs = self.yaml_configs.get('adastra_analytics').get('screenplays')
+        if global_configs is None:
+            print("No screenplays found!")
+            return
+
+        # Verify required arguments are defined, then retrieve all.
+        global_configs.check_keys(
+            ['output_directory', 'screenplays']
+        )
+        output_directory    = global_configs.get('output_directory')
+        defined_screenplays = global_configs.get('screenplays')
+        _global_where       = global_configs.get('where')
+
+        # Filter the adastra dataset further if specified.
+        _adastra_dataset = Dataset(self.adastra_dataset) \
+            .filter_where(_global_where)
+
+        # Verify selected queries are present, if provided.
+        if screenplays:
+            defined_screenplays.check_keys(screenplays)
+
+        # Iterate and build each screenplay.
+        for screenplay_name, screenplay_configs in defined_screenplays.items():
+
+            # Process selected screenplays if specified. Otherwise, run all.
+            if screenplays and screenplay_name not in screenplays:
+                continue
+
+            # Verify required arguments are defined, then retrieve all.
+            screenplay_configs.check_keys(
+                ['folder', 'formats',]
+            )
+            folder       = screenplay_configs.get('folder')
+            formats      = screenplay_configs.get('formats')
+            _where       = screenplay_configs.get('where')
+            _add_columns = screenplay_configs.get('add_columns')
+            _justify     = screenplay_configs.get('justify')
+            _line_sep    = screenplay_configs.get('line_sep', '\n')
+
+            output_folderpath = os.path.join(output_directory, folder)
+
+            screenplay_main(
+                screenplay_name,
+
+                adastra_dataset=_adastra_dataset,
+                where=_where,
+                add_columns=_add_columns,
+
+                formats=formats,
+                justify=_justify,
+                line_sep=_line_sep,
+
+                output_folder=output_folderpath
+            )
 
             
 
-    def run_wordclouds(self):
+    def run_wordclouds(self, wordclouds=None):
         """
         
         """
         print("\nBuilding wordclouds from `adastra_analytics.wordclouds`.")
 
-        # 
+        # Retrieve the relplots configs to process from the Configs.
         global_configs = self.yaml_configs.get('adastra_analytics').get('wordclouds')
         if global_configs is None:
             print("* No wordclouds found!")
             return
 
-        # 
+        # Verify required arguments are defined, then retrieve all.
         global_configs.check_keys(
             ['output_directory',
              'documents_column', 'filter_columns',
              'tfidf_args', 'wordcloud_args',
              'wordclouds']
         )
+        output_directory      = global_configs.get('output_directory')
+        documents_column      = global_configs.get('documents_column')
+        filter_columns        = global_configs.get('filter_columns')
+        tfidf_args            = global_configs.get('tfidf_args')
+        global_wordcloud_args = global_configs.get('wordcloud_args')
+        defined_wordclouds    = global_configs.get('wordclouds')
+        _global_where         = global_configs.get('where')
         
         # Filter the adastra dataset further if specified.
         _adastra_dataset = Dataset(self.adastra_dataset) \
-            .filter_where(global_configs.get('where'))
+            .filter_where(_global_where)
 
+        # Build the term freqs for the entire dataset (to be filtered later).
         term_freqs = get_term_freqs(
             _adastra_dataset,
-            index=global_configs.get('filter_columns'),
-            doc_col=global_configs.get('documents_column'),
-            tfidf_args=global_configs.get('tfidf_args'),
+            index=filter_columns,
+            doc_col=documents_column,
+            tfidf_args=tfidf_args,
         )
 
-        # Iterate and build each query.
-        for wordcloud_configs in global_configs.get('wordclouds'):
+        # Verify selected wordclouds are present, if provided.
+        if wordclouds:
+            defined_wordclouds.check_keys(wordclouds)
 
-            # 
+        for wordcloud_name, wordcloud_configs in defined_wordclouds.items():
+
+            # Process selected wordclouds if specified. Otherwise, run all.
+            if wordclouds and wordcloud_name not in wordclouds:
+                continue
+            
+            # Verify required arguments are defined, then retrieve all.
             wordcloud_configs.check_keys(
-                ['name', 'where']
+                ['file', 'where']
+            )
+            file   = wordcloud_configs.get('file')
+            where  = wordcloud_configs.get('where')
+            _image = wordcloud_configs.get('image_filepath')
+            _wordcloud_args = wordcloud_configs.get('wordcloud_args')
+
+            # Both global and specific args are provided.
+            # Build the wordcloud with these based on the image.
+            wordcloud_args = merge_dicts(
+                global_wordcloud_args,
+                _wordcloud_args
             )
 
-            # 
-            image_filepath = wordcloud_configs.get(
-                'image_filepath',
-                os.path.join(
-                    self.adastra_directory,
-                    'game/images',
-                    wordcloud_configs.get('name') 
-                )
+            # The image_filepath can be optionally specified.
+            # Otherwise, assume it is sourced from the game files.
+            game_filepath = os.path.join(
+                self.adastra_directory, 'game/images', file
             )
+            image_filepath = _image or game_filepath
 
-            try:
-                # 
-                filtered_term_freqs = filter_term_freqs(
-                    term_freqs,
-                    filters=wordcloud_configs.get('where')
-                )
+            output_filepath = os.path.join(output_directory, file)
+
+            wordcloud_main(
+                wordcloud_name,
+
+                term_freqs=term_freqs,
+                where=where,
+
+                image_file=image_filepath,
+                wordcloud_args=wordcloud_args,
                 
-                # 
-                word_freqs = build_filtered_tfidf_word_freqs(
-                    term_freqs, filtered_term_freqs
-                )
-
-                # 
-                wordcloud_args = merge_dicts(
-                    global_configs.get('wordcloud_args'),
-                    wordcloud_configs.get('wordcloud_args')
-                )
-
-                wordcloud = WordcloudImage(
-                    word_freqs,
-                    image_filepath = image_filepath,
-                    wordcloud_args = wordcloud_args
-                )
-
-                # 
-                output_directory = global_configs.get('output_directory')
-                output_file = wordcloud_configs.get('name')
-                output_filepath = os.path.join(output_directory, output_file)
-                wordcloud.to_disk(output_filepath)
-
-                print(f"* Wordcloud saved to `{output_filepath}`.")
-
-            
-            except Exception as err:
-                print(f"!!! Failed to build wordcloud for `{image_filepath}` :: {err}")
-            
-
-    def run_screenplays(self):
-        """
-        
-        """
-        print("\nProcessing screenplays from `adastra_analytics.screenplays`.")
-
-        # 
-        global_configs = self.yaml_configs.get('adastra_analytics').get('screenplays')
-        if global_configs is None:
-            print("No screenplays found!")
-            return
-
-        # 
-        global_configs.check_keys(
-            ['output_directory', 'screenplays',]
-        )
-
-        # Filter the adastra dataset further if specified.
-        _adastra_dataset = Dataset(self.adastra_dataset) \
-            .filter_where(global_configs.get('where'))
-
-        # Iterate and build each query.
-        for screenplay_configs in global_configs.get('screenplays'):
-
-            # 
-            screenplay_configs.check_keys(
-                ['name', 'formats',]
+                output_file=output_filepath,
             )
-            output_type = screenplay_configs.get('name')
-            justify     = screenplay_configs.get('justify')
-            line_sep    = screenplay_configs.get('line_sep', '\n')
-            formats     = screenplay_configs.get('formats')
-
-            # Filter the adastra dataset further if specified.
-            # Add new columns if specified.
-            screenplay_dataset = (
-                _adastra_dataset
-                    .filter_where(screenplay_configs.get('where'))
-                    .add_columns(screenplay_configs.get('add_columns'))
-            )
-
-            # Transform the dataset's lines into formatted lines.
-            formatted_screenplay_dataset = format_rows_to_lines(
-                screenplay_dataset,
-                formats=formats,
-                justify=justify,
-            )
-
-            # Iterate the file names and output each as a separate file.
-            for file in formatted_screenplay_dataset['file'].unique():
-                formatted_screenplay_subset = formatted_screenplay_dataset \
-                    .filter_where(f'file = "{file}"')
-
-                # 
-                output_folderpath = os.path.join(
-                    global_configs.get('output_directory'),
-                    output_type
-                )
-                output_filepath = os.path.join(output_folderpath, file + '.txt')
-                
-                formatted_screenplay_subset.to_txt(output_filepath, 'line', sep=line_sep)
-
-            print(f"* Saved all screenplays for {output_type} to `{output_folderpath}`.")

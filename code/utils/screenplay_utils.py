@@ -2,7 +2,7 @@ import textwrap
 from string import Formatter
 
 from utils.utils import list_to_dict, merge_dicts
-from dataset import Dataset
+from classes.dataset import Dataset
 
 
 # Internal helper methods for `build_formatted_line`.
@@ -192,7 +192,7 @@ def format_rows_to_lines(data, formats, justify=None):
     _data = data.copy()
 
     # For each format, subset the dataframe and format each line.
-    for format_configs in formats:
+    for format_name, format_configs in formats.items():
 
         # Check the format-keys, and build optional parts-configs.
         format_configs.check_keys(
