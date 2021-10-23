@@ -47,22 +47,25 @@ class Configs(dict):
             return _value
 
     
-    def check_keys(self, keys):
+    def check_keys(self, keys, exit=True):
         """
         Verify that all required dict keys are present to run a script.
-        Raises an error prematurely to prevent unnecessary processing.
+        Can raise an error prematurely to prevent unnecessary processing.
         """
         success = True
 
         for key in keys:
             if key not in self:
                 print(
-                    f"Config key `{key}` is required to run this script!"
+                    f"! Key `{key}` is required to run this script!"
                 )
                 success = False
 
         if not success:
-            print("Please fix missing keys and try again!")
-            sys.exit(0)
+            if exit:
+                print("@ Please fix missing keys and try again!")
+                sys.exit(0)
+            else:
+                print("@ These runs will be skipped!")
 
     
