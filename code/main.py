@@ -1,5 +1,4 @@
 import argparse
-import sys
 
 from adastra_analytics import AdastraAnalytics
 
@@ -7,67 +6,81 @@ from adastra_analytics import AdastraAnalytics
 def main():
 
     parser = argparse.ArgumentParser()
+    subparser = parser.add_subparsers(dest='command')
 
-    # Add all arguments and parse.
-    parser.add_argument('--build-dataset', required=False, action='store_true')
-    parser.add_argument('--build-nlp-dataset', required=False, action='store_true')
-    parser.add_argument('-r', '--run', type=str, nargs='*')
-    parser.add_argument('--queries', required=False, type=str, nargs='*')
-    parser.add_argument('--screenplays', required=False, type=str, nargs='*')
-    parser.add_argument('--relplots', required=False, type=str, nargs='*')
-    parser.add_argument('--wordclouds', required=False, type=str, nargs='*')
+    build = subparser.add_parser('build')
+    build.add_argument('--nlp', required=False, action='store_true')
+
+    run = subparser.add_parser('run')
+    run.add_argument('--queries'    , required=False, type=str, nargs='*')
+    run.add_argument('--screenplays', required=False, type=str, nargs='*')
+    run.add_argument('--relplots'   , required=False, type=str, nargs='*')
+    run.add_argument('--wordclouds' , required=False, type=str, nargs='*')
+
+    # A custom configs path can be supplied.
+    # Otherwise, it defaults to a library-internal one.
+    default_configs_path = '../configs.yml'
+    parser.add_argument('--configs', required=False, type=str, default=default_configs_path)
 
     args = parser.parse_args()
 
-    # Check that parameters have actually been specified.
-    if not vars(args):
-        print("No arguments specified! Use `python main.py -h` for help.")
-        sys.exit(0)
-
-    # Separate logic for --run.
-    runs = args.run or []
-
-    if args.run is not None:
-        # If no runs are specified, run all 
-        valid_runs = [
-            'queries', 'screenplays', 'relplots', 'wordclouds'
-        ]   
-
-        if not runs:
-            runs = valid_runs
-
-        # Verify that all run params are valid, if provided.
-        # If an invalid run is provided, fail.
-        all_valid = True
-        for run_type in runs:
-            if run_type not in valid_runs:
-                print(f"Run type `{run_type}` is not defined!")
-                all_valid = False
-
-        if not all_valid:    
-            print(f"Valid options: [{', '.join(valid_runs)}]")
-            sys.exit(0)
+    # Establish the AA.
+    aa = AdastraAnalytics(args.configs)
 
     # Build the dataset if specified.
-    aa = AdastraAnalytics(
-        build_dataset=args.build_dataset or args.build_nlp_dataset,
-        use_nlp=args.build_nlp_dataset,
-    )
+    if args.command == 'build':
 
-    # Run the parameters, based on `args.run`.
-    # (These are run in order of fastest to slowest.)
-    if args.queries is not None or 'queries' in runs:
-        aa.run_queries(args.queries)
+        aa.build_adastra_dataset(args.nlp)
+        aa.save_adastra_dataset()
 
-    if args.screenplays is not None or 'screenplays' in runs:
-        aa.run_screenplays(args.screenplays)
+    elif args.command == 'run':
 
-    if args.relplots is not None or 'relplots' in runs:
-        aa.run_relplots(args.relplots)
+        ###
+        # Set the run options.
+        ###
 
-    if args.wordclouds is not None or 'wordclouds' in runs:
-        aa.run_wordclouds(args.wordclouds)
+        # If a run is None, the parameter was not specified.
+        # * If all runs are None, run all.
+        # If a run is list(str), run those specific strings.
+        # * If empty, run all.
+        runs = {
+            'queries'    : args.queries,
+            'relplots'   : args.relplots,
+            'screenplays': args.screenplays,
+            'wordclouds' : args.wordclouds,
+        }
 
+        # If all runs are None, run all.
+        if all(value is None for value in runs.values()):
+            runs = {key: [] for key in runs}
+
+
+        ###  
+        # Retrieve the datasets and complete each run.
+        ### 
+
+        # Retrieve the datasets.
+        aa.load_adastra_dataset()
+        aa.build_datasets()
+
+        # Retrieve the runs from the arguments.
+        run_lambdas = {
+            'queries'    : aa.run_queries,
+            'relplots'   : aa.run_relplots,
+            'screenplays': aa.run_screenplays,
+            'wordclouds' : aa.run_wordclouds,
+        }
+
+        for run_type, run_args in runs.items():
+
+            # Ignore undefined runs.
+            # (Runs are redefined as [] if all None.)
+            if run_args is None:
+                continue
+
+            # Apply the specified lambda using the provided arguments.
+            run_lambdas[run_type](run_args)
+           
 
 
 if __name__ == '__main__':

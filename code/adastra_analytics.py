@@ -14,74 +14,71 @@ from adastra_analytics_mains import query_main, relplot_main, screenplay_main, w
 
 
 class AdastraAnalytics:
-    CONFIGS_FILEPATH = '../configs.yml'
+    
 
-    def __init__(self, configs_filepath=CONFIGS_FILEPATH, build_dataset=False, use_nlp=False):
-        self.yaml_configs = Configs.load_yaml(configs_filepath)
+    def __init__(self, configs_filepath):
         
+        self.yaml_configs = Configs.load_yaml(configs_filepath)
+
         # Verify necessary configs are present, then collect.
         dataset_configs = self.yaml_configs.get('dataset_configs')
         dataset_configs.check_keys(
             ['adastra_directory', 'adastra_datapath', 'main_character']
         )
         self.adastra_directory = dataset_configs.get('adastra_directory')
-        adastra_datapath = dataset_configs.get('adastra_datapath')
-        main_character   = dataset_configs.get('main_character')
+        self.adastra_datapath  = dataset_configs.get('adastra_datapath')
+        self.main_character    = dataset_configs.get('main_character')
 
-        # Build the adastra dataset.
-        self.adastra_dataset = self.get_adastra_dataset(
-            self.adastra_directory, adastra_datapath,
-            main_character=main_character,
-            build_dataset=build_dataset, use_nlp=use_nlp
-        )
-
-        # Instantiate extra datasets.
-        self.datasets = self.build_datasets()
+        # Define other passable objects.
+        self.adastra_dataset = None
+        self.datasets = None
 
 
 
-    @staticmethod
-    def get_adastra_dataset(
-        adastra_directory: str, adastra_datapath: str,
-        main_character: str,
-        build_dataset: bool, use_nlp: bool
-    ) -> Dataset:
+    def build_adastra_dataset(self, use_nlp=False) -> Dataset:
         """
 
         """
-        # Recreate the dataset if specified.
-        if build_dataset is True:
-            print(f"Building Adastra dataset using script files in `{adastra_directory}`...")
-            adastra_data = build_adastra_data(adastra_directory, main_character=main_character)
-            print("Dataset built!")
+        print(f"\nBuilding Adastra dataset using script files in `{self.adastra_directory}`...")
+        adastra_data = build_adastra_data(self.adastra_directory, main_character=self.main_character)
 
-            # Apply optional NLP processing if specified.
-            if use_nlp is True:
-                print(
-                    "Augmenting dataset with NLP... (This process takes about a minute.)"
-                )
-                adastra_data = nlp_augment_adastra_data(adastra_data)
-                print("Dataset augmented!")
+        # Apply optional NLP processing if specified.
+        if use_nlp is True:
+            print(
+                "@ Augmenting dataset with NLP... (This process takes about a minute.)"
+            )
+            adastra_data = nlp_augment_adastra_data(adastra_data)
+            print("@ Dataset augmented!")
 
-            # Save whichever version to disk.
-            Dataset(adastra_data).to_jsonl(adastra_datapath)
-            print(f"Dataset saved to `{adastra_datapath}`.")
+        self.adastra_dataset = Dataset(adastra_data)
+ 
 
+    def save_adastra_dataset(self):
+        """
+        
+        """
+        self.adastra_dataset.to_jsonl(self.adastra_datapath)
+        print(f"@ Dataset saved to `{self.adastra_datapath}`.")
+
+    
+    def load_adastra_dataset(self):
+        """
+        
+        """
         # Load in the saved Dataset from disk.
-        if os.path.exists(adastra_datapath):
-            adastra_dataset = Dataset(adastra_datapath)
-            print(f"Successfully loaded Adastra dataset from `{adastra_datapath}`!")
+        if os.path.exists(self.adastra_datapath):
+            adastra_dataset = Dataset(self.adastra_datapath)
+            print(f"\nSuccessfully loaded Adastra dataset from `{self.adastra_datapath}`!")
 
-            return adastra_dataset
+            self.adastra_dataset = adastra_dataset
         
         else:
             print(
-                f"File not found at `{adastra_datapath}`\n"
-                "Are you sure it has been created?\n"
-                "If this is your first time running, please set `build_dataset` flag to `True`."
+                f"! File not found at `{self.adastra_datapath}`\n"
+                "! Are you sure it has been created?\n"
+                "! If this is your first time running, please set `build_dataset` flag to `True`."
             )
             sys.exit(0)
-
 
 
     def build_datasets(self):
@@ -93,7 +90,7 @@ class AdastraAnalytics:
         # 
         datasets_configs = self.yaml_configs.get('datasets')
         if datasets_configs is None:
-            print("* No extra datasets found.")
+            print("@ No extra datasets found.")
             return {}
 
         # 
@@ -112,9 +109,9 @@ class AdastraAnalytics:
 
             # 
             datasets[dataset_name] = dataset
-            print(f"* `{dataset_name}` dataset built.")
+            print(f"* `{dataset_name}` built.")
 
-        return datasets
+        self.datasets = datasets
     
 
 
@@ -146,7 +143,7 @@ class AdastraAnalytics:
 
         # Verify selected queries are present, if provided.
         if queries:
-            defined_queries.check_keys(queries)
+            defined_queries.check_keys(queries, exit=False)
 
         # Iterate and build each query.
         for query_name, query_configs in defined_queries.items():
@@ -207,7 +204,7 @@ class AdastraAnalytics:
 
         # Verify selected relplots are present, if provided.
         if relplots:
-            defined_relplots.check_keys(relplots)
+            defined_relplots.check_keys(relplots, exit=False)
 
         # Iterate and build each relplot.
         for relplot_name, relplot_configs in defined_relplots.items():
@@ -281,7 +278,7 @@ class AdastraAnalytics:
 
         # Verify selected queries are present, if provided.
         if screenplays:
-            defined_screenplays.check_keys(screenplays)
+            defined_screenplays.check_keys(screenplays, exit=False)
 
         # Iterate and build each screenplay.
         for screenplay_name, screenplay_configs in defined_screenplays.items():
@@ -360,7 +357,7 @@ class AdastraAnalytics:
 
         # Verify selected wordclouds are present, if provided.
         if wordclouds:
-            defined_wordclouds.check_keys(wordclouds)
+            defined_wordclouds.check_keys(wordclouds, exit=False)
 
         for wordcloud_name, wordcloud_configs in defined_wordclouds.items():
 
