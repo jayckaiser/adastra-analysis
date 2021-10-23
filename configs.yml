@@ -401,7 +401,7 @@ adastra_analytics:
     screenplays:
 
       # # Emulates 'The Cursed Child'
-      # style1:
+      # screenplay_style1:
       #   folder: style1
       #   justify: 75
       #   line_sep: "\n\n"
@@ -454,7 +454,7 @@ adastra_analytics:
 
 
       # # Custom format
-      # style2:
+      # screenplay_style2:
       #   folder: style2
       #   justify: 75
       #   line_sep: "\n\n"
@@ -503,7 +503,7 @@ adastra_analytics:
 
 
       # Emulates an actual movie screenplay.
-      style3:
+      screenplay_style3:
         folder: style3
         justify: 75
         line_sep: "\n\n"
@@ -526,9 +526,9 @@ adastra_analytics:
           # Dialogue explicitly spoken by speaker.
           has_speaker:
             where: "has_speaker IS TRUE"
+            style: "{speaker}\n{line}"
             justify: 60 
             textwrap_offset: 15
-            style: "{speaker}\n{line}"
             formatting:
               speaker:
                 offset: 15
