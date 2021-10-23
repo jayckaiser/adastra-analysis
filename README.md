@@ -1,8 +1,9 @@
 # adastra-analysis
-TL;DR: What started as a goal to write the contents of the visual novel Adastra into screenplays has now become a ~two-week-long~ **month-long** project culminating in analyses and sand-boxing using text and images from the game. I've created an interactive set of scripts to create a cleaned dataset using the content that can be queried and plotted. In addition, I've codified a customizable interface for building wordclouds and formatted screenplays.
+TL;DR: What started as a goal to write the contents of the visual novel Adastra into screenplays has now become a ~two-week-long~ **six-week-long** project culminating in analyses and sandboxing using text and images from the game. I've created an interactive set of scripts to create a cleaned dataset using the content that can be queried and plotted. In addition, I've codified a customizable interface for building wordclouds and formatted screenplays.
 
+-----
 
-## Overview
+# Overview
 
 Do you love the visual novel Adastra? Do you often reminisce about the time you spent there with best boy Amicus? Do you want to get a more intimate look at him and all the other kooky characters who try to kill you during your thirteen hours imprisoned in paradise?
 
@@ -13,12 +14,12 @@ By the gods, are you in luck! This code allows you to do the following:
 - Recreate game illustrations and sprites as word clouds (customizable by speaker, file, etc.)
 - Extract and save sentiment and aggregate statistics by speaker across chapter as relational plots
 
-Note: I'm sharing this code as is. You should consider this repo both incomplete and a work-in-progress. This presumes you hold a basic knowledge of Python and running it locally. If there's enough interest, I'll expand upon the project and add a CLI, but please do not ask me for help resolving installation issues. StackOverflow will be far more helpful!
+Note: I'm sharing this code as is. You should consider this repo both incomplete and a work-in-progress. This presumes you hold a basic knowledge of Python and running it locally; please do not ask me for help resolving installation issues. StackOverflow will be far more helpful!
 
-*(Please do reach out to me if you encounter a bug while using the library! I have **not** done enough testing.)*
+*Please do reach out to me if you encounter a bug while using the library! I have **not** done enough testing.*
 
 
-## FYI
+# FYI
 
 Adastra contains a total of 15,577 lines across 14 chapters of content, translating to 219,937 words in total. Given the mutual-exclusivity of optional choices and end-games, a player will consume roughly 180,907 words across a typical playthrough.
 
@@ -32,17 +33,17 @@ Read on to learn how you can play with this data yourself!
 
 -----
 
-## Setup
+# Setup
 
 Create a new environment in which to play with this code (e.g. using venv). A `requirements.txt` file has been included to try to circumvent dependency errors.
 
 Download the latest Linux version of Adastra. Unzip the directory and put it somewhere easily accessible. The location should be added to the configs file under `dataset_configs.adastra_directory`.
 
-All logic for this library's outputs is derived from `configs.yml`. This is a single YAML file where you can specify exactly how you want to interact with the dataset, as well as how you want to output your queries, screenplays, relplots, and wordclouds. Below, I will document the structure of the file, its keys and their meanings, and suggestions for how to work with the library.
+All logic for this library's outputs is derived from a single YAML config file. This is where you can specify exactly how you want to interact with the dataset, as well as how you want to output your queries, relplots, screenplays, and wordclouds. This is defined at `configs.yml` by default; you can specify another path using `--configs`.
 
 Example runs are already filled in. You can comment these out (`Ctrl + /` on most modern IDEs) and add your own, or customize them as you see fit.
 
-Before you run any code, you need to populate a number of fields that specify where to output files on your machine:
+Before you run any code, you need to populate a manually fill some fields that specify where to output generated files on your machine:
 - `dataset_configs.adastra_directory`
 - `dataset_configs.adastra_datapath`
 - `adastra_analytics.queries.output_directory`
@@ -50,62 +51,86 @@ Before you run any code, you need to populate a number of fields that specify wh
 - `adastra_analytics.relplots.output_directory`
 - `adastra_analytics.wordclouds.output_directory`
 
+Below, I will document the structure of the file, its keys and their meanings, and suggestions for how to work with the library.
+
 -----
 
-## Scripts
+# Scripts
 
-`main.py` is the powerhouse to complete all processes defined in `configs.yml`. Before you can run additional processes, you must build the dataset.
+`main.py` is the powerhouse to complete all processes defined in the configs file. Before you can run additional processes, you must build the dataset.
+
+
+## Build
+
+The dataset contains the text of each line, its index, and metadata for querying the dataset. By default, the dataset contains these columns:
+
+| Column | Type | Description |
+| ------ | ---- | ----------- |
+| file | str | name of source file |
+| line_idx | int | line number of file |
+| category | enum | line category (among a predefined set of enumerations) |
+| speaker | str | character/source of the line (includes 'internal_narration' and 'speaker_unspecified') |
+| line | str | cleaned text of the line |
+| is_renpy | bool | is the line internal Ren'Py-logic? |
+| is_choice | bool | is the line a split to multiple branches (a player choice or conditional Python logic)? |
+| is_read | bool | is the line text read by the player? |
+| has_speaker | bool | is the line spoken by a named speaker (not internal narration or an unspecified speaker)? |
+| is_branch | bool | is the line an optional branch (delineated by a choice)? |
+| raw | str | raw text of the line |
+
+
+Additionally, I have built optional NLP functionality that can extend the dataset. These are the additional NLP columns added:
+
+| Column | Type | Description |
+| ------ | ---- | ----------- |
+| sentiment | [-1, 1] | sentiment of the line (negative to positive) |
+| subjectivity | [0, 1] | subjectivity (strength) of the sentiment |
+| sentences | str | sentences in the line, joined by newlines |
+| num_sentences | int | number of sentences |
+| words | str | non-punctuation words in the line, joined by spaces |
+| num_words | int | number of extracted words |
+| content_words | str | non-stop/filler words in the line, joined by spaces |
+| num_content_words | int | number of extracted content words |
+
 
 To build the standard dataset:
->  ```
-  python main.py --build-dataset
-  ```
-  | Column | Type | Description |
-  | ------ | ---- | ----------- |
-  | file | str | name of source file |
-  | line_idx | int | line number of file |
-  | category | enum | line category (among a predefined set of enumerations) |
-  | speaker | str | character/source of the line (includes 'internal_narration' and 'speaker_unspecified') |
-  | line | str | cleaned text of the line |
-  | is_renpy | bool | is the line internal Ren'Py-logic? |
-  | is_choice | bool | is the line a split to multiple branches (a player choice or conditional Python logic)? |
-  | is_read | bool | is the line text read by the player? |
-  | has_speaker | bool | is the line spoken by a named speaker (not internal narration or an unspecified speaker)? |
-  | is_branch | bool | is the line an optional branch (delineated by a choice)? |
-  | raw | str | raw text of the line |
+```
+python main.py build
+```
+
+To build the extended NLP dataset:
+```
+python main.py build --nlp
+```
+
+Once a dataset is built and saved, it can be queried in runs.
 
 
-To build the data with extra NLP-specific fields:
->  ```
-  python main.py --build-nlp-dataset
-  ```
-  | Column | Type | Description |
-  | ------ | ---- | ----------- |
-  | sentiment | [-1, 1] | sentiment of the line (negative to positive) |
-  | subjectivity | [0, 1] | subjectivity (strength) of the sentiment |
-  | sentences | str | sentences in the line, joined by newlines |
-  | num_sentences | int | number of sentences |
-  | words | str | non-punctuation words in the line, joined by spaces |
-  | num_words | int | number of extracted words |
-  | content_words | str | non-stop/filler words in the line, joined by spaces |
-  | num_content_words | int | number of extracted content words |
-
-Once a dataset has been built, you can run processes from the configs file.
 
 -----
 
-## Run Adastra Analytics
-The `--run` argument completes categories of processes from the `configs.yml` file that should be completed. You can choose one or more types to run a specific selection, or use `all` to run all.
+## Run
+There are four types of runs I have defined in this library. The functionality of each is defined in the configs file.
+
+To run the processes:
+
 ```
-python main.py --run {all, queries, screenplays, relplots, wordclouds}
+python main.py run [--queries] [--relplots] [--screenplays] [--wordclouds]
 ```
+
+If no arguments are specified after `--run`, all will be run.
+Regardless of what is selected, they will be run in order of fastest to slowest (the order defined above).
+
+
 
 -----
 
 ### Queries
 SQL statements can be defined to query off the Adastra dataset and any other custom datasets defined in the configs. These are saved as JSON-lines.
+
+Specific queries can be provided. Otherwise, all are run.
 ```
-python main.py --run queries
+python main.py run --queries [query1 [query2 ...]]
 ```
 
 These are defined in `adastra_analytics.queries` in the configs file.
@@ -122,12 +147,46 @@ queries:
 
 (See `examples/queries` for a preselected list of generated queries.)
 
+
+
+-----
+
+### Relational Plots
+Create custom Seaborn relational plots based off of SQL statements queried off the Adastra dataset and any other custom datasets defined in the configs. Relplot arguments are entirely customizable based on standard Seaborn relplot kwargs. These are saved as PNG files.
+
+Specific relplots can be provided. Otherwise, all are run.
+```
+python main.py run --replots [relplot1 [relplot2 ...]]
+```
+
+These are defined in `adastra_analytics.relplots` in the configs file.
+```
+relplots:
+  output_directory: where should the JSONL files be saved?
+  dataset_alias: how is the main Adastra dataset aliased in the queries?
+  where [optional]: apply an optional SQL where filter to the dataset before any queries are run
+  relplot_args:
+    * these are universal kwargs to provide to all relplots
+  relplots:
+    - name: name of the output file to save the query result to
+      relplot_args:
+        * these are kwargs to provide to the relplot; they overwrite the universal kwargs defined above
+      sql: the SQL statement to run
+    - ...
+```
+
+(See `examples/relplots` for a preselected list of generated plots.)
+
+
+
 -----
 
 ### Screenplays
-Output the text contents of Adastra into cleaned and formatted screenplays, separated by chapter. Specify formatting by line-type using where-filters.
+The text contents of Adastra are cleaned into formatted screenplays, separated by chapter. Specify formatting by line-type using where-filters. These are saved as TXT files in a specified folder.
+
+Specific screenplays can be provided. Otherwise, all are run.
 ```
-python main.py --run screenplays
+python main.py run --screenplays [screenplay1 [screenplay2 ...]]
 ```
 
 These are defined in `adastra_analytics.screenplays` in the configs file.
@@ -224,38 +283,16 @@ I've created three versions of outputs already. If someone has a better idea for
                  with you!?"
   ```
 
------
 
-### Relational Plots
-Create custom Seaborn relational plots based off of SQL statements queried off the Adastra dataset and any other custom datasets defined in the configs. Relplot arguments are entirely customizable based on standard Seaborn relplot kwargs.
-```
-python main.py --run replots
-```
-
-These are defined in `adastra_analytics.relplots` in the configs file.
-```
-relplots:
-  output_directory: where should the JSONL files be saved?
-  dataset_alias: how is the main Adastra dataset aliased in the queries?
-  where [optional]: apply an optional SQL where filter to the dataset before any queries are run
-  relplot_args:
-    * these are universal kwargs to provide to all relplots
-  relplots:
-    - name: name of the output file to save the query result to
-      relplot_args:
-        * these are kwargs to provide to the relplot; they overwrite the universal kwargs defined above
-      sql: the SQL statement to run
-    - ...
-```
-
-(See `examples/relplots` for a preselected list of generated plots.)
 
 -----
 
 ### Wordclouds
-Save custom wordclouds based off of subsets of text and masked over specific images from the game (and elsewhere). These can be populated by lines from a specific where-filter of the data (e.g. only text from a specific file, only text spoken by Amicus, etc). These can even be specified down to specific scenes, if you know the file and line numbers.
+Save custom wordclouds based off of subsets of text and masked over specific images from the game (and elsewhere). These can be populated by lines from a specific where-filter of the data (e.g. only text from a specific file, only text spoken by Amicus, etc). These can even be specified down to specific scenes, if you know the file and line numbers. These are saved as PNG files.
+
+Specific wordclouds can be provided. Otherwise, all are run.
 ```
-python main.py --run wordclouds
+python main.py run --wordclouds [wordcloud1 [wordcloud2 ...]]
 ```
 
 These are defined in `adastra_analytics.wordclouds` in the configs file.
@@ -288,6 +325,6 @@ wordclouds:
 
 ### Conclusion
 
-This documentation is incomplete, but it's more than enough to get started! I'll continue to document and expand the project in the coming weeks. I've had a lot of fun building out this project, and I hope that someone else gets use out of all this work. Regardless, enjoy the wordclouds and screenplay files! Please reach out to `u/OrigamiOtter` for questions and feedback!
+This documentation is incomplete, but it's more than enough to get started! I'll continue to document and expand the project in the coming weeks. I've had a lot of fun building out this project, and I hope that someone else gets use out of all this work. Regardless, enjoy the wordclouds I've shared! Please reach out to `u/OrigamiOtter` for questions and feedback!
 
 -----
