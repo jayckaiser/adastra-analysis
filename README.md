@@ -136,13 +136,19 @@ python main.py run --queries [query1 [query2 ...]]
 These are defined in `adastra_analytics.queries` in the configs file.
 ```
 queries:
+
   output_directory: where should the JSONL files be saved?
   dataset_alias: how is the main Adastra dataset aliased in the queries?
-  where [optional]: apply an optional SQL where filter to the dataset before any queries are run
+  where (optional): apply an optional SQL where filter to the dataset before any queries are run
+
   queries:
-    - name: name of the output file to save the query result to
+
+    [query1]:
+      file: name of the output file to save the query result to
       sql: the SQL statement to run
-    - ...
+
+    [query2]:
+      ...
 ```
 
 (See `examples/queries` for a preselected list of generated queries.)
@@ -156,23 +162,29 @@ Create custom Seaborn relational plots based off of SQL statements queried off t
 
 Specific relplots can be provided. Otherwise, all are run.
 ```
-python main.py run --replots [relplot1 [relplot2 ...]]
+python main.py run --relplots [relplot1 [relplot2 ...]]
 ```
 
 These are defined in `adastra_analytics.relplots` in the configs file.
 ```
 relplots:
+
   output_directory: where should the JSONL files be saved?
   dataset_alias: how is the main Adastra dataset aliased in the queries?
-  where [optional]: apply an optional SQL where filter to the dataset before any queries are run
+  where (optional): apply an optional SQL where filter to the dataset before any queries are run
   relplot_args:
     * these are universal kwargs to provide to all relplots
+
   relplots:
-    - name: name of the output file to save the query result to
+
+    [relplot1]:
+      file: name of the output file to save the query result to
       relplot_args:
         * these are kwargs to provide to the relplot; they overwrite the universal kwargs defined above
       sql: the SQL statement to run
-    - ...
+
+    [relplot2]:
+      ...
 ```
 
 (See `examples/relplots` for a preselected list of generated plots.)
@@ -192,29 +204,45 @@ python main.py run --screenplays [screenplay1 [screenplay2 ...]]
 These are defined in `adastra_analytics.screenplays` in the configs file.
 ```
 screenplays:
+
   output_directory: where should the screenplays be saved?
-  where [optional]: apply an optional SQL where filter to the dataset before any screenplays are created
+  where (optional): apply an optional SQL where filter to the dataset before any screenplays are created
+
   screenplays:
-    - name: name of the output folder to save the screenplay files to
+
+    [screenplay_style1]:
+      folder: name of the output folder to save the screenplay files to
       justify: at how many characters should the text wrap to the next line?
       line_sep: how should lines be separated?
-      formats:
-        - where: where-filter to specify which lines are formatted in this style
-          style [default "{line}"]: which parts of the row are included in the formatting, and how?
-          justify [optional]: should this format use different formatting from the rest of the output?
-          textwrap_offset [default 0]: how far should wrapped lines be offset from the left edge?
-          parts:
-            - name: name of column to include in the formatting (must be defined in `style`)
-              strip_quotes [default False]: should wrapper quotes be removed?
-              upper [default False]: should the text be cast to uppercase?
-              lower [default False]: should the text be cast to lowercase?
-              title [default False]: should the text be cast to title-case?
-              offset [default 0]: how far should the line part be offset from the left edge?
-              prefix: what text should be prefixed to the text?
-              postfix: what text should be postfixed to the text?
-            - ...
-        - ...
-    - ...
+      add_columns: additional columns to add to the dataset (useful for filtering on windows, etc.)
+
+      categories:
+
+        [category1]:
+          where: where-filter to specify which lines are formatted in this style
+          style: which parts of the row are included in the formatting, and how?
+          justify (optional): should this format use different formatting from the rest of the output?
+          textwrap_offset (default 0): how far should wrapped lines be offset from the left edge?
+
+          formatting (optional): this is where optional formatting is applied to parts of `style`
+
+            [column_part1]: name of column to include in the formatting (must be defined in `style`); if a key is not defined here, default formatting is applied
+              strip_quotes (default False): should wrapper quotes be removed?
+              upper (default False): should the text be cast to uppercase?
+              lower (default False): should the text be cast to lowercase?
+              title (default False): should the text be cast to title-case?
+              offset (default 0): how far should the line part be offset from the left edge?
+              prefix (default ""): what text should be prefixed to the text?
+              postfix (default ""): what text should be postfixed to the text?
+
+            [column_part2]:
+              ...
+
+        [category2]:
+          ...
+
+    [screenplay_style2]:
+      ...
 ```
 
 I've created three versions of outputs already. If someone has a better idea for how to best improve readability for the output, please let me know!
@@ -303,20 +331,27 @@ Wordplot arguments are entirely customizable based on `wordcloud.Wordcloud` kwar
 
 ```
 wordclouds:
+
   output_directory: where should the wordcloud images be saved?
-  where [optional]: apply an optional SQL where filter to the dataset before any wordclouds are built
+  where (optional): apply an optional SQL where filter to the dataset before any wordclouds are built
   documents_column: which column in the dataset should be used to build the wordclouds?
   filter_columns: which columns in the dataset are used in where-filter queries below?
   tfidf_args:
     * these are kwargs to provide to the CountVectorizer used to build the TF-IDF frequencies
   wordcloud_args:
     * these are universal wordcloud kwargs to apply to all wordclouds below
+
   wordclouds:
-    - name: name of the output file to save the wordcloud to
+
+    [wordcloud1]:
+      file: name of the output file to save the wordcloud to
       where: a where-filter to restrict which lines build the wordcloud
+      image_filepath (optional): the path to the file to mask the wordcloud over; if unspecified, looks for a file with the same name as `file` within `{adastra_directory}/game/images`
       wordcloud_args:
         * these are kwargs to provide to the wordcloud; they overwrite the universal kwargs defined above
-    - ...
+
+    [wordcloud2]:
+      ...
 ```
 
 (See `examples/wordclouds` for a preselected list of generated clouds.)
