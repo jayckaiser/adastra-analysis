@@ -8,9 +8,11 @@ def main():
     parser = argparse.ArgumentParser()
     subparser = parser.add_subparsers(dest='command')
 
+    # Build subprocess
     build = subparser.add_parser('build')
     build.add_argument('--nlp', required=False, action='store_true')
 
+    # Run subprocess
     run = subparser.add_parser('run')
     run.add_argument('--queries'    , required=False, type=str, nargs='*')
     run.add_argument('--screenplays', required=False, type=str, nargs='*')

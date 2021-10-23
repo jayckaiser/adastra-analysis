@@ -109,7 +109,7 @@ class AdastraAnalytics:
 
             # 
             datasets[dataset_name] = dataset
-            print(f"* `{dataset_name}` built.")
+            print(f"* Dataset `{dataset_name}` built.")
 
         self.datasets = datasets
     
@@ -289,10 +289,10 @@ class AdastraAnalytics:
 
             # Verify required arguments are defined, then retrieve all.
             screenplay_configs.check_keys(
-                ['folder', 'formats',]
+                ['folder', 'categories',]
             )
             folder       = screenplay_configs.get('folder')
-            formats      = screenplay_configs.get('formats')
+            categories   = screenplay_configs.get('categories')
             _where       = screenplay_configs.get('where')
             _add_columns = screenplay_configs.get('add_columns')
             _justify     = screenplay_configs.get('justify')
@@ -307,7 +307,7 @@ class AdastraAnalytics:
                 where=_where,
                 add_columns=_add_columns,
 
-                formats=formats,
+                categories=categories,
                 justify=_justify,
                 line_sep=_line_sep,
 
