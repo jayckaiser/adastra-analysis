@@ -19,7 +19,7 @@ definitions:
   # Filter used across script.
   is_read: &is_read "is_read is True"
 
-  # Long identical SQL query used across 14 relplots.
+  # Long identical SQL query used across 14 sentiment relplots
   rolling_sentiment: &rolling_sentiment |
       select
           line_idx,
@@ -32,7 +32,7 @@ definitions:
       from adastra
           inner join characters using(speaker)
 
-  # Repeated where-clauses used across wordclouds.
+  # Repeated where-clauses used across wordclouds
   is_alexios : &is_alexios  "speaker = 'alexios'"
   is_amicus  : &is_amicus   "speaker = 'amicus'"
   is_cassius : &is_cassius  "speaker = 'cassius'"
@@ -40,6 +40,9 @@ definitions:
   is_marco   : &is_marco    "speaker = 'marco'"
   is_neferu  : &is_neferu   "speaker = 'neferu'"
   is_virginia: &is_virginia "speaker = 'virginia'"
+
+  # Default format-style in screenplays
+  default_line : &default_line "{line}"
 
 
 # Define additional datasets not present in the main data.
@@ -130,176 +133,6 @@ adastra_analytics:
       #       select
       #         sum(num_words) as total_words
       #       from adastra
-
-
-  # Run `screenplays.py` to create normalized text of the game in a specified format.
-  screenplays:
-
-    # Specify where the screenplays should be saved.
-    output_directory: /home/jayckaiser/adastra/screenplays
-
-    # Define a where-clause to apply before every query.
-    where: "is_read is True or is_choice is True"
-
-    # Define screenplay params here.
-    screenplays:
-
-      # # Emulates 'The Cursed Child'
-      # style1:
-      #   folder: style1
-      #   justify: 75
-      #   line_sep: "\n\n"
-      #   formats:
-
-      #     # Player/game choice between branches.
-      #     is_choice:
-      #       where: "is_choice IS TRUE"
-      #       parts:
-      #         - name: line
-      #           prefix: '['
-      #           postfix: ']'
-
-      #     # Dialogue explicitly spoken by speaker in branch.
-      #     has_speaker_in_branch:
-      #       where: "is_branch IS TRUE AND has_speaker IS TRUE"
-      #       style: "{speaker}\n{line}"
-      #       textwrap_offset: 8
-      #       parts:
-      #         - name: speaker
-      #           offset: 8
-      #           upper: True
-      #         - name: line
-      #           offset: 2
-
-      #     # Internal narration and unspecified speaker in branch.
-      #     is_narration_in_branch:
-      #       where: "is_branch IS TRUE AND has_speaker IS FALSE"
-      #       textwrap_offset: 8
-      #       parts:
-      #         - name: line
-      #           offset: 8
-
-      #     # Dialogue explicitly spoken by speaker.
-      #     has_speaker_outside_branch:
-      #       where: "is_branch IS FALSE AND has_speaker IS TRUE"
-      #       style: "{speaker}\n{line}"
-      #       parts:
-      #         - name: speaker
-      #           upper: True
-      #         - name: line
-      #           offset: 2
-
-      #     # Internal narration and unspecified speaker.
-      #     is_narration_outside_branch:
-      #       where: "is_branch IS FALSE AND has_speaker IS FALSE"
-      #       parts:
-      #         - name: line
-
-
-      # # Custom format
-      # style2:
-      #   folder: style2
-      #   justify: 75
-      #   line_sep: "\n\n"
-      #   formats:
-
-      #     # Player/game choice between branches.
-      #     is_choice:
-      #       where: "is_choice IS TRUE"
-      #       parts:
-      #         - name: line
-      #           prefix: "[BRANCH]: "
-
-      #     # Dialogue explicitly spoken by speaker in branch.
-      #     has_speaker_in_branch:
-      #       where: "is_branch IS TRUE AND has_speaker IS TRUE"
-      #       style: "{speaker}: {line}"
-      #       textwrap_offset: 8
-      #       parts:
-      #         - name: speaker
-      #           offset: 4
-      #           upper: True
-      #         - name: line
-
-      #     # Internal narration and unspecified speaker in branch.
-      #     is_narration_in_branch:
-      #       where: "is_branch IS TRUE AND has_speaker IS FALSE"
-      #       textwrap_offset: 4
-      #       parts:
-      #         - name: line
-      #           offset: 4
-
-      #     # Dialogue explicitly spoken by speaker.
-      #     is_speaker_outside_branch:
-      #       where: "is_branch IS FALSE AND has_speaker IS TRUE"
-      #       style: "{speaker}: {line}"
-      #       textwrap_offset: 4
-      #       parts:
-      #         - name: speaker
-      #           upper: True
-      #         - name: line
-
-      #     # Internal narration and unspecified speaker.
-      #     is_narration_outisde_branch:
-      #       where: "is_branch IS FALSE AND has_speaker IS FALSE"
-      #       parts:
-      #         - name: line
-
-
-      # Emulates an actual movie screenplay.
-      style3:
-        folder: style3
-        justify: 75
-        line_sep: "\n\n"
-
-        # Add additional columns to the dataset to allow deeper formatting.
-        add_columns:
-          - 'LAG(is_branch, 1) OVER (ORDER BY file, line_idx) AS prev_line_is_branch'
-
-        formats:
-
-          # Player/game choice between branches.
-          is_choice:
-            where: "is_choice IS TRUE"
-            add_bar: True
-            parts: 
-              - name: line
-                prefix: "[BRANCH]: "
-
-          # Dialogue explicitly spoken by speaker.
-          has_speaker:
-            where: "has_speaker IS TRUE"
-            justify: 60 
-            textwrap_offset: 15
-            style: "{speaker}\n{line}"
-            parts:
-              - name: speaker
-                offset: 15
-                upper: True
-              - name: line
-                # strip_quotes: True
-
-          # Internal narration and unspecified speaker.
-          is_internal_narration:
-            where: "has_speaker IS FALSE AND speaker = 'internal_narration'"
-            parts: 
-              - name: line
-
-          # Internal narration and unspecified speaker.
-          is_unspecified_speaker:
-            where: "has_speaker IS FALSE AND speaker = 'speaker_unspecified'"
-            justify: 60
-            textwrap_offset: 15
-            parts: 
-              - name: line
-                offset: 15
-                # strip_quotes: True
-
-          is_end_of_branch:
-            where: "prev_line_is_branch IS TRUE AND is_branch IS FALSE"
-            add_bar: True
-            parts: 
-              - name: line
 
 
   # Run `relplots.py` to run SQL queries to create Seaborn relplots.
@@ -553,6 +386,175 @@ adastra_analytics:
       #   remove_outliers: True
       #   where: "file = 'end_game2'"
       #   sql: *rolling_sentiment
+
+
+  # Run `screenplays.py` to create normalized text of the game in a specified format.
+  screenplays:
+
+    # Specify where the screenplays should be saved.
+    output_directory: /home/jayckaiser/adastra/screenplays
+
+    # Define a where-clause to apply before every query.
+    where: "is_read is True or is_choice is True"
+
+    # Define screenplay params here.
+    screenplays:
+
+      # # Emulates 'The Cursed Child'
+      # style1:
+      #   folder: style1
+      #   justify: 75
+      #   line_sep: "\n\n"
+      #   categories:
+
+      #     # Player/game choice between branches.
+      #     is_choice:
+      #       where: "is_choice IS TRUE"
+      #       style: *default_line
+      #       formatting:
+      #         line:
+      #           prefix: '['
+      #           postfix: ']'
+
+      #     # Dialogue explicitly spoken by speaker in branch.
+      #     has_speaker_in_branch:
+      #       where: "is_branch IS TRUE AND has_speaker IS TRUE"
+      #       style: "{speaker}\n{line}"
+      #       textwrap_offset: 8
+      #       formatting:
+      #         speaker:
+      #           offset: 8
+      #           upper: True
+      #         line:
+      #           offset: 2
+
+      #     # Internal narration and unspecified speaker in branch.
+      #     is_narration_in_branch:
+      #       where: "is_branch IS TRUE AND has_speaker IS FALSE"
+      #       style: *default_line
+      #       textwrap_offset: 8
+      #       formatting:
+      #         line:
+      #           offset: 8
+
+      #     # Dialogue explicitly spoken by speaker.
+      #     has_speaker_outside_branch:
+      #       where: "is_branch IS FALSE AND has_speaker IS TRUE"
+      #       style: "{speaker}\n{line}"
+      #       formatting:
+      #         speaker:
+      #           upper: True
+      #         line:
+      #           offset: 2
+
+      #     # Internal narration and unspecified speaker.
+      #     is_narration_outside_branch:
+      #       where: "is_branch IS FALSE AND has_speaker IS FALSE"
+      #       style: *default_line
+
+
+      # # Custom format
+      # style2:
+      #   folder: style2
+      #   justify: 75
+      #   line_sep: "\n\n"
+      #   categories:
+
+      #     # Player/game choice between branches.
+      #     is_choice:
+      #       where: "is_choice IS TRUE"
+      #       style: *default_line
+      #       formatting:
+      #         line:
+      #           prefix: "[BRANCH]: "
+
+      #     # Dialogue explicitly spoken by speaker in branch.
+      #     has_speaker_in_branch:
+      #       where: "is_branch IS TRUE AND has_speaker IS TRUE"
+      #       style: "{speaker}: {line}"
+      #       textwrap_offset: 8
+      #       formatting:
+      #         speaker:
+      #           offset: 4
+      #           upper: True
+
+      #     # Internal narration and unspecified speaker in branch.
+      #     is_narration_in_branch:
+      #       where: "is_branch IS TRUE AND has_speaker IS FALSE"
+      #       style: *default_line
+      #       textwrap_offset: 4
+      #       formatting:
+      #         line:
+      #           offset: 4
+
+      #     # Dialogue explicitly spoken by speaker.
+      #     is_speaker_outside_branch:
+      #       where: "is_branch IS FALSE AND has_speaker IS TRUE"
+      #       style: "{speaker}: {line}"
+      #       textwrap_offset: 4
+      #       formatting:
+      #         speaker:
+      #           upper: True
+
+      #     # Internal narration and unspecified speaker.
+      #     is_narration_outisde_branch:
+      #       where: "is_branch IS FALSE AND has_speaker IS FALSE"
+      #       style: *default_line
+
+
+      # Emulates an actual movie screenplay.
+      style3:
+        folder: style3
+        justify: 75
+        line_sep: "\n\n"
+
+        # Add additional columns to the dataset to allow deeper formatting.
+        add_columns:
+          - 'LAG(is_branch, 1) OVER (ORDER BY file, line_idx) AS prev_line_is_branch'
+
+        categories:
+
+          # Player/game choice between branches.
+          is_choice:
+            where: "is_choice IS TRUE"
+            style: *default_line
+            add_bar: True
+            formatting: 
+              line:
+                prefix: "[BRANCH]: "
+
+          # Dialogue explicitly spoken by speaker.
+          has_speaker:
+            where: "has_speaker IS TRUE"
+            justify: 60 
+            textwrap_offset: 15
+            style: "{speaker}\n{line}"
+            formatting:
+              speaker:
+                offset: 15
+                upper: True
+
+          # Internal narration and unspecified speaker.
+          is_internal_narration:
+            where: "has_speaker IS FALSE AND speaker = 'internal_narration'"
+            style: *default_line
+
+          # Internal narration and unspecified speaker.
+          is_unspecified_speaker:
+            where: "has_speaker IS FALSE AND speaker = 'speaker_unspecified'"
+            style: *default_line
+            justify: 60
+            textwrap_offset: 15
+            formatting: 
+              line:
+                offset: 15
+
+          is_end_of_branch:
+            where: "prev_line_is_branch IS TRUE AND is_branch IS FALSE"
+            style: *default_line
+            formatting:
+              line:
+                add_bar: True
 
 
   # Run `wordclouds.py` to create TF-IDF wordclouds using custom filters. 

@@ -41,7 +41,7 @@ def query_main(
         print(f"* Query `{query_name}` completed: {output_file}")
 
     except Exception as err:
-        print(f"! Query {query_name} failed: {err}")
+        print(f"! Query `{query_name}` failed: {err}")
 
 
 
@@ -92,7 +92,7 @@ def relplot_main(
         print(f"* Relplot `{relplot_name}` completed: {output_file}")
     
     except Exception as err:
-        print(f"! Relplot {relplot_name} failed: {err}")
+        print(f"! Relplot `{relplot_name}` failed: {err}")
 
 
 
@@ -103,7 +103,7 @@ def screenplay_main(
     where,
     add_columns,
 
-    formats,
+    categories,
     justify,
     line_sep,
 
@@ -122,7 +122,7 @@ def screenplay_main(
         # Transform the dataset's lines into formatted lines.
         formatted_screenplay_dataset = format_rows_to_lines(
             screenplay_dataset,
-            formats=formats,
+            categories=categories,
             justify=justify,
         )
 
@@ -138,7 +138,7 @@ def screenplay_main(
         print(f"* Screenplay `{screenplay_name}` completed: {output_folder}")
     
     except Exception as err:
-        print(f"! Screenplay {screenplay_name} failed: {err}")
+        print(f"! Screenplay `{screenplay_name}` failed: {err}")
 
 
 
@@ -179,4 +179,4 @@ def wordcloud_main(
         print(f"* Wordcloud `{wordcloud_name}` completed: {output_file}")
     
     except Exception as err:
-        print(f"! Wordcloud {wordcloud_name} failed: {err}")
+        print(f"! Wordcloud `{wordcloud_name}` failed: {err}")

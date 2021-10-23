@@ -1,7 +1,7 @@
 import textwrap
 from string import Formatter
 
-from utils.utils import list_to_dict, merge_dicts
+from utils.utils import merge_dicts
 from classes.dataset import Dataset
 
 
@@ -138,8 +138,8 @@ def _extract_format_strings(string):
 # Main method applied across rows in the dataset.
 def build_formatted_line(
     row,
-    line_parts_configs,
-    style='{line}',
+    formatting_configs,
+    style,
     justify=None,
     textwrap_offset=0,
     add_bar=False,
@@ -156,7 +156,7 @@ def build_formatted_line(
         line_part = row[line_part_name]
 
         # Complete each line part configs, defaulting to no formatting if unspecified.
-        line_part_configs = line_parts_configs.get(line_part_name)
+        line_part_configs = formatting_configs.get(line_part_name)
         formatted = _format_line_part(line_part, line_part_configs)
 
         # Add the transformed line part back to the dictionary.
@@ -185,42 +185,42 @@ def build_formatted_line(
     return formatted_line
 
 
-def format_rows_to_lines(data, formats, justify=None):
+def format_rows_to_lines(data, categories, justify=None):
     """
     Convert all lines in a dataset into a specified format.
     """
     _data = data.copy()
 
     # For each format, subset the dataframe and format each line.
-    for format_name, format_configs in formats.items():
+    for category_name, categories_configs in categories.items():
 
         # Check the format-keys, and build optional parts-configs.
-        format_configs.check_keys(
-            ['where', 'parts']
+        categories_configs.check_keys(
+            ['where', 'style']
         )
-        style = format_configs.get('style', "{line}")
-        textwrap_offset = format_configs.get('textwrap_offset', 0)
-        add_bar = format_configs.get('add_bar', False)
-        _justify = format_configs.get('justify', justify)
+        where = categories_configs.get('where')
+        style = categories_configs.get('style')
+        _formatting = categories_configs.get('formatting', {})
+
+        _textwrap_offset = categories_configs.get('textwrap_offset', 0)
+        _add_bar = categories_configs.get('add_bar', False)
+        _justify = categories_configs.get('justify', justify)
 
         # Subset the screenplay dataset and format those lines.
         _screenplay_subset = (
             _data.copy()
-                .filter_where(format_configs.get('where'))
+                .filter_where(where)
         )
-
-        # Convert provided parts configs from a list to a dict.
-        line_parts_configs = list_to_dict(format_configs.get('parts'), 'name')
 
         # Perform transformations on the lines, based on the config logic provided.
         _screenplay_subset['line'] = _screenplay_subset.apply(
             lambda row: build_formatted_line(
                 row,
-                line_parts_configs,
+                _formatting,
                 style=style,
                 justify=_justify,
-                textwrap_offset=textwrap_offset,
-                add_bar=add_bar,
+                textwrap_offset=_textwrap_offset,
+                add_bar=_add_bar,
             ),
             axis=1
         )
@@ -235,5 +235,6 @@ def format_rows_to_lines(data, formats, justify=None):
         merged = merged.drop(['line_x', 'line_y'], axis=1)
 
         _data = Dataset(merged)
+        print(f"* `{category_name}` logic applied.", flush=True, end='\r')
 
     return _data
