@@ -1,6 +1,8 @@
 # adastra-analysis
 TL;DR: What started as a goal to write the contents of the visual novel Adastra into screenplays has now become a ~two-week-long~ **six-week-long** project culminating in a system to dynamically interact with text and images from Adastra. Through a set of scripts, you can parse the game's files into a cleaned dataset and other generated files. These include formatted screenplays, wordclouds, and relation plots.
 
+![amicus](/examples/wordclouds/sprites/amicus/amicus.png)
+
 -----
 
 # Overview
@@ -55,6 +57,12 @@ Below, I will document the structure of the file, its keys and their meanings, a
 
 -----
 
+![alexandcassiuskiss](/examples/wordclouds/illustrations/alexandcassiuskiss.PNG)
+
+-----
+
+
+
 # Scripts
 
 `main.py` is the powerhouse to complete all processes defined in the configs file.
@@ -105,8 +113,6 @@ python main.py build --nlp
 
 Once a dataset is built and saved, it can be queried in runs.
 
-
-
 -----
 
 ## Run
@@ -137,15 +143,16 @@ These are defined in `adastra_analytics.queries` in the configs file.
 ```
 queries:
 
-  output_directory: where should the JSONL files be saved?
-  dataset_alias: how is the main Adastra dataset aliased in the queries?
-  where (optional): apply an optional SQL where filter to the dataset before any queries are run
+  output_directory    [REQUIRED] base output directory to save queries
+  dataset_alias       [REQUIRED] Adastra dataset alias used in SQL queries
+  where               [OPTIONAL] where-clause to apply before every query
 
   queries:
 
-    [query1]:
-      file: name of the output file to save the query result to
-      sql: the SQL statement to run
+    [query1]:         [REQUIRED] key to query, accessible via `--queries query1`
+      file            [REQUIRED] output subpath under {output_directory}
+      sql             [REQUIRED] SQL query to run
+      where           [OPTIONAL] where-clause to apply before the query
 
     [query2]:
       ...
@@ -158,7 +165,7 @@ queries:
 -----
 
 ### Relational Plots
-Create custom Seaborn relational plots based off of SQL statements queried off the Adastra dataset and any other custom datasets defined in the configs. Relplot arguments are entirely customizable based on standard Seaborn relplot kwargs. These are saved as PNG files.
+Create custom relational plots based off of SQL statements queried off the Adastra dataset and any other custom datasets defined in the configs. These are saved as PNG files.
 
 Specific relplots can be provided. Otherwise, all are run.
 ```
@@ -166,22 +173,26 @@ python main.py run --relplots [relplot1 [relplot2 ...]]
 ```
 
 These are defined in `adastra_analytics.relplots` in the configs file.
+
+Relplot arguments are entirely customizable based on standard Seaborn relplot kwargs. See [here](https://seaborn.pydata.org/generated/seaborn.relplot.html) for the Relplot source code (to get a feel for the kwargs).
+
 ```
 relplots:
 
-  output_directory: where should the JSONL files be saved?
-  dataset_alias: how is the main Adastra dataset aliased in the queries?
-  where (optional): apply an optional SQL where filter to the dataset before any queries are run
-  relplot_args:
-    * these are universal kwargs to provide to all relplots
+  output_directory      [REQUIRED] base output directory to save relplots
+  dataset_alias         [REQUIRED] Adastra dataset alias used in SQL queries
+  where                 [OPTIONAL] where-clause to apply before every query
+  relplot_args:         [OPTIONAL] `seaborn.relplot` kwargs applied to all relplots
 
   relplots:
 
-    [relplot1]:
-      file: name of the output file to save the query result to
-      relplot_args:
-        * these are kwargs to provide to the relplot; they overwrite the universal kwargs defined above
-      sql: the SQL statement to run
+    [relplot1]:         [REQUIRED] key to query, accessible via `--relplots relplot1`
+      file              [REQUIRED] output subpath under {output_directory}
+      sql               [REQUIRED] SQL query to run
+      where             [OPTIONAL] where-clause to apply before the query
+      axhline           [OPTIONAL] apply a horizontal line to the relplot; defaults to None
+      remove_outliers   [OPTIONAL] apply smoothing to the output by filtering within three-sigmas; defaults to False
+      relplot_args:     [OPTIONAL] `seaborn.relplot` kwargs applied to this specific relplot
 
     [relplot2]:
       ...
@@ -205,44 +216,41 @@ These are defined in `adastra_analytics.screenplays` in the configs file.
 ```
 screenplays:
 
-  output_directory: where should the screenplays be saved?
-  where (optional): apply an optional SQL where filter to the dataset before any screenplays are created
+  output_directory:        [REQUIRED] base output directory to save screenplays
+  where:                   [OPTIONAL] where-clause to apply to the dataset before every screenplay
 
   screenplays:
 
-    [screenplay_style1]:
-      folder: name of the output folder to save the screenplay files to
-      justify: at how many characters should the text wrap to the next line?
-      line_sep: how should lines be separated?
-      add_columns: additional columns to add to the dataset (useful for filtering on windows, etc.)
+  [screenplay1]:           [REQUIRED] key to query, accessible via `--screenplays screenplay1`
+    folder                 [REQUIRED] output subfolder under {output_directory}
+    justify                [REQUIRED] how wide should the output be (justify-width)
+    line_sep               [REQUIRED] how should lines be separated
+    where:                 [OPTIONAL] where-clause to apply before the query
 
-      categories:
+    categories:            [REQUIRED] filters to segregate the text into styles
+      [category_name1]:    [REQUIRED] name of category (unqueriable, but used to track progress)
+        where              [REQUIRED] where-clause to filter which lines use the given category style
+        style              [REQUIRED] shape of the output with columns used (i.e. "{column1}: {column2}")
+        textwrap_offset    [OPTIONAL] how far should wrapped text be indented; defaults to 0
 
-        [category1]:
-          where: where-filter to specify which lines are formatted in this style
-          style: which parts of the row are included in the formatting, and how?
-          justify (optional): should this format use different formatting from the rest of the output?
-          textwrap_offset (default 0): how far should wrapped lines be offset from the left edge?
+        formatting:        [OPTIONAL] special formatting rules for columns specified in `style`; defaults to no-formatting
+          [column1]:       [OPTIONAL] part of `style` being formatted; corresponds to a column in the dataset
+            strip_quotes   [OPTIONAL] remove wrapper quotes; defaults to False
+            upper          [OPTIONAL] cast the column text to uppercase; defaults to False
+            lower          [OPTIONAL] cast the column text to lowercase; defaults to False
+            title          [OPTIONAL] cast the column text to titlecase; defaults to False
+            offset         [OPTIONAL] offset the column text from by left edge with spaces; defaults to 0
+            prefix         [OPTIONAL] prefix the column text with a string; defaults to ""
+            postfix        [OPTIONAL] postfix the column text with a string; defaults to ""
 
-          formatting (optional): this is where optional formatting is applied to parts of `style`
+          [column2]:
+            ...
 
-            [column_part1]: name of column to include in the formatting (must be defined in `style`); if a key is not defined here, default formatting is applied
-              strip_quotes (default False): should wrapper quotes be removed?
-              upper (default False): should the text be cast to uppercase?
-              lower (default False): should the text be cast to lowercase?
-              title (default False): should the text be cast to title-case?
-              offset (default 0): how far should the line part be offset from the left edge?
-              prefix (default ""): what text should be prefixed to the text?
-              postfix (default ""): what text should be postfixed to the text?
+      [category_name2]:
+        ...
 
-            [column_part2]:
-              ...
-
-        [category2]:
-          ...
-
-    [screenplay_style2]:
-      ...
+  [screenplay2]:
+    ...
 ```
 
 I've created three versions of outputs already. If someone has a better idea for how to best improve readability for the output, please let me know!
@@ -325,30 +333,29 @@ python main.py run --wordclouds [wordcloud1 [wordcloud2 ...]]
 
 These are defined in `adastra_analytics.wordclouds` in the configs file.
 
-By default, a customized TF-IDF algorithm is used to generate word-frequencies for the wordclouds. I will not claim this has been coded correctly, but the wordclouds look nice, so I'm keeping it as is.
+By default, a customized TF-IDF algorithm is used to generate word-frequencies for the wordclouds. The TF portion is built using sklearn's `CountVectorizer`; this is customizable via user-provided kwargs.  See [here](https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html) for the CountVectorizer source code (to get a feel for the kwargs).
 
-Wordplot arguments are entirely customizable based on `wordcloud.Wordcloud` kwargs. I've set up a nice set of defaults, but feel free to test further!
+*Note: I will not claim this has been coded correctly, but the wordclouds look nice, so I'm keeping it as is.*
+
+Wordcloud arguments are entirely customizable based on `wordcloud.Wordcloud` kwargs. I've set up a nice set of defaults, but feel free to test further! See [here](https://github.com/amueller/word_cloud/blob/master/wordcloud/wordcloud.py) for the Wordcloud source code (to get a feel for the kwargs).
 
 ```
 wordclouds:
 
-  output_directory: where should the wordcloud images be saved?
-  where (optional): apply an optional SQL where filter to the dataset before any wordclouds are built
-  documents_column: which column in the dataset should be used to build the wordclouds?
-  filter_columns: which columns in the dataset are used in where-filter queries below?
-  tfidf_args:
-    * these are kwargs to provide to the CountVectorizer used to build the TF-IDF frequencies
-  wordcloud_args:
-    * these are universal wordcloud kwargs to apply to all wordclouds below
+  output_directory      [REQUIRED] base output directory to save wordclouds
+  where                 [OPTIONAL] where-clause to apply to the dataset before every wordcloud
+  documents_column      [REQUIRED] name of 'documents' column in the dataset that will build the wordclouds
+  filter_columns        [REQUIRED] column subset used in where-filters below
+  tfidf_args:           [REQUIRED] sklearn `CountVectorizer` kwargs used to build term-frequencies
+  wordcloud_args:       [OPTIONAL] `wordcloud.Wordcloud` kwargs applied to all wordclouds
 
   wordclouds:
 
-    [wordcloud1]:
-      file: name of the output file to save the wordcloud to
-      where: a where-filter to restrict which lines build the wordcloud
-      image_filepath (optional): the path to the file to mask the wordcloud over; if unspecified, looks for a file with the same name as `file` within `{adastra_directory}/game/images`
-      wordcloud_args:
-        * these are kwargs to provide to the wordcloud; they overwrite the universal kwargs defined above
+    [wordcloud1]:       [REQUIRED] key to query, accessible via `--wordclouds wordcloud1`
+      file              [REQUIRED] output subpath under {output_directory}
+      image_file        [OPTIONAL] path to image mask; uses internal game file at `file` if unspecified
+      where             [REQUIRED] where-clause to subset text used in the wordcloud
+      wordcloud_args:   [OPTIONAL] `wordcloud.Wordcloud` kwargs applied to this specific wordcloud
 
     [wordcloud2]:
       ...
@@ -362,4 +369,4 @@ wordclouds:
 
 This documentation is incomplete, but it's more than enough to get started! I'll continue to document and expand the project in the coming weeks. I've had a lot of fun building out this project, and I hope that someone else gets use out of all this work. Regardless, enjoy the wordclouds I've shared! Please reach out to `u/OrigamiOtter` for questions and feedback!
 
------
+![amicusend](/examples/wordclouds/illustrations/amicusend.png)
