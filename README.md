@@ -1,5 +1,5 @@
 # adastra-analysis
-TL;DR: What started as a goal to write the contents of the visual novel Adastra into screenplays has now become a ~two-week-long~ **six-week-long** project culminating in analyses and sandboxing using text and images from the game. I've created an interactive set of scripts to create a cleaned dataset using the content that can be queried and plotted. In addition, I've codified a customizable interface for building wordclouds and formatted screenplays.
+TL;DR: What started as a goal to write the contents of the visual novel Adastra into screenplays has now become a ~two-week-long~ **six-week-long** project culminating in a system to dynamically interact with text and images from Adastra. Through a set of scripts, you can parse the game's files into a cleaned dataset and other generated files. These include formatted screenplays, wordclouds, and relation plots.
 
 -----
 
@@ -35,11 +35,11 @@ Read on to learn how you can play with this data yourself!
 
 # Setup
 
-Create a new environment in which to play with this code (e.g. using venv). A `requirements.txt` file has been included to try to circumvent dependency errors.
+Create a new environment in which to play with this code (e.g. using `venv`). A `requirements.txt` file has been included to try to circumvent dependency errors.
 
 Download the latest Linux version of Adastra. Unzip the directory and put it somewhere easily accessible. The location should be added to the configs file under `dataset_configs.adastra_directory`.
 
-All logic for this library's outputs is derived from a single YAML config file. This is where you can specify exactly how you want to interact with the dataset, as well as how you want to output your queries, relplots, screenplays, and wordclouds. This is defined at `configs.yml` by default; you can specify another path using `--configs`.
+All logic for this library's outputs is derived from a single YAML config file. This is where you can specify exactly how you want to interact with the dataset, as well as how you want to output your queries, relplots, screenplays, and wordclouds. By default, this is defined at `configs.yml`; you can specify another path using `--configs`.
 
 Example runs are already filled in. You can comment these out (`Ctrl + /` on most modern IDEs) and add your own, or customize them as you see fit.
 
@@ -51,18 +51,18 @@ Before you run any code, you need to populate a manually fill some fields that s
 - `adastra_analytics.relplots.output_directory`
 - `adastra_analytics.wordclouds.output_directory`
 
-Below, I will document the structure of the file, its keys and their meanings, and suggestions for how to work with the library.
+Below, I will document the structure of the file, its keys and their meanings, and suggestions for how to interact with the library.
 
 -----
 
 # Scripts
 
-`main.py` is the powerhouse to complete all processes defined in the configs file. Before you can run additional processes, you must build the dataset.
+`main.py` is the powerhouse to complete all processes defined in the configs file.
 
 
 ## Build
 
-The dataset contains the text of each line, its index, and metadata for querying the dataset. By default, the dataset contains these columns:
+Before you can run additional processes, you must build the dataset. The dataset contains the text of each line, its index, and metadata for querying the its contents. By default, the dataset contains these columns:
 
 | Column | Type | Description |
 | ------ | ---- | ----------- |
