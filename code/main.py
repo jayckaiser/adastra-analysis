@@ -14,10 +14,10 @@ def main():
 
     # Run subprocess
     run = subparser.add_parser('run')
-    run.add_argument('--queries'    , required=False, type=str, nargs='*')
-    run.add_argument('--screenplays', required=False, type=str, nargs='*')
-    run.add_argument('--relplots'   , required=False, type=str, nargs='*')
-    run.add_argument('--wordclouds' , required=False, type=str, nargs='*')
+    run.add_argument('-q', '--queries'    , required=False, type=str, nargs='*')
+    run.add_argument('-s', '--screenplays', required=False, type=str, nargs='*')
+    run.add_argument('-r', '--relplots'   , required=False, type=str, nargs='*')
+    run.add_argument('-w', '--wordclouds' , required=False, type=str, nargs='*')
 
     # A custom configs path can be supplied.
     # Otherwise, it defaults to a library-internal one.
@@ -28,6 +28,7 @@ def main():
 
     # Establish the AA.
     aa = AdastraAnalytics(args.configs)
+    print(f"@ Retrieved configs from `{args.configs}`")
 
     # Build the dataset if specified.
     if args.command == 'build':

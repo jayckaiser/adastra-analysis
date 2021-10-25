@@ -371,7 +371,7 @@ class AdastraAnalytics:
             )
             file   = wordcloud_configs.get('file')
             where  = wordcloud_configs.get('where')
-            _image = wordcloud_configs.get('image_filepath')
+            _image = wordcloud_configs.get('image_file')
             _wordcloud_args = wordcloud_configs.get('wordcloud_args')
 
             # Both global and specific args are provided.

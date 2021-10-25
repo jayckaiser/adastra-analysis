@@ -211,6 +211,7 @@ def format_rows_to_lines(data, categories, justify=None):
             _data.copy()
                 .filter_where(where)
         )
+            
 
         # Perform transformations on the lines, based on the config logic provided.
         _screenplay_subset['line'] = _screenplay_subset.apply(
