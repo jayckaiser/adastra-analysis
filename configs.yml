@@ -2,7 +2,7 @@
 dataset_configs:
 
   # [REQUIRED] Specify the path to the unzipped Adastra folder.
-  adastra_directory: /home/jayckaiser/adastra/Adastra-17-linux
+  adastra_directory: &adastra_directory /home/jayckaiser/adastra/Adastra-17-linux
 
   # [REQUIRED] Specify where the 'adastra' JSONL dataset is stored.
   adastra_datapath: /home/jayckaiser/adastra/data/adastra.jsonl
@@ -747,7 +747,7 @@ adastra_analytics:
     # [REQUIRED] Define universal wordcloud params here. They can be overwritten in any image below.
     # (If not defined here, must be defined under each wordcloud below.)
     wordcloud_args:
-      font_path: /home/jayckaiser/adastra/RobotoSlab-VariableFont_wght.ttf
+      font_path:  !JOIN [*adastra_directory, "game/RobotoSlab-Medium.ttf"]  #/home/jayckaiser/adastra/RobotoSlab-VariableFont_wght.ttf
       max_words: 2500
       max_font_size: 30
       mode: RGB

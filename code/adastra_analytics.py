@@ -18,7 +18,7 @@ class AdastraAnalytics:
 
     def __init__(self, configs_filepath):
         
-        self.yaml_configs = Configs.load_yaml(configs_filepath)
+        self.yaml_configs = Configs.load_configs(configs_filepath)
 
         # Verify necessary configs are present, then collect.
         dataset_configs = self.yaml_configs.get('dataset_configs')

@@ -1,5 +1,6 @@
 import sys
-import yaml
+
+from utils.yaml_utils import load_yaml
 
 
 class Configs(dict):
@@ -11,14 +12,11 @@ class Configs(dict):
 
     
     @classmethod
-    def load_yaml(cls, filepath):
+    def load_configs(cls, filepath):
         """
         Standardized method to load a YAML file and instantiate a Configs.
         """
-        with open(filepath, 'r') as fp:
-            return Configs(
-                yaml.load(fp, Loader=yaml.FullLoader)
-            )
+        return Configs(load_yaml(filepath))
 
     
     def get(self, k, default=None):

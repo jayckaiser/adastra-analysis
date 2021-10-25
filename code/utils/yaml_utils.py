@@ -10,7 +10,7 @@ def _os_join(loader, node):
     seq = loader.construct_sequence(node)
     return os.path.join(map(str, seq))
 
-yaml.add_constructor('!OS_JOIN', _os_join)
+yaml.add_constructor('!JOIN', _os_join)
 
 # 
 def _and_join(loader, node):
@@ -25,3 +25,11 @@ def _or_join(loader, node):
     return '(' + ') OR ('.join(map(str, seq)) + ')'
 
 yaml.add_constructor('!OR', _or_join)
+
+
+def load_yaml(filepath):
+    """
+    Standardized method to load a YAML file and instantiate a Configs.
+    """
+    with open(filepath, 'r') as fp:
+        return yaml.load(fp, Loader=yaml.FullLoader)
