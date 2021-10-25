@@ -221,6 +221,7 @@ class AdastraAnalytics:
             sql              = relplot_configs.get('sql')
             _where           = relplot_configs.get('where')
             _relplot_args    = relplot_configs.get('relplot_args')
+            _title           = relplot_configs.get('title')
             _figsize         = relplot_configs.get('figsize')
             _axhline         = relplot_configs.get('axhline')
             _remove_outliers = relplot_configs.get('remove_outliers')
@@ -243,6 +244,7 @@ class AdastraAnalytics:
                 sql=sql,
 
                 relplot_args=relplot_args,
+                title=_title,
                 figsize=_figsize,
                 axhline=_axhline,
                 remove_outliers=_remove_outliers,

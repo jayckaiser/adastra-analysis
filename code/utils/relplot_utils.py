@@ -12,6 +12,7 @@ from utils.utils import prepare_directories
 
 def build_relplot(
     data, relplot_args,
+    title=None,
     figsize=None, axhline=None,
     remove_outliers=False,
 ):
@@ -41,6 +42,10 @@ def build_relplot(
     # Add a custom horizontal line if specified.
     if axhline is not None:
         plt.axhline(axhline, linestyle='--', color='black', alpha=0.5)
+
+    # Add a title if defined.
+    if title is not None:
+        plt.title(title)
 
     fig = plt.gcf()
     fig.set_size_inches(*figsize)

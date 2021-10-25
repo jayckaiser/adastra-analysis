@@ -56,6 +56,7 @@ def relplot_main(
 
     relplot_args,
     figsize,
+    title,
     axhline,
     remove_outliers,
 
@@ -82,6 +83,7 @@ def relplot_main(
         output_relplot = build_relplot(
             output_dataset,
             relplot_args=relplot_args,
+            title=title,
             figsize=figsize,
             axhline=axhline,
             remove_outliers=remove_outliers
