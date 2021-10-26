@@ -12,23 +12,36 @@ class Screenplay:
         self,
 
         data,
-        # screenplay_args,
-        
+        columns=None,
+        where=None,
+        sql=None,
+        dataset_alias=None,
+        datasets=None,
+
+        # screenplay_args=None,
         categories={},
         justify=None,
         line_sep='\n',
     ):
         # Screenplays are really graphical extensions of Datasets.
-        self.justify = justify
-        self.line_sep = line_sep
+        self.data = Dataset(
+            data,
+            columns=columns,
+            where=where,
+            sql=sql,
+            dataset_alias=dataset_alias,
+            datasets=datasets,
+        ).get_data()
 
         # 
         self.screenplay_rows = self.build_screenplay_rows(
-            data,
+            self.data,
             # screenplay_args=screenplay_args,
             categories=categories,
-            justify=self.justify,
+            justify=justify,
         )
+
+        self.line_sep = line_sep
 
 
     @staticmethod

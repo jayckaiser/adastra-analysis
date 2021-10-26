@@ -5,6 +5,7 @@ import seaborn as sns
 
 from scipy import stats
 
+from classes.dataset import Dataset
 from util.utils import prepare_directories
 
 
@@ -16,8 +17,13 @@ class Relplot:
         self,
 
         data,
-        relplot_args,
+        columns=None,
+        where=None,
+        sql=None,
+        dataset_alias=None,
+        datasets=None,
 
+        relplot_args=None,
         figsize=(16,10),
         style="darkgrid",
         title=None,
@@ -25,11 +31,18 @@ class Relplot:
         remove_outliers=False,
     ):
         # Relplots are really graphical extensions of Datasets.
-        self.data = data
+        self.data = Dataset(
+            data,
+            columns=columns,
+            where=where,
+            sql=sql,
+            dataset_alias=dataset_alias,
+            datasets=datasets,
+        ).get_data()
 
         # 
         self.relplot = self.build_relplot(
-            data,
+            self.data,
             relplot_args=relplot_args,
 
             figsize=figsize,
