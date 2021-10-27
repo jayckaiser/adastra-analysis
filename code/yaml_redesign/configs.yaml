@@ -1,0 +1,1318 @@
+# [OPTIONAL] These are defined variables used across multiple scripts.
+# (These are only passed around the yaml file, not used in Python.)
+definitions:
+
+  ### ALL
+  is_read: &is_read "is_read is True"
+
+
+  ### QUERIES
+
+  # Useful for identifying scenes by file_idx.
+  get_read_content: &get_read_content |
+      select 
+          file,
+          line_idx,
+          is_read,
+          is_choice,
+          is_branch,
+          line
+      from adastra
+
+
+  ### RELPLOTS
+
+  # Long identical SQL query used across 14 sentiment relplots
+  rolling_sentiment: &rolling_sentiment |
+      select
+          line_idx,
+          speaker,
+          avg(sentiment) over (
+              partition by speaker
+              order by line_idx
+              rows between 9 preceding and current row
+          ) as rolling_sentiment
+      from adastra
+          inner join characters using(speaker)
+
+
+  ### SCREENPLAYS
+
+  # Default format-style in screenplays
+  default_line : &default_line "{line}"
+
+
+  ### WORDCLOUDS
+
+  # Repeated where-clauses used across wordclouds
+  is_alexios : &is_alexios  "speaker = 'alexios'"
+  is_amicus  : &is_amicus   "speaker = 'amicus'"
+  is_cassius : &is_cassius  "speaker = 'cassius'"
+  is_cato    : &is_cato     "speaker = 'cato'"
+  is_marco   : &is_marco    "speaker = 'marco'"
+  is_neferu  : &is_neferu   "speaker = 'neferu'"
+  is_virginia: &is_virginia "speaker = 'virginia'"
+
+
+
+# [REQUIRED] Define datasets to build and save when running `build`.
+build:
+
+  dataset_dir: &dataset_dir /home/jayckaiser/adastra/data
+
+  datasets:
+
+    - !AdastraDataset
+      name: adastra
+      file: !PATH_JOIN [*dataset_dir, adastra.jsonl]
+      adastra_dir: &adastra_dir /home/jayckaiser/adastra/Adastra-17-linux
+      main_character: Marco
+      use_nlp: True
+
+    # Define a custom set of main characters to filter on, as well as the colors to display them with in relplots.
+    - !Dataset
+      name: characters
+      file: !PATH_JOIN [*dataset_dir, characters.jsonl]
+      dataset:
+        columns: [speaker, color]
+        data: &characters_palette  # This dictionary is passed to `relplots` as well.
+          alexios : '#65ca68'
+          amicus  : '#ff3333'
+          cassius : '#FFFFFF'
+          cato    : '#7a7a7a'
+          marco   : '#0000FF'
+          neferu  : '#ffcc00'
+          virginia: '#8e389c'
+
+    - !TermFreqs
+      name: term_freqs
+      file: !PATH_JOIN [*dataset_dir, term_frequencies.jsonl]
+      dataset:
+        sql: |
+            select
+                file, line_idx, speaker, is_branch, sentiment,
+                content_words as documents
+            from adastra
+            where is_read
+      countvectorizer_args:
+        stop_words: english
+        ngram_range: [1, 1]
+        max_df: 0.3
+        min_df: 5
+
+
+
+  
+
+
+# Main configs for all output runs.
+run:
+
+  # Run `--queries` to run SQL queries and save outputs to JSONL files.
+  queries:
+
+    queries_dir: &queries_dir /home/jayckaiser/adastra/queries
+
+    # Create one output per key.
+    queries:
+
+      # Here is the structure of a typical `query`.
+      # !Query:
+      #   name       [REQUIRED] key to query, accessible via `--queries name`
+      #   file       [REQUIRED] output path for Query .jsonl file
+      #   sql        [REQUIRED] SQL query to run
+      #   where      [OPTIONAL] where-clause to apply before the query
+
+      - !Query
+        name: lines_per_file
+        file: !PATH_JOIN [*queries_dir, lines_per_file.jsonl]
+        dataset:
+          where: *is_read
+          sql: |
+            select
+              file,
+              count(*) as num_lines
+            from adastra
+            group by 1
+            order by 1
+      
+      - !Query
+        name: lines_per_speaker
+        file: !PATH_JOIN [*queries_dir, lines_per_speaker.jsonl]
+        dataset:
+          where: *is_read
+          sql: |
+            select
+              speaker,
+              count(*) as num_lines
+            from adastra
+            group by 1
+            order by 1
+
+      - !Query
+        name: words_per_file
+        file: !PATH_JOIN [*queries_dir, words_per_file.jsonl]
+        dataset:
+          where: *is_read
+          sql: |
+            select
+              file,
+              sum(num_words) as sum_words
+            from adastra
+            group by 1
+            order by 1
+            
+      - !Query
+        name: words_per_speaker
+        file: !PATH_JOIN [*queries_dir, words_per_speaker.jsonl]
+        dataset:
+          where: *is_read
+          sql: |
+            select
+              speaker,
+              sum(num_words) as sum_words
+            from adastra
+            group by 1
+            order by 1
+
+      - !Query
+        name: total_lines
+        file: !PATH_JOIN [*queries_dir, total_lines.jsonl]
+        dataset:
+          where: *is_read
+          sql: |
+            select
+              count(*) as total_words
+            from adastra
+
+      - !Query
+        name: total_words
+        file: !PATH_JOIN [*queries_dir, total_words.jsonl]
+        dataset:
+          where: *is_read
+          sql: |
+            select
+              sum(num_words) as total_words
+            from adastra
+
+      # Get read content and metadata from all script files.
+      - !Query
+        name: a1s1
+        file: !PATH_JOIN [*queries_dir, contents/a1s1.jsonl]
+        dataset:
+          where: !AND [*is_read, "file = 'a1s1'"]
+          sql: *get_read_content
+
+      - !Query
+        name: a1s2
+        file: !PATH_JOIN [*queries_dir, contents/a1s2.jsonl]
+        dataset:
+          where: !AND [*is_read, "file = 'a1s2'"]
+          sql: *get_read_content
+
+      - !Query
+        name: a1s3
+        file: !PATH_JOIN [*queries_dir, contents/a1s3.jsonl]
+        dataset:
+          where: !AND [*is_read, "file = 'a1s3'"]
+          sql: *get_read_content
+
+      - !Query
+        name: a1s4
+        file: !PATH_JOIN [*queries_dir, contents/a1s4.jsonl]
+        dataset:
+          where: !AND [*is_read, "file = 'a1s4'"]
+          sql: *get_read_content
+
+      - !Query
+        name: a1s5
+        file: !PATH_JOIN [*queries_dir, contents/a1s5.jsonl]
+        dataset:
+          where: !AND [*is_read, "file = 'a1s5'"]
+          sql: *get_read_content
+
+      - !Query
+        name: a1s6
+        file: !PATH_JOIN [*queries_dir, contents/a1s6.jsonl]
+        dataset:
+          where: !AND [*is_read, "file = 'a1s6'"]
+          sql: *get_read_content
+
+      - !Query
+        name: a1s7
+        file: !PATH_JOIN [*queries_dir, contents/a1s7.jsonl]
+        dataset:
+          where: !AND [*is_read, "file = 'a1s7'"]
+          sql: *get_read_content
+
+      - !Query
+        name: a2s1
+        file: !PATH_JOIN [*queries_dir, contents/a2s1.jsonl]
+        dataset:
+          where: !AND [*is_read, "file = 'a2s1'"]
+          sql: *get_read_content
+
+      - !Query
+        name: a2s2
+        file: !PATH_JOIN [*queries_dir, contents/a2s2.jsonl]
+        dataset:
+          where: !AND [*is_read, "file = 'a2s2'"]
+          sql: *get_read_content
+
+      - !Query
+        name: a2s3
+        file: !PATH_JOIN [*queries_dir, contents/a2s3.jsonl]
+        dataset:
+          where: !AND [*is_read, "file = 'a2s3'"]
+          sql: *get_read_content
+
+      - !Query
+        name: a3s1
+        file: !PATH_JOIN [*queries_dir, contents/a3s1.jsonl]
+        dataset:
+          where: !AND [*is_read, "file = 'a3s1'"]
+          sql: *get_read_content
+
+      - !Query
+        name: a3s2
+        file: !PATH_JOIN [*queries_dir, contents/a3s2.jsonl]
+        dataset:
+          where: !AND [*is_read, "file = 'a3s2'"]
+          sql: *get_read_content
+
+      - !Query
+        name: end_game1
+        file: !PATH_JOIN [*queries_dir, contents/end_game1.jsonl]
+        dataset:
+          where: !AND [*is_read, "file = 'end_game1'"]
+          sql: *get_read_content
+
+      - !Query
+        name: end_game2
+        file: !PATH_JOIN [*queries_dir, contents/end_game2.jsonl]
+        dataset:
+          where: !AND [*is_read, "file = 'end_game2'"]
+          sql: *get_read_content
+
+
+  # Run `--relplots` to run SQL queries to create Seaborn relational plots.
+  relplots:
+
+    relplots_dir: &relplots_dir /home/jayckaiser/adastra/relplots
+
+    relplot_args: &relplot_args
+      hue: speaker
+      kind: line
+      palette: *characters_palette
+      
+    relplots:
+
+      # Here is the structure of a typical `relplot`.
+      #
+      # !Relplot:
+      #   name              [REQUIRED] key to query, accessible via `--relplots name`
+      #   file              [REQUIRED] output path for Relplot .png file
+      #   sql               [REQUIRED] SQL query to run
+      #   relplot_args:     [REQUIRED] custom `seaborn.relplot` kwargs to define the relplot
+      #   where             [OPTIONAL] where-clause to apply before the query
+      #   axhline           [OPTIONAL] apply a horizontal line to the relplot; defaults to None
+      #   remove_outliers   [OPTIONAL] apply smoothing to the output by filtering within three-sigmas; defaults to False
+      
+      - !Relplot
+        name: lines_per_character
+        file: !PATH_JOIN [*relplots_dir, lines_per_character.png]
+        dataset:
+          sql: |
+              select
+                  file,
+                  speaker,
+                  count(*) as num_lines
+              from adastra
+              inner join characters using(speaker)
+              group by 1, 2
+              order by 1, 2
+        relplot_args:
+          <<: *relplot_args
+          x: file
+          y: num_lines
+      
+      - !Relplot
+        name: proportion_lines_per_character
+        file: !PATH_JOIN [*relplots_dir, proportion_lines_per_character.png]
+        dataset:
+          sql: |
+              select
+                  file,
+                  speaker,
+                  count(*) / num_lines_by_file as proportion_lines
+              from adastra
+                  inner join characters using(speaker)
+                  inner join (
+                      select
+                          file,
+                          cast(count(*) as float) as num_lines_by_file
+                      from adastra
+                      group by 1
+                  ) using(file)
+              group by 1, 2
+              order by 1, 2
+        relplot_args:
+          <<: *relplot_args
+          x: file
+          y: proportion_lines
+          
+      - !Relplot
+        name: words_per_character
+        file: !PATH_JOIN [*relplots_dir, words_per_character.png]
+        dataset:
+          sql: |
+              select
+                  file,
+                  speaker,
+                  sum(num_words) as num_words
+              from adastra
+              inner join characters using(speaker)
+              group by 1, 2
+              order by 1, 2
+        relplot_args:
+          <<: *relplot_args
+          x: file
+          y: num_words
+        
+      - !Relplot
+        name: proportion_words_per_character
+        file: !PATH_JOIN [*relplots_dir, proportion_words_per_character.png]
+        dataset:
+          sql: |
+              select
+                  file,
+                  speaker,
+                  sum(num_words) / num_words_by_file as proportion_words
+              from adastra
+                  inner join characters using(speaker)
+                  inner join (
+                      select
+                          file,
+                          cast(sum(num_words) as float) as num_words_by_file
+                      from adastra
+                      group by 1
+                  ) using(file)
+              group by 1, 2
+              order by 1, 2
+        relplot_args:
+          <<: *relplot_args
+          x: file
+          y: proportion_words
+            
+      - !Relplot
+        name: average_sentiment_per_character
+        file: !PATH_JOIN [*relplots_dir, average_sentiment_per_character.png]
+        dataset:
+          sql: |
+              select
+                  file,
+                  speaker,
+                  avg(sentiment) as avg_sentiment
+              from adastra
+                  inner join characters using(speaker)
+              group by 1, 2
+              order by 1, 2
+        relplot_args:
+          <<: *relplot_args
+          x: file
+          y: avg_sentiment
+        axhline: 0.0
+        
+      # Sentiment graphs, one per file.
+      - !Relplot
+        name: a1s1_sentiment
+        file: !PATH_JOIN [*relplots_dir, sentiment/a1s1.png]
+        relplot_args:
+        dataset:
+          where: "file = 'a1s1'"
+          sql: *rolling_sentiment
+          <<: *relplot_args
+          x: line_idx
+          y: rolling_sentiment
+        title: "Rolling sentiment by character across Act 1, Scene 1"
+        axhline: 0.0
+        remove_outliers: True
+        
+      - !Relplot
+        name: a1s2_sentiment
+        file: !PATH_JOIN [*relplots_dir, sentiment/a1s2.png]
+        relplot_args:
+        dataset:
+          where: "file = 'a1s2'"
+          sql: *rolling_sentiment
+          <<: *relplot_args
+          x: line_idx
+          y: rolling_sentiment
+        title: "Rolling sentiment by character across Act 1, Scene 2"
+        axhline: 0.0
+        remove_outliers: True
+        
+      - !Relplot
+        name: a1s3_sentiment
+        file: !PATH_JOIN [*relplots_dir, sentiment/a1s3.png]
+        relplot_args:
+        dataset:
+          where: "file = 'a1s3'"
+          sql: *rolling_sentiment
+          <<: *relplot_args
+          x: line_idx
+          y: rolling_sentiment
+        title: "Rolling sentiment by character across Act 1, Scene 3"
+        axhline: 0.0
+        remove_outliers: True
+        
+      - !Relplot
+        name: a1s4_sentiment
+        file: !PATH_JOIN [*relplots_dir, sentiment/a1s4.png]
+        relplot_args:
+        dataset:
+          where: "file = 'a1s4'"
+          sql: *rolling_sentiment
+          <<: *relplot_args
+          x: line_idx
+          y: rolling_sentiment
+        title: "Rolling sentiment by character across Act 1, Scene 4"
+        axhline: 0.0
+        remove_outliers: True
+        
+      - !Relplot
+        name: a1s5_sentiment
+        file: !PATH_JOIN [*relplots_dir, sentiment/a1s5.png]
+        dataset:
+          where: "file = 'a1s5'"
+          sql: *rolling_sentiment
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        title: "Rolling sentiment by character across Act 1, Scene 5"
+        axhline: 0.0
+        remove_outliers: True
+        
+      - !Relplot
+        name: a1s6_sentiment
+        file: !PATH_JOIN [*relplots_dir, sentiment/a1s6.png]
+        dataset:
+          where: "file = 'a1s6'"
+          sql: *rolling_sentiment
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        title: "Rolling sentiment by character across Act 1, Scene 6"
+        axhline: 0.0
+        remove_outliers: True
+        
+      - !Relplot
+        name: a1s7_sentiment
+        file: !PATH_JOIN [*relplots_dir, sentiment/a1s7.png]
+        dataset:
+          where: "file = 'a1s7'"
+          sql: *rolling_sentiment
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        title: "Rolling sentiment by character across Act 1, Scene 7"
+        axhline: 0.0
+        remove_outliers: True
+        
+      - !Relplot
+        name: a2s1_sentiment
+        file: !PATH_JOIN [*relplots_dir, sentiment/a2s1.png]
+        dataset:
+          where: "file = 'a2s1'"
+          sql: *rolling_sentiment
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        title: "Rolling sentiment by character across Act 2, Scene 1"
+        axhline: 0.0
+        remove_outliers: True
+        
+      - !Relplot
+        name: a2s2_sentiment
+        file: !PATH_JOIN [*relplots_dir, sentiment/a2s2.png]
+        dataset:
+          where: "file = 'a2s2'"
+          sql: *rolling_sentiment
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        title: "Rolling sentiment by character across Act 2, Scene 2"
+        axhline: 0.0
+        remove_outliers: True
+        
+      - !Relplot
+        name: a2s3_sentiment
+        file: !PATH_JOIN [*relplots_dir, sentiment/a2s3.png]
+        dataset:
+          where: "file = 'a2s3'"
+          sql: *rolling_sentiment
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        title: "Rolling sentiment by character across Act 2, Scene 3"
+        axhline: 0.0
+        remove_outliers: True
+        
+      - !Relplot
+        name: a3s1_sentiment
+        file: !PATH_JOIN [*relplots_dir, sentiment/a3s1.png]
+        dataset:
+          where: "file = 'a3s1'"
+          sql: *rolling_sentiment
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        title: "Rolling sentiment by character across Act 3, Scene 1"
+        axhline: 0.0
+        remove_outliers: True
+        
+      - !Relplot
+        name: a3s2_sentiment
+        file: !PATH_JOIN [*relplots_dir, sentiment/a3s2.png]
+        dataset:
+          where: "file = 'a3s2'"
+          sql: *rolling_sentiment
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        title: "Rolling sentiment by character across Act 3, Scene 2"
+        axhline: 0.0
+        remove_outliers: True
+        
+      - !Relplot
+        name: end_game1_sentiment
+        file: !PATH_JOIN [*relplots_dir, sentiment/end_game1.png]
+        dataset:
+          where: "file = 'end_game1'"
+          sql: *rolling_sentiment
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        title: "Rolling sentiment by character across End Game 1"
+        axhline: 0.0
+        remove_outliers: True
+        
+      - !Relplot
+        name: end_game2_sentiment
+        file: !PATH_JOIN [*relplots_dir, sentiment/end_game2.png]
+        dataset:
+          where: "file = 'end_game2'"
+          sql: *rolling_sentiment
+        relplot_args:
+          x: line_idx
+          y: rolling_sentiment
+        title: "Rolling sentiment by character across End Game 2"
+        axhline: 0.0
+        remove_outliers: True
+        
+
+
+  # Run `--screenplays` to create normalized text of the game in a specified format.
+  screenplays:
+
+    screenplays_dir: &screenplays_dir /home/jayckaiser/adastra/screenplays
+
+    dataset:
+      sql: |
+          select *,
+              LAG(is_branch, 1) OVER (ORDER BY file, line_idx) AS prev_line_is_branch
+          from adastra
+          where is_read or is_choice
+
+    screenplays:
+
+      # Here is the structure of a typical `screenplay`.
+      #
+      # [screenplay_style1]:     [REQUIRED] key to query, accessible via `--screenplays screenplay_style1`
+      #   folder                 [REQUIRED] output subfolder under {output_directory}
+      #   justify                [REQUIRED] how wide should the output be (justify-width)
+      #   line_sep               [REQUIRED] how should lines be separated
+      #   where                  [OPTIONAL] where-clause to apply before the query
+      #     
+      #   categories:            [REQUIRED] filters to segregate the text into styles
+      #     [category_name1]:    [REQUIRED] name of category (unqueriable, but used to track progress)
+      #       where              [REQUIRED] where-clause to filter which lines use the given category style
+      #       style              [REQUIRED] shape of the output with columns used (i.e. "{column1}: {column2}")
+      #       textwrap_offset    [OPTIONAL] how far should wrapped text be indented; defaults to 0
+      # 
+      #       formatting:        [OPTIONAL] special formatting rules for columns specified in `style`; defaults to no-formatting
+      #         [column1]:       [OPTIONAL] part of `style` being formatted; corresponds to a column in the dataset
+      #           strip_quotes   [OPTIONAL] remove wrapper quotes; defaults to False
+      #           upper          [OPTIONAL] cast the column text to uppercase; defaults to False
+      #           lower          [OPTIONAL] cast the column text to lowercase; defaults to False
+      #           title          [OPTIONAL] cast the column text to titlecase; defaults to False
+      #           offset         [OPTIONAL] offset the column text from by left edge with spaces; defaults to 0
+      #           prefix         [OPTIONAL] prefix the column text with a string; defaults to ""
+      #           postfix        [OPTIONAL] postfix the column text with a string; defaults to ""
+
+      # Emulates 'The Cursed Child'
+      !Screenplay
+      - name: screenplay_style1
+        folder: !PATH_JOIN [*screenplays_dir, style1]
+        justify: 75
+        line_sep: "\n\n"
+        categories:
+
+          # Player/game choice between branches.
+          is_choice:
+            where: "is_choice IS TRUE"
+            style: *default_line
+            formatting:
+              line:
+                prefix: '['
+                postfix: ']'
+
+          # Dialogue explicitly spoken by speaker in branch.
+          has_speaker_in_branch:
+            where: "is_branch IS TRUE AND has_speaker IS TRUE"
+            style: "{speaker}\n{line}"
+            textwrap_offset: 8
+            formatting:
+              speaker:
+                offset: 8
+                upper: True
+              line:
+                offset: 2
+
+          # Internal narration and unspecified speaker in branch.
+          is_narration_in_branch:
+            where: "is_branch IS TRUE AND has_speaker IS FALSE"
+            style: *default_line
+            textwrap_offset: 8
+            formatting:
+              line:
+                offset: 8
+
+          # Dialogue explicitly spoken by speaker.
+          has_speaker_outside_branch:
+            where: "is_branch IS FALSE AND has_speaker IS TRUE"
+            style: "{speaker}\n{line}"
+            formatting:
+              speaker:
+                upper: True
+              line:
+                offset: 2
+
+          # Internal narration and unspecified speaker.
+          is_narration_outside_branch:
+            where: "is_branch IS FALSE AND has_speaker IS FALSE"
+            style: *default_line
+
+
+      # Custom format
+      !Screenplay
+      - name: screenplay_style2
+        folder: !PATH_JOIN [*screenplays_dir, style2]
+        justify: 75
+        line_sep: "\n\n"
+        categories:
+
+          # Player/game choice between branches.
+          is_choice:
+            where: "is_choice IS TRUE"
+            style: *default_line
+            formatting:
+              line:
+                prefix: "[BRANCH]: "
+
+          # Dialogue explicitly spoken by speaker in branch.
+          has_speaker_in_branch:
+            where: "is_branch IS TRUE AND has_speaker IS TRUE"
+            style: "{speaker}: {line}"
+            textwrap_offset: 8
+            formatting:
+              speaker:
+                offset: 4
+                upper: True
+
+          # Internal narration and unspecified speaker in branch.
+          is_narration_in_branch:
+            where: "is_branch IS TRUE AND has_speaker IS FALSE"
+            style: *default_line
+            textwrap_offset: 4
+            formatting:
+              line:
+                offset: 4
+
+          # Dialogue explicitly spoken by speaker.
+          is_speaker_outside_branch:
+            where: "is_branch IS FALSE AND has_speaker IS TRUE"
+            style: "{speaker}: {line}"
+            textwrap_offset: 4
+            formatting:
+              speaker:
+                upper: True
+
+          # Internal narration and unspecified speaker.
+          is_narration_outisde_branch:
+            where: "is_branch IS FALSE AND has_speaker IS FALSE"
+            style: *default_line
+
+
+      # Emulates an actual movie screenplay.
+      !Screenplay
+      - name: screenplay_style3
+        folder: !PATH_JOIN [*screenplays_dir, style3]
+        justify: 75
+        line_sep: "\n\n"
+
+        # Add additional columns to the dataset to allow deeper formatting.
+        add_columns:
+          - 'LAG(is_branch, 1) OVER (ORDER BY file, line_idx) AS prev_line_is_branch'
+
+        categories:
+
+          # Player/game choice between branches.
+          is_choice:
+            where: "is_choice IS TRUE"
+            style: *default_line
+            add_bar: True
+            formatting: 
+              line:
+                prefix: "[BRANCH]: "
+
+          # Dialogue explicitly spoken by speaker.
+          has_speaker:
+            where: "has_speaker IS TRUE"
+            style: "{speaker}\n{line}"
+            justify: 60 
+            textwrap_offset: 15
+            formatting:
+              speaker:
+                offset: 15
+                upper: True
+
+          # Internal narration and unspecified speaker.
+          is_internal_narration:
+            where: "has_speaker IS FALSE AND speaker = 'internal_narration'"
+            style: *default_line
+
+          # Internal narration and unspecified speaker.
+          is_unspecified_speaker:
+            where: "has_speaker IS FALSE AND speaker = 'speaker_unspecified'"
+            style: *default_line
+            justify: 60
+            textwrap_offset: 15
+            formatting: 
+              line:
+                offset: 15
+
+          is_end_of_branch:
+            where: "cast(prev_line_is_branch as boolean) IS TRUE AND is_branch IS FALSE"
+            style: *default_line
+            add_bar: True
+                
+
+
+  # Run `--wordclouds` to create TF-IDF wordclouds using custom filters. 
+  wordclouds:
+
+    wordclouds_dir : &wordclouds_dir  /home/jayckaiser/adastra/wordclouds
+    images_dir     : &images_dir      !PATH_JOIN [*adastra_directory, 'game/images']
+
+    # [REQUIRED] Specify which column in the dataset will be used to build the wordclouds.
+    # - Prebuilt options are 'line', 'words', or 'content_words'.
+    #   * 'line' is the cleaned text of the line.
+    #   * 'words' removes punctuation.
+    #   * 'content_words' removes punctuation and stop-words and converts to lowercase.
+
+    
+
+    # [REQUIRED] Define universal wordcloud params here. They can be overwritten in any image below.
+    # (If not defined here, must be defined under each wordcloud below.)
+    wordcloud_args: &wordcloud_args
+      font_path: !PATH_JOIN [*adastra_directory, "game/RobotoSlab-Medium.ttf"]
+      max_words: 2500
+      max_font_size: 30
+      mode: RGB
+      background_color: black
+      repeat: True
+      relative_scaling: 0.3
+      random_state: 42
+
+    # [REQUIRED] Create one wordcloud per image.
+    # - By default, use images found in `{adastra_directory}/game/images`.
+    #   (If the input image is different, specify an 'image_file' subkey.)
+    # - By default, the key is the name of both the input and output image.
+    wordclouds:
+
+      # Here is the structure of a typical `wordcloud`.
+      #
+      # [wordcloud1]:       [REQUIRED] key to query, accessible via `--wordclouds wordcloud1`
+      #   file              [REQUIRED] output subpath under {output_directory}
+      #   image_file        [OPTIONAL] path to image mask; uses internal game file at `file` if unspecified
+      #   where             [REQUIRED] where-clause to subset text used in the wordcloud
+      #   wordcloud_args:   [OPTIONAL] custom `wordcloud.Wordcloud` kwargs to define the wordcloud
+
+      # Alexios
+      - !Wordcloud
+        name : alexios
+        image: !PATH_JOIN [*adastra_dir, sprites/alexios/alexios.png]
+        file : !PATH_JOIN [*wordclouds_dir, sprites/alexios.png]
+        where: *is_alexios
+        wordcloud_args:
+          <<: *wordcloud_args
+          contour_width: 1
+          contour_color: white
+
+      - !Wordcloud
+        name : alexios-vshocked-e
+        image: !PATH_JOIN [*adastra_dir, sprites/alexios/alexios-vshocked-e.png]
+        file : !PATH_JOIN [*wordclouds_dir, sprites/alexios.png]
+        where: *is_alexios
+        wordcloud_args:
+          <<: *wordcloud_args
+          contour_width: 1
+          contour_color: white
+
+      - !Wordcloud
+        name : alexios-alexios-shocked
+        image: !PATH_JOIN [*adastra_dir, sprites/alexios/alexios-shocked.png]
+        file : !PATH_JOIN [*wordclouds_dir, sprites/alexios.png]
+        where: *is_alexios
+        wordcloud_args:
+          <<: *wordcloud_args
+          contour_width: 1
+          contour_color: white
+
+      - !Wordcloud
+        name : alexios-embarrassed
+        image: !PATH_JOIN [*adastra_dir, sprites/alexios/alexios-embarrassed.png]
+        file : !PATH_JOIN [*wordclouds_dir, sprites/alexios.png]
+        where: *is_alexios
+        wordcloud_args:
+          <<: *wordcloud_args
+          contour_width: 1
+          contour_color: white
+
+      - !Wordcloud
+        name : alexios-angry-e-u
+        image: !PATH_JOIN [*adastra_dir, sprites/alexios/alexios-angry-e-u.png]
+        file : !PATH_JOIN [*wordclouds_dir, sprites/alexios-angry-e-u.png]
+        where: !AND [*is_alexios, "sentiment < 0"]
+        wordcloud_args:
+          <<: *wordcloud_args
+          contour_width: 1
+          contour_color: white
+
+      - !Wordcloud
+        name : garden1
+        image: !PATH_JOIN [*adastra_dir, backgrounds/garden1.png]
+        file :!PATH_JOIN [*wordclouds_dir, backgrounds/garden1.png]
+        where: *is_alexios
+        wordcloud_args:
+          <<: *wordcloud_args
+
+
+      # Amicus
+      - !Wordcloud
+        name : amicus
+        image: !PATH_JOIN [*adastra_dir, sprites/amicus/amicus.png]
+        file : !PATH_JOIN [*wordclouds_dir, sprites/amicus.png]
+        where: *is_amicus
+        wordcloud_args:
+          <<: *wordcloud_args
+          contour_width: 1
+          contour_color: white
+
+      - !Wordcloud
+        name: amicus-tears
+        image: !PATH_JOIN [*adastra_dir, sprites/amicus/amicus-tears.png]
+        file:  !PATH_JOIN [*wordclouds_dir, sprites/amicus-tears.png]
+        where: "speaker = 'amicus' AND sentiment < 0"
+        wordcloud_args:
+          <<: *wordcloud_args
+          contour_width: 1
+          contour_color: white
+
+      - !Wordcloud
+        name : amicus-smile
+        image: !PATH_JOIN [*adastra_dir, sprites/amicus/amicus-smile.png]
+        file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-smile.png]
+        where: "speaker = 'amicus' AND sentiment > 0"
+        wordcloud_args:
+          <<: *wordcloud_args
+          contour_width: 1
+          contour_color: white
+
+      - !Wordcloud
+        name : amicus-shocked
+        image: !PATH_JOIN [*adastra_dir, sprites/amicus/amicus-shocked.png]
+        file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-shocked.png]
+        where: *is_amicus
+        wordcloud_args:
+          <<: *wordcloud_args
+          contour_width: 1
+          contour_color: white
+
+      - !Wordcloud
+        name : amicus-crossed-serious
+        image: !PATH_JOIN [*adastra_dir, sprites/amicus/amicus-crossed-serious.png]
+        file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-crossed-serious.png]
+        where: *is_amicus
+        wordcloud_args:
+          <<: *wordcloud_args
+          contour_width: 1
+          contour_color: white
+
+      - !Wordcloud
+        name : amicus-angry-n
+        image: !PATH_JOIN [*adastra_dir, sprites/amicus/amicus-angry-n.png]
+        file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-angry-n.png]
+        where: "speaker = 'amicus' AND sentiment < 0"
+        wordcloud_args:
+          <<: *wordcloud_args
+          contour_width: 1
+          contour_color: white
+
+      - !Wordcloud
+        name : sleep
+        image: !PATH_JOIN [*adastra_dir, illustrations/sleep.png]
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/sleep.png]
+        where: *is_amicus
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : amicusend
+        image: !PATH_JOIN [*adastra_dir, illustrations/amicusend.png]
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/amicusend.png]
+        where: *is_amicus
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : amicusroom
+        image: !PATH_JOIN [*adastra_dir, backgrounds/amicusroom.png]
+        file : !PATH_JOIN [*wordclouds_dir, backgrounds/amicusroom.png]
+        where: *is_amicus
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      # From Marco on ship until untie Amicus
+      - !Wordcloud
+        name : introspection
+        image: !PATH_JOIN [*adastra_dir, illustrations/introspection.png]
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/introspection.png]
+        where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"  
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : spaceship
+        image: !PATH_JOIN [*adastra_dir, backgrounds/spaceship.png]
+        file : !PATH_JOIN [*wordclouds_dir, backgrounds/spaceship.png]
+        where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : spaceshipnebula
+        image: !PATH_JOIN [*adastra_dir, backgrounds/spaceshipnebula.png]
+        file : !PATH_JOIN [*wordclouds_dir, backgrounds/spaceshipnebula.png]
+        where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : spaceshipstar
+        image: !PATH_JOIN [*adastra_dir, backgrounds/spaceshipstar.png]
+        file : !PATH_JOIN [*wordclouds_dir, backgrounds/spaceshipstar.png]
+        where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"
+        wordcloud_args:
+          <<: *wordcloud_args
+
+
+      # Visit to town after 2nd trial
+      - !Wordcloud
+        name : dinner1
+        image: !PATH_JOIN [*adastra_dir, illustrations/dinner1.png]
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner1.PNG]
+        where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"  
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : dinner2
+        image: !PATH_JOIN [*adastra_dir, illustrations/dinner2.png]
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner2.PNG]
+        where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : dinner3
+        image: !PATH_JOIN [*adastra_dir, illustrations/dinner3.png]
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner3.PNG]
+        where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : dinner4
+        image: !PATH_JOIN [*adastra_dir, illustrations/dinner4.png]
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner4.PNG]
+        where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"
+        wordcloud_args:
+          <<: *wordcloud_args
+
+
+      # Cassius
+      cassius:
+        file: sprites/cassius/cassius.png
+        where: *is_cassius
+        wordcloud_args:
+          contour_width: 1
+          contour_color: white
+      cassius-angry-u:
+        file: sprites/cassius/cassius-angry-u.png
+        where: "speaker = 'cassius' AND sentiment < 0"
+        wordcloud_args:
+          contour_width: 1
+          contour_color: white
+      cassius-paw:
+        file: sprites/cassius/cassius-paw.png
+        where: *is_cassius
+        wordcloud_args:
+          contour_width: 1
+          contour_color: white
+      cassius-furious:
+        file: sprites/cassius/cassius-furious.png
+        where: "speaker = 'cassius' AND sentiment < 0"
+        wordcloud_args:
+          contour_width: 1
+          contour_color: white
+      cassius-disappointed-u:
+        file: sprites/cassius/cassius-disappointed-u.png
+        where: *is_cassius
+        wordcloud_args:
+          contour_width: 1
+          contour_color: white
+
+
+      # Cato
+      cato:
+        file: sprites/cato/cato.png
+        where: *is_cato
+        wordcloud_args:
+          contour_width: 1
+          contour_color: white
+      cato-bow-v:
+        file: sprites/cato/cato-bow-v.png
+        where: *is_cato
+        wordcloud_args:
+          contour_width: 1
+          contour_color: white 
+      cato-angry-u:
+        file: sprites/cato/cato-angry-u.png
+        where: "speaker = 'cato' AND sentiment < 0"
+        wordcloud_args:
+          contour_width: 1
+          contour_color: white
+
+
+      # Neferu
+      neferu:
+        file: sprites/neferu/neferu.png
+        where: *is_neferu
+        wordcloud_args:
+          contour_width: 1
+          contour_color: white
+      neferu-wink-f:
+        file: sprites/neferu/neferu-wink-f.png
+        where: *is_neferu
+        wordcloud_args:
+          contour_width: 1
+          contour_color: white
+      neferu-talking-n:
+        file: sprites/neferu/neferu-talking-n.png
+        where: *is_neferu
+        wordcloud_args:
+          contour_width: 1
+          contour_color: white
+      neferu-talking-a:
+        file: sprites/neferu/neferu-talking-a.png
+        where: *is_neferu
+        wordcloud_args:
+          contour_width: 1
+          contour_color: white
+      neferu-silly-f-n:
+        file: sprites/neferu/neferu-silly-f-n.png
+        where: *is_neferu
+        wordcloud_args:
+          contour_width: 1
+          contour_color: white
+      neferu-shocked:
+        file: sprites/neferu/neferu-shocked.png
+        where: *is_neferu
+        wordcloud_args:
+          contour_width: 1
+          contour_color: white
+      neferu-fury:
+        file: sprites/neferu/neferu-fury.png
+        where: "speaker = 'neferu' AND sentiment < 0"
+        wordcloud_args:
+          contour_width: 1
+          contour_color: white
+
+
+      # Virginia
+      virginia:
+        file: sprites/virginia/virginia.png
+        where: *is_virginia
+        wordcloud_args:
+          contour_width: 1
+          contour_color: white
+      virginia-tilt-p:
+        file: sprites/virginia/virginia-tilt-p.png
+        where: *is_virginia
+        wordcloud_args:
+          contour_width: 1
+          contour_color: white
+      virginia-annoyed:
+        file: sprites/virginia/virginia-annoyed.png
+        where: "speaker = 'virginia' AND sentiment < 0"
+        wordcloud_args:
+          contour_width: 1
+          contour_color: white
+      archives1:
+        file: illustrations/archives1.png
+        where: "file = 'a2s3' AND line_idx BETWEEN 795 AND 925"
+
+
+      # Meera 
+      meera:
+        file: illustrations/meera.png
+        where: "speaker = 'meera'"
+        wordcloud_args:
+          contour_width: 1
+          contour_color: white
+
+
+      # Monitor
+      monitor:
+        file: illustrations/monitor.png
+        where: "speaker = 'monitor'"
+
+
+      # Cassius and Alexios
+      poisoned:
+        file: illustrations/poisoned.png
+        where: "file = 'a3s1' AND line_idx BETWEEN 784 AND 990"  # A3S1 Breakfast
+        wordcloud_args:
+          relative_scaling: 0.2
+      alexandcassius:
+        file: illustrations/alexandcassius.PNG
+        where: "file = 'a1s5' AND line_idx BETWEEN 62 AND 626"  # 1st trial
+      alexandcassiuskiss:
+        file: illustrations/alexandcassiuskiss.PNG
+        where: "file = 'a1s5' AND line_idx BETWEEN 62 AND 626"  # 1st trial
+
+
+      # Cato and Neferu
+      nefandcat1:
+        file: illustrations/nefandcat1.PNG
+        where: "file = 'a2s2' AND line_idx BETWEEN 590 AND 882"  # Neferu/Cato rendezvous
+        wordcloud_args:
+          relative_scaling: 0.2
+      nefandcat2:
+        file: illustrations/nefandcat2.PNG
+        where: "file = 'a2s2' AND line_idx BETWEEN 590 AND 882"  # Neferu/Cato rendezvous
+        wordcloud_args:
+          relative_scaling: 0.2
+
+
+      # Amicus and Neferu
+      amicusandneferu1:
+        file: illustrations/amicusandneferu1.png
+        where: "file = 'a1s6' AND line_idx BETWEEN 670 AND 930"  # Amicus/Neferu rendezvous
+      amicusandneferu2:
+        file: illustrations/amicusandneferu2.png
+        where: "file = 'a1s6' AND line_idx BETWEEN 670 AND 930"  # Amicus/Neferu rendezvous
+      amicusandneferu3:
+        file: illustrations/amicusandneferu3.png
+        where: "file = 'a1s6' AND line_idx BETWEEN 670 AND 930"  # Amicus/Neferu rendezvous
+      backoff2:
+        file: illustrations/backoff2.PNG
+        where: "file = 'a1s4' AND line_idx BETWEEN 552 AND 1162"  # Communal baths
+      backoff3:
+        file: illustrations/backoff3.PNG
+        where: "file = 'a1s4' AND line_idx BETWEEN 552 AND 1162"  # Communal baths
+
+
+      # Island
+      islandday:
+        file: backgrounds/islandday.png
+        where: "speaker IN ('alexios', 'marco', 'amicus')"
+
+
+      # All text
+      adastra:
+        file: illustrations/adastra.png
+        where: "TRUE"
+      Adastranl:
+        file: illustrations/Adastranl.png
+        where: "TRUE"
+      bg:
+        image_file: /home/jayckaiser/adastra/Adastra-17-linux/game/gui/bg.png
+        file: gui/bg.png
+        where: "TRUE"
+
+
+      # Amicus and Marco in end-game
+      farewell1:
+        file: illustrations/farewell1.png
+        where: "file = 'end_game1' AND line_idx BETWEEN 2712 AND 3036"  # Ride home with Amicus
+      farewell3:
+        file: illustrations/farewell3.png
+        where: "file = 'end_game1' AND line_idx BETWEEN 2712 AND 3036"  # Ride home with Amicus
+      wemadeit1:
+        file: illustrations/wemadeit1.PNG
+        where: "file = 'end_game1' AND line_idx BETWEEN 81 AND 2711"  # end_game1 from life to leave
+      wemadeit4:
+        file: illustrations/wemadeit4.PNG
+        where: "file = 'end_game1' AND line_idx BETWEEN 81 AND 2711"  # end_game1 from life to leave
+
+
+      # A3S2 fight
+      lastmoment:
+        file: illustrations/lastmoment.png
+        where: "file = 'a3s2' AND line_idx BETWEEN 310 AND 670"
+
+
+      # Meeting with the parents
+      finalspace:
+        file: illustrations/finalspace.png
+        where: "(file = 'a3s2' AND line_idx BETWEEN 675 AND 959) OR (file = 'end_game1' AND line_idx BETWEEN 0 AND 80)" 
+      finalspace2:
+        file: illustrations/finalspace2.png
+        where: "(file = 'a3s2' AND line_idx BETWEEN 675 AND 959) OR (file = 'end_game1' AND line_idx BETWEEN 0 AND 80)"
+      watching:
+        file: illustrations/watching.PNG
+        where: "(file = 'a3s2' AND line_idx BETWEEN 675 AND 959) OR (file = 'end_game1' AND line_idx BETWEEN 0 AND 80)" 
+      
+
+      # Amicus & Marco ;)
+      amiscene1:
+        file: illustrations/amiscene1.png
+        where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
+      amiscene3:
+        file: illustrations/amiscene3.png
+        where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
+      ss1:
+        file: illustrations/ss1.png
+        where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
+      ss3:
+        file: illustrations/ss3.png
+        where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
+      2ss:
+        file: illustrations/2ss.png
+        where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
+      2ss3:
+        file: illustrations/2ss3.png
+        where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
