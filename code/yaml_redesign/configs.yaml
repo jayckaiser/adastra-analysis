@@ -118,10 +118,9 @@ run:
 
       # Here is the structure of a typical `query`.
       # !Query:
-      #   name       [REQUIRED] key to query, accessible via `--queries name`
-      #   file       [REQUIRED] output path for Query .jsonl file
-      #   sql        [REQUIRED] SQL query to run
-      #   where      [OPTIONAL] where-clause to apply before the query
+      #   name   : key to query, accessible via `--queries name`
+      #   file   : output path for Query .jsonl file
+      #   dataset: dataset of the query
 
       - !Query
         name: lines_per_file
@@ -821,10 +820,7 @@ run:
     #   * 'words' removes punctuation.
     #   * 'content_words' removes punctuation and stop-words and converts to lowercase.
 
-    
-
-    # [REQUIRED] Define universal wordcloud params here. They can be overwritten in any image below.
-    # (If not defined here, must be defined under each wordcloud below.)
+    # Define universal wordcloud params here. They can be overwritten in any image below.
     wordcloud_args: &wordcloud_args
       font_path: !PATH_JOIN [*adastra_directory, "game/RobotoSlab-Medium.ttf"]
       max_words: 2500
@@ -835,25 +831,22 @@ run:
       relative_scaling: 0.3
       random_state: 42
 
-    # [REQUIRED] Create one wordcloud per image.
-    # - By default, use images found in `{adastra_directory}/game/images`.
-    #   (If the input image is different, specify an 'image_file' subkey.)
-    # - By default, the key is the name of both the input and output image.
     wordclouds:
 
       # Here is the structure of a typical `wordcloud`.
       #
-      # [wordcloud1]:       [REQUIRED] key to query, accessible via `--wordclouds wordcloud1`
-      #   file              [REQUIRED] output subpath under {output_directory}
-      #   image_file        [OPTIONAL] path to image mask; uses internal game file at `file` if unspecified
-      #   where             [REQUIRED] where-clause to subset text used in the wordcloud
-      #   wordcloud_args:   [OPTIONAL] custom `wordcloud.Wordcloud` kwargs to define the wordcloud
+      # !Wordcloud
+      #   name          : key to query, accessible via `--wordclouds wordcloud1`
+      #   file          : output path for wordcloud
+      #   image         : path to image mask
+      #   where         : where-clause to subset term frequencies used in the wordcloud
+      #   wordcloud_args: `wordcloud.Wordcloud` kwargs to define the wordcloud
 
       # Alexios
       - !Wordcloud
         name : alexios
-        image: !PATH_JOIN [*adastra_dir, sprites/alexios/alexios.png]
         file : !PATH_JOIN [*wordclouds_dir, sprites/alexios.png]
+        image: !PATH_JOIN [*images_dir, sprites/alexios/alexios.png]
         where: *is_alexios
         wordcloud_args:
           <<: *wordcloud_args
@@ -862,8 +855,8 @@ run:
 
       - !Wordcloud
         name : alexios-vshocked-e
-        image: !PATH_JOIN [*adastra_dir, sprites/alexios/alexios-vshocked-e.png]
         file : !PATH_JOIN [*wordclouds_dir, sprites/alexios.png]
+        image: !PATH_JOIN [*images_dir, sprites/alexios/alexios-vshocked-e.png]
         where: *is_alexios
         wordcloud_args:
           <<: *wordcloud_args
@@ -872,8 +865,8 @@ run:
 
       - !Wordcloud
         name : alexios-alexios-shocked
-        image: !PATH_JOIN [*adastra_dir, sprites/alexios/alexios-shocked.png]
         file : !PATH_JOIN [*wordclouds_dir, sprites/alexios.png]
+        image: !PATH_JOIN [*images_dir, sprites/alexios/alexios-shocked.png]
         where: *is_alexios
         wordcloud_args:
           <<: *wordcloud_args
@@ -882,8 +875,8 @@ run:
 
       - !Wordcloud
         name : alexios-embarrassed
-        image: !PATH_JOIN [*adastra_dir, sprites/alexios/alexios-embarrassed.png]
         file : !PATH_JOIN [*wordclouds_dir, sprites/alexios.png]
+        image: !PATH_JOIN [*images_dir, sprites/alexios/alexios-embarrassed.png]
         where: *is_alexios
         wordcloud_args:
           <<: *wordcloud_args
@@ -892,8 +885,8 @@ run:
 
       - !Wordcloud
         name : alexios-angry-e-u
-        image: !PATH_JOIN [*adastra_dir, sprites/alexios/alexios-angry-e-u.png]
         file : !PATH_JOIN [*wordclouds_dir, sprites/alexios-angry-e-u.png]
+        image: !PATH_JOIN [*images_dir, sprites/alexios/alexios-angry-e-u.png]
         where: !AND [*is_alexios, "sentiment < 0"]
         wordcloud_args:
           <<: *wordcloud_args
@@ -902,8 +895,8 @@ run:
 
       - !Wordcloud
         name : garden1
-        image: !PATH_JOIN [*adastra_dir, backgrounds/garden1.png]
-        file :!PATH_JOIN [*wordclouds_dir, backgrounds/garden1.png]
+        file : !PATH_JOIN [*wordclouds_dir, backgrounds/garden1.png]
+        image: !PATH_JOIN [*images_dir, backgrounds/garden1.png]
         where: *is_alexios
         wordcloud_args:
           <<: *wordcloud_args
@@ -912,8 +905,8 @@ run:
       # Amicus
       - !Wordcloud
         name : amicus
-        image: !PATH_JOIN [*adastra_dir, sprites/amicus/amicus.png]
         file : !PATH_JOIN [*wordclouds_dir, sprites/amicus.png]
+        image: !PATH_JOIN [*images_dir, sprites/amicus/amicus.png]
         where: *is_amicus
         wordcloud_args:
           <<: *wordcloud_args
@@ -922,9 +915,9 @@ run:
 
       - !Wordcloud
         name: amicus-tears
-        image: !PATH_JOIN [*adastra_dir, sprites/amicus/amicus-tears.png]
         file:  !PATH_JOIN [*wordclouds_dir, sprites/amicus-tears.png]
-        where: "speaker = 'amicus' AND sentiment < 0"
+        image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-tears.png]
+        where: !AND [*is_amicus, "sentiment < 0"]
         wordcloud_args:
           <<: *wordcloud_args
           contour_width: 1
@@ -932,9 +925,9 @@ run:
 
       - !Wordcloud
         name : amicus-smile
-        image: !PATH_JOIN [*adastra_dir, sprites/amicus/amicus-smile.png]
         file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-smile.png]
-        where: "speaker = 'amicus' AND sentiment > 0"
+        image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-smile.png]
+        where: !AND [*is_amicus, "sentiment > 0"]
         wordcloud_args:
           <<: *wordcloud_args
           contour_width: 1
@@ -942,8 +935,8 @@ run:
 
       - !Wordcloud
         name : amicus-shocked
-        image: !PATH_JOIN [*adastra_dir, sprites/amicus/amicus-shocked.png]
         file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-shocked.png]
+        image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-shocked.png]
         where: *is_amicus
         wordcloud_args:
           <<: *wordcloud_args
@@ -952,8 +945,8 @@ run:
 
       - !Wordcloud
         name : amicus-crossed-serious
-        image: !PATH_JOIN [*adastra_dir, sprites/amicus/amicus-crossed-serious.png]
         file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-crossed-serious.png]
+        image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-crossed-serious.png]
         where: *is_amicus
         wordcloud_args:
           <<: *wordcloud_args
@@ -962,9 +955,9 @@ run:
 
       - !Wordcloud
         name : amicus-angry-n
-        image: !PATH_JOIN [*adastra_dir, sprites/amicus/amicus-angry-n.png]
         file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-angry-n.png]
-        where: "speaker = 'amicus' AND sentiment < 0"
+        image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-angry-n.png]
+        where: !AND [*is_amicus, "sentiment < 0"]
         wordcloud_args:
           <<: *wordcloud_args
           contour_width: 1
@@ -972,24 +965,24 @@ run:
 
       - !Wordcloud
         name : sleep
-        image: !PATH_JOIN [*adastra_dir, illustrations/sleep.png]
         file : !PATH_JOIN [*wordclouds_dir, illustrations/sleep.png]
+        image: !PATH_JOIN [*images_dir, illustrations/sleep.png]
         where: *is_amicus
         wordcloud_args:
           <<: *wordcloud_args
 
       - !Wordcloud
         name : amicusend
-        image: !PATH_JOIN [*adastra_dir, illustrations/amicusend.png]
         file : !PATH_JOIN [*wordclouds_dir, illustrations/amicusend.png]
+        image: !PATH_JOIN [*images_dir, illustrations/amicusend.png]
         where: *is_amicus
         wordcloud_args:
           <<: *wordcloud_args
 
       - !Wordcloud
         name : amicusroom
-        image: !PATH_JOIN [*adastra_dir, backgrounds/amicusroom.png]
         file : !PATH_JOIN [*wordclouds_dir, backgrounds/amicusroom.png]
+        image: !PATH_JOIN [*images_dir, backgrounds/amicusroom.png]
         where: *is_amicus
         wordcloud_args:
           <<: *wordcloud_args
@@ -997,32 +990,32 @@ run:
       # From Marco on ship until untie Amicus
       - !Wordcloud
         name : introspection
-        image: !PATH_JOIN [*adastra_dir, illustrations/introspection.png]
         file : !PATH_JOIN [*wordclouds_dir, illustrations/introspection.png]
+        image: !PATH_JOIN [*images_dir, illustrations/introspection.png]
         where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"  
         wordcloud_args:
           <<: *wordcloud_args
 
       - !Wordcloud
         name : spaceship
-        image: !PATH_JOIN [*adastra_dir, backgrounds/spaceship.png]
         file : !PATH_JOIN [*wordclouds_dir, backgrounds/spaceship.png]
+        image: !PATH_JOIN [*images_dir, backgrounds/spaceship.png]
         where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"
         wordcloud_args:
           <<: *wordcloud_args
 
       - !Wordcloud
         name : spaceshipnebula
-        image: !PATH_JOIN [*adastra_dir, backgrounds/spaceshipnebula.png]
         file : !PATH_JOIN [*wordclouds_dir, backgrounds/spaceshipnebula.png]
+        image: !PATH_JOIN [*images_dir, backgrounds/spaceshipnebula.png]
         where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"
         wordcloud_args:
           <<: *wordcloud_args
 
       - !Wordcloud
         name : spaceshipstar
-        image: !PATH_JOIN [*adastra_dir, backgrounds/spaceshipstar.png]
         file : !PATH_JOIN [*wordclouds_dir, backgrounds/spaceshipstar.png]
+        image: !PATH_JOIN [*images_dir, backgrounds/spaceshipstar.png]
         where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"
         wordcloud_args:
           <<: *wordcloud_args
@@ -1031,288 +1024,498 @@ run:
       # Visit to town after 2nd trial
       - !Wordcloud
         name : dinner1
-        image: !PATH_JOIN [*adastra_dir, illustrations/dinner1.png]
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner1.PNG]
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner1.png]
+        image: !PATH_JOIN [*images_dir, illustrations/dinner1.PNG]
         where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"  
         wordcloud_args:
           <<: *wordcloud_args
 
       - !Wordcloud
         name : dinner2
-        image: !PATH_JOIN [*adastra_dir, illustrations/dinner2.png]
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner2.PNG]
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner2.png]
+        image: !PATH_JOIN [*images_dir, illustrations/dinner2.PNG]
         where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"
         wordcloud_args:
           <<: *wordcloud_args
 
       - !Wordcloud
         name : dinner3
-        image: !PATH_JOIN [*adastra_dir, illustrations/dinner3.png]
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner3.PNG]
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner3.png]
+        image: !PATH_JOIN [*images_dir, illustrations/dinner3.PNG]
         where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"
         wordcloud_args:
           <<: *wordcloud_args
 
       - !Wordcloud
         name : dinner4
-        image: !PATH_JOIN [*adastra_dir, illustrations/dinner4.png]
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner4.PNG]
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner4.png]
+        image: !PATH_JOIN [*images_dir, illustrations/dinner4.PNG]
         where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"
         wordcloud_args:
           <<: *wordcloud_args
 
 
       # Cassius
-      cassius:
-        file: sprites/cassius/cassius.png
+      - !Wordcloud
+        name : cassius
+        file : !PATH_JOIN [*wordclouds_dir, sprites/cassius.png]
+        image: !PATH_JOIN [*images_dir, sprites/cassius/cassius.png]
         where: *is_cassius
         wordcloud_args:
+          <<: *wordcloud_args
           contour_width: 1
           contour_color: white
-      cassius-angry-u:
-        file: sprites/cassius/cassius-angry-u.png
-        where: "speaker = 'cassius' AND sentiment < 0"
+
+      - !Wordcloud
+        name : cassius-angry-u
+        file : !PATH_JOIN [*wordclouds_dir, sprites/cassius-angry-u.png] 
+        image: !PATH_JOIN [*images_dir, sprites/cassius/cassius-angry-u.png]
+        where: !AND [*is_cassius, "sentiment < 0"]
         wordcloud_args:
+          <<: *wordcloud_args
           contour_width: 1
           contour_color: white
-      cassius-paw:
-        file: sprites/cassius/cassius-paw.png
+
+      - !Wordcloud
+        name : cassius-paw
+        file : !PATH_JOIN [*wordclouds_dir, sprites/cassius-paw.png] 
+        image: !PATH_JOIN [*images_dir, sprites/cassius/cassius-paw.png]
         where: *is_cassius
         wordcloud_args:
+          <<: *wordcloud_args
           contour_width: 1
           contour_color: white
-      cassius-furious:
-        file: sprites/cassius/cassius-furious.png
-        where: "speaker = 'cassius' AND sentiment < 0"
+
+      - !Wordcloud
+        name : cassius-furious
+        file : !PATH_JOIN [*wordclouds_dir, sprites/cassius-furious.png] 
+        image: !PATH_JOIN [*images_dir, sprites/cassius/cassius-furious.png]
+        where: !AND [*is_cassius, "sentiment < 0"]
         wordcloud_args:
+          <<: *wordcloud_args
           contour_width: 1
           contour_color: white
-      cassius-disappointed-u:
-        file: sprites/cassius/cassius-disappointed-u.png
+
+      - !Wordcloud
+        name : cassius-disappointed-u
+        file : !PATH_JOIN [*wordclouds_dir, sprites/cassius-disappointed-u.png] 
+        image: !PATH_JOIN [*images_dir, sprites/cassius/cassius-disappointed-u.png]
         where: *is_cassius
         wordcloud_args:
+          <<: *wordcloud_args
           contour_width: 1
           contour_color: white
 
 
       # Cato
-      cato:
-        file: sprites/cato/cato.png
+      - !Wordcloud
+        name : cato
+        file : !PATH_JOIN [*wordclouds_dir, sprites/cato.png] 
+        image: !PATH_JOIN [*images_dir, sprites/cato/cato.png]
         where: *is_cato
         wordcloud_args:
+          <<: *wordcloud_args
           contour_width: 1
           contour_color: white
-      cato-bow-v:
-        file: sprites/cato/cato-bow-v.png
+
+      - !Wordcloud
+        name : cato-bow-v
+        file : !PATH_JOIN [*wordclouds_dir, sprites/cato-bow-v.png] 
+        image: !PATH_JOIN [*images_dir, sprites/cato/cato-bow-v.png]
         where: *is_cato
         wordcloud_args:
+          <<: *wordcloud_args
           contour_width: 1
-          contour_color: white 
-      cato-angry-u:
-        file: sprites/cato/cato-angry-u.png
-        where: "speaker = 'cato' AND sentiment < 0"
+          contour_color: white
+
+      - !Wordcloud
+        name : cato-angry-u
+        file : !PATH_JOIN [*wordclouds_dir, sprites/cato-angry-u.png] 
+        image: !PATH_JOIN [*images_dir, sprites/cato/cato-angry-u.png]
+        where: !AND [*is_cato, "sentiment < 0"]
         wordcloud_args:
+          <<: *wordcloud_args
           contour_width: 1
           contour_color: white
 
 
       # Neferu
-      neferu:
-        file: sprites/neferu/neferu.png
+      - !Wordcloud
+        name : neferu
+        file : !PATH_JOIN [*wordclouds_dir, sprites/neferu.png] 
+        image: !PATH_JOIN [*images_dir, sprites/neferu/neferu.png]
         where: *is_neferu
         wordcloud_args:
+          <<: *wordcloud_args
           contour_width: 1
           contour_color: white
-      neferu-wink-f:
-        file: sprites/neferu/neferu-wink-f.png
+
+      - !Wordcloud
+        name : neferu-wink-f
+        file : !PATH_JOIN [*wordclouds_dir, sprites/neferu-wink-f.png] 
+        image: !PATH_JOIN [*images_dir, sprites/neferu/neferu-wink-f.png]
         where: *is_neferu
         wordcloud_args:
+          <<: *wordcloud_args
           contour_width: 1
           contour_color: white
-      neferu-talking-n:
-        file: sprites/neferu/neferu-talking-n.png
+
+      - !Wordcloud
+        name: neferu-talking-n
+        file: !PATH_JOIN [*wordclouds_dir, sprites/neferu-talking-n.png] 
+        image: !PATH_JOIN [*images_dir, sprites/neferu/neferu-talking-n.png]
         where: *is_neferu
         wordcloud_args:
+          <<: *wordcloud_args
           contour_width: 1
           contour_color: white
-      neferu-talking-a:
-        file: sprites/neferu/neferu-talking-a.png
+
+      - !Wordcloud
+        name : neferu-talking-a
+        file : !PATH_JOIN [*wordclouds_dir, sprites/neferu-talking-a.png] 
+        image: !PATH_JOIN [*images_dir, sprites/neferu/neferu-talking-a.png]
         where: *is_neferu
         wordcloud_args:
+          <<: *wordcloud_args
           contour_width: 1
           contour_color: white
-      neferu-silly-f-n:
-        file: sprites/neferu/neferu-silly-f-n.png
+
+      - !Wordcloud
+        name : neferu-silly-f-n
+        file : !PATH_JOIN [*wordclouds_dir, sprites/neferu-silly-f-n.png] 
+        image: !PATH_JOIN [*images_dir, sprites/neferu/neferu-silly-f-n.png]
         where: *is_neferu
         wordcloud_args:
+          <<: *wordcloud_args
           contour_width: 1
           contour_color: white
-      neferu-shocked:
-        file: sprites/neferu/neferu-shocked.png
+
+      - !Wordcloud
+        name : neferu-shocked
+        file : !PATH_JOIN [*wordclouds_dir, sprites/neferu-shocked.png] 
+        image: !PATH_JOIN [*images_dir, sprites/neferu/neferu-shocked.png]
         where: *is_neferu
         wordcloud_args:
+          <<: *wordcloud_args
           contour_width: 1
           contour_color: white
-      neferu-fury:
-        file: sprites/neferu/neferu-fury.png
-        where: "speaker = 'neferu' AND sentiment < 0"
+
+      - !Wordcloud
+        name : neferu-fury
+        file : !PATH_JOIN [*wordclouds_dir, sprites/neferu-fury.png] 
+        image: !PATH_JOIN [*images_dir, sprites/neferu/neferu-fury.png]
+        where: !AND [*is_neferu, "sentiment < 0"]
         wordcloud_args:
+          <<: *wordcloud_args
           contour_width: 1
           contour_color: white
 
 
       # Virginia
-      virginia:
-        file: sprites/virginia/virginia.png
+      - !Wordcloud
+        name : virginia
+        file : !PATH_JOIN [*wordclouds_dir, sprites/virginia.png] 
+        image: !PATH_JOIN [*images_dir, sprites/virginia/virginia.png]
         where: *is_virginia
         wordcloud_args:
+          <<: *wordcloud_args
           contour_width: 1
           contour_color: white
-      virginia-tilt-p:
-        file: sprites/virginia/virginia-tilt-p.png
+
+      - !Wordcloud
+        name : virginia-tilt-p
+        file : !PATH_JOIN [*wordclouds_dir, sprites/virginia-tilt-p.png] 
+        image: !PATH_JOIN [*images_dir, sprites/virginia/virginia-tilt-p.png]
         where: *is_virginia
         wordcloud_args:
+          <<: *wordcloud_args
           contour_width: 1
           contour_color: white
-      virginia-annoyed:
-        file: sprites/virginia/virginia-annoyed.png
-        where: "speaker = 'virginia' AND sentiment < 0"
+
+      - !Wordcloud
+        name : virginia-annoyed
+        file : !PATH_JOIN [*wordclouds_dir, sprites/virginia-annoyed.png] 
+        image: !PATH_JOIN [*images_dir, sprites/virginia/virginia-annoyed.png]
+        where: !AND [*is_virginia, "sentiment < 0"]
         wordcloud_args:
+          <<: *wordcloud_args
           contour_width: 1
           contour_color: white
-      archives1:
-        file: illustrations/archives1.png
+
+      - !Wordcloud
+        name : archives1
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/archives1.png] 
+        image: !PATH_JOIN [*images_dir, illustrations/archives1.png]
         where: "file = 'a2s3' AND line_idx BETWEEN 795 AND 925"
+        wordcloud_args:
+          <<: *wordcloud_args
 
 
       # Meera 
-      meera:
-        file: illustrations/meera.png
+      - !Wordcloud
+        name : meera
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/meera.png] 
+        image: !PATH_JOIN [*images_dir, illustrations/meera.png]
         where: "speaker = 'meera'"
         wordcloud_args:
+          <<: *wordcloud_args
           contour_width: 1
           contour_color: white
 
 
       # Monitor
-      monitor:
-        file: illustrations/monitor.png
+      - !Wordcloud
+        name : monitor
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/monitor.png] 
+        image: !PATH_JOIN [*images_dir, illustrations/monitor.png]
         where: "speaker = 'monitor'"
+        wordcloud_args:
+          <<: *wordcloud_args
 
 
       # Cassius and Alexios
-      poisoned:
-        file: illustrations/poisoned.png
+      - !Wordcloud
+        name : poisoned
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/poisoned.png] 
+        image: !PATH_JOIN [*images_dir, illustrations/poisoned.png]
         where: "file = 'a3s1' AND line_idx BETWEEN 784 AND 990"  # A3S1 Breakfast
         wordcloud_args:
+          <<: *wordcloud_args
           relative_scaling: 0.2
-      alexandcassius:
-        file: illustrations/alexandcassius.PNG
+
+      - !Wordcloud
+        name : alexandcassius
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/alexandcassius.PNG] 
+        image: !PATH_JOIN [*images_dir, illustrations/alexandcassius.PNG]
         where: "file = 'a1s5' AND line_idx BETWEEN 62 AND 626"  # 1st trial
-      alexandcassiuskiss:
-        file: illustrations/alexandcassiuskiss.PNG
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : alexandcassiuskiss
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/alexandcassiuskiss.PNG] 
+        image: !PATH_JOIN [*images_dir, illustrations/alexandcassiuskiss.PNG]
         where: "file = 'a1s5' AND line_idx BETWEEN 62 AND 626"  # 1st trial
+        wordcloud_args:
+          <<: *wordcloud_args
 
 
       # Cato and Neferu
-      nefandcat1:
-        file: illustrations/nefandcat1.PNG
+      - !Wordcloud
+        name : nefandcat1
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/nefandcat1.PNG] 
+        image: !PATH_JOIN [*images_dir, illustrations/nefandcat1.PNG]
         where: "file = 'a2s2' AND line_idx BETWEEN 590 AND 882"  # Neferu/Cato rendezvous
         wordcloud_args:
+          <<: *wordcloud_args
           relative_scaling: 0.2
-      nefandcat2:
-        file: illustrations/nefandcat2.PNG
+
+      - !Wordcloud
+        name : nefandcat2
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/nefandcat2.PNG] 
+        image: !PATH_JOIN [*images_dir, illustrations/nefandcat2.PNG]
         where: "file = 'a2s2' AND line_idx BETWEEN 590 AND 882"  # Neferu/Cato rendezvous
         wordcloud_args:
+          <<: *wordcloud_args
           relative_scaling: 0.2
 
 
-      # Amicus and Neferu
-      amicusandneferu1:
-        file: illustrations/amicusandneferu1.png
-        where: "file = 'a1s6' AND line_idx BETWEEN 670 AND 930"  # Amicus/Neferu rendezvous
-      amicusandneferu2:
-        file: illustrations/amicusandneferu2.png
-        where: "file = 'a1s6' AND line_idx BETWEEN 670 AND 930"  # Amicus/Neferu rendezvous
-      amicusandneferu3:
-        file: illustrations/amicusandneferu3.png
-        where: "file = 'a1s6' AND line_idx BETWEEN 670 AND 930"  # Amicus/Neferu rendezvous
-      backoff2:
-        file: illustrations/backoff2.PNG
-        where: "file = 'a1s4' AND line_idx BETWEEN 552 AND 1162"  # Communal baths
-      backoff3:
-        file: illustrations/backoff3.PNG
-        where: "file = 'a1s4' AND line_idx BETWEEN 552 AND 1162"  # Communal baths
+      # Amicus and Neferu rendezvous
+      - !Wordcloud
+        name : amicusandneferu1
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/amicusandneferu1.png] 
+        image: !PATH_JOIN [*images_dir, illustrations/amicusandneferu1.png]
+        where: "file = 'a1s6' AND line_idx BETWEEN 670 AND 930"
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : amicusandneferu2
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/amicusandneferu2.png] 
+        image: !PATH_JOIN [*images_dir, illustrations/amicusandneferu2.png]
+        where: "file = 'a1s6' AND line_idx BETWEEN 670 AND 930"
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : amicusandneferu3
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/amicusandneferu3.png] 
+        image: !PATH_JOIN [*images_dir, illustrations/amicusandneferu3.png]
+        where: "file = 'a1s6' AND line_idx BETWEEN 670 AND 930"
+        wordcloud_args:
+          <<: *wordcloud_args
+
+
+      # Communal baths
+      - !Wordcloud
+        name: backoff2
+        file: !PATH_JOIN [*wordclouds_dir, illustrations/backoff2.PNG] 
+        image: !PATH_JOIN [*images_dir, illustrations/backoff2.PNG]
+        where: "file = 'a1s4' AND line_idx BETWEEN 552 AND 1162"
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name: backoff3
+        file: !PATH_JOIN [*wordclouds_dir, illustrations/backoff3.PNG] 
+        image: !PATH_JOIN [*images_dir, illustrations/backoff3.PNG]
+        where: "file = 'a1s4' AND line_idx BETWEEN 552 AND 1162"
+        wordcloud_args:
+          <<: *wordcloud_args
 
 
       # Island
-      islandday:
-        file: backgrounds/islandday.png
+      - !Wordcloud
+        name : islandday
+        file : !PATH_JOIN [*wordclouds_dir, backgrounds/islandday.png] 
+        image: !PATH_JOIN [*images_dir, backgrounds/islandday.png]
         where: "speaker IN ('alexios', 'marco', 'amicus')"
+        wordcloud_args:
+          <<: *wordcloud_args
 
 
       # All text
-      adastra:
-        file: illustrations/adastra.png
+      - !Wordcloud
+        name : adastra
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/adastra.png] 
+        image: !PATH_JOIN [*images_dir, illustrations/adastra.png]
         where: "TRUE"
-      Adastranl:
-        file: illustrations/Adastranl.png
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : Adastranl
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/Adastranl.png] 
+        image: !PATH_JOIN [*images_dir, illustrations/Adastranl.png]
         where: "TRUE"
-      bg:
-        image_file: /home/jayckaiser/adastra/Adastra-17-linux/game/gui/bg.png
-        file: gui/bg.png
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : bg
+        file : !PATH_JOIN [*wordclouds_dir, gui/bg.png] 
+        image: !PATH_JOIN [*images_dir, gui/bg.png]
         where: "TRUE"
+        wordcloud_args:
+          <<: *wordcloud_args
 
 
       # Amicus and Marco in end-game
-      farewell1:
-        file: illustrations/farewell1.png
+      - !Wordcloud
+        name : farewell1
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/farewell1.png] 
+        image: !PATH_JOIN [*images_dir, illustrations/farewell1.png]
         where: "file = 'end_game1' AND line_idx BETWEEN 2712 AND 3036"  # Ride home with Amicus
-      farewell3:
-        file: illustrations/farewell3.png
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : farewell3
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/farewell3.png] 
+        image: !PATH_JOIN [*images_dir, illustrations/farewell3.png]
         where: "file = 'end_game1' AND line_idx BETWEEN 2712 AND 3036"  # Ride home with Amicus
-      wemadeit1:
-        file: illustrations/wemadeit1.PNG
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : wemadeit1
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/wemadeit1.png] 
+        image: !PATH_JOIN [*images_dir, illustrations/wemadeit1.PNG]
         where: "file = 'end_game1' AND line_idx BETWEEN 81 AND 2711"  # end_game1 from life to leave
-      wemadeit4:
-        file: illustrations/wemadeit4.PNG
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : wemadeit4
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/wemadeit4.png] 
+        image: !PATH_JOIN [*images_dir, illustrations/wemadeit4.PNG]
         where: "file = 'end_game1' AND line_idx BETWEEN 81 AND 2711"  # end_game1 from life to leave
+        wordcloud_args:
+          <<: *wordcloud_args
 
 
       # A3S2 fight
-      lastmoment:
-        file: illustrations/lastmoment.png
+      - !Wordcloud
+        name : lastmoment
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/lastmoment.png] 
+        image: !PATH_JOIN [*images_dir, illustrations/lastmoment.png]
         where: "file = 'a3s2' AND line_idx BETWEEN 310 AND 670"
+        wordcloud_args:
+          <<: *wordcloud_args
 
 
       # Meeting with the parents
-      finalspace:
-        file: illustrations/finalspace.png
+      - !Wordcloud
+        name : finalspace
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/finalspace.png] 
+        image: !PATH_JOIN [*images_dir, illustrations/finalspace.png]
         where: "(file = 'a3s2' AND line_idx BETWEEN 675 AND 959) OR (file = 'end_game1' AND line_idx BETWEEN 0 AND 80)" 
-      finalspace2:
-        file: illustrations/finalspace2.png
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : finalspace2
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/finalspace2.png] 
+        image: !PATH_JOIN [*images_dir, illustrations/finalspace2.png]
         where: "(file = 'a3s2' AND line_idx BETWEEN 675 AND 959) OR (file = 'end_game1' AND line_idx BETWEEN 0 AND 80)"
-      watching:
-        file: illustrations/watching.PNG
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : watching
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/watching.PNG] 
+        image: !PATH_JOIN [*images_dir, illustrations/watching.PNG]
         where: "(file = 'a3s2' AND line_idx BETWEEN 675 AND 959) OR (file = 'end_game1' AND line_idx BETWEEN 0 AND 80)" 
+        wordcloud_args:
+          <<: *wordcloud_args
+
       
 
       # Amicus & Marco ;)
-      amiscene1:
-        file: illustrations/amiscene1.png
+      - !Wordcloud
+        name : amiscene1
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/amiscene1.png] 
+        image: !PATH_JOIN [*images_dir, illustrations/amiscene1.png]
         where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
-      amiscene3:
-        file: illustrations/amiscene3.png
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : amiscene3
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/amiscene3.png] 
+        image: !PATH_JOIN [*images_dir, illustrations/amiscene3.png]
         where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
-      ss1:
-        file: illustrations/ss1.png
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : ss1
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/ss1.png] 
+        image: !PATH_JOIN [*images_dir, illustrations/ss1.png]
         where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
-      ss3:
-        file: illustrations/ss3.png
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : ss3
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/ss3.png] 
+        image: !PATH_JOIN [*images_dir, illustrations/ss3.png]
         where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
-      2ss:
-        file: illustrations/2ss.png
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : 2ss
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/2ss.png] 
+        image: !PATH_JOIN [*images_dir, illustrations/2ss.png]
         where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
-      2ss3:
-        file: illustrations/2ss3.png
+        wordcloud_args:
+          <<: *wordcloud_args
+
+      - !Wordcloud
+        name : 2ss3
+        file : !PATH_JOIN [*wordclouds_dir, illustrations/2ss3.png] 
+        image: !PATH_JOIN [*images_dir, illustrations/2ss3.png]
         where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
+        wordcloud_args:
+          <<: *wordcloud_args
