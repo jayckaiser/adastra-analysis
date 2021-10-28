@@ -1,7 +1,108 @@
+from os import stat
+import sys
+
 import pandas as pd
 import pandasql as psql
 
 from utils.utils import prepare_directories
+
+
+class DataLake:
+    """
+    A collection of Datasets.
+    """
+    def __init__(
+        self,
+        data_lake=None,
+    ):
+        if data_lake:
+            self.data_lake = data_lake
+        else:
+            self.data_lake = {}
+
+    
+    def add_dataset(
+        self,
+
+        name,
+        file=None,
+        dataset=None,
+    ):
+        """
+        
+        """
+        # 
+        if dataset:
+            _dataset = Dataset(**dataset)
+
+            if file:
+                _dataset.to_disk(file)
+
+        # 
+        elif file:
+            _dataset = Dataset.load_dataset(file)
+
+        # 
+        elif name in self.data_lake:
+            _dataset = self.data_lake.get(name)
+        else:
+            print("#> A dataset needs a `file` or `dataset` specified!")
+            sys.exit()
+
+        # 
+        self.data_lake[name] = _dataset
+
+
+    def get(self, name):
+        """
+        
+        """
+        if name not in self.data_lake:
+            print(f"`! Dataset {name}` undefined!")
+            sys.exit(0)
+        else:
+            return self.data_lake.get('name')
+
+
+
+    def filter_datasets(self, filters):
+        """
+        
+        """
+        if filters:
+            for filter in filters:
+                name = filters['name']
+                where = filters['where']
+
+                _dataset = self.get(name)
+                _dataset = _dataset.filter_where(where)
+
+                self.data_lake[name] = _dataset
+
+
+    def query_sql(self, sql):
+        """
+        
+        """
+        for name, dataset in self.data_lake.items():
+                exec(f"{name} = dataset.copy()")
+
+        _data = psql.sqldf(sql)
+
+        return Dataset(_data)
+
+
+
+    def copy(self):
+        """
+        
+        """
+        return {
+            key: data.copy() for key, data in self.data_lake.items()
+        }
+                
+
+
 
 
 class Dataset:
@@ -10,48 +111,48 @@ class Dataset:
     """
     def __init__(
         self,
-    
+
         data,
         columns=None,
-        where=None,
-        sql=None,
-        dataset_alias=None,
-        datasets=None,
     ):
-        self.data = self.build_dataset(data, columns=columns)
+        self.dataset = self.build_dataset(data, columns)
 
-        self.data = self.filter_where(where)
-        self.data = self.query_sql(sql, dataset_alias, datasets)
+
+    @classmethod
+    def load_dataset(self, file):
+        """
+        
+        """
+        _dataframe = pd.read_json(
+            file,
+            orient='records',
+            lines=True
+        )
+        return Dataset(_dataframe)
+
 
 
     @staticmethod
     def build_dataset(data, columns=None):
-        """
-        Create the DataFrame, depending on type of input.
-        """
 
         # Dataset or DataFrame is given.
         if isinstance(data, Dataset) or isinstance(data, pd.DataFrame):
             return data
         
-        # Local filepath is given.
-        elif isinstance(data, str):
-            return pd.read_json(
-                data,
-                orient='records',
-                lines=True
-            )
-        
         # Dictionary and column names are given.
         else: 
             return pd.Dataframe(data, columns=columns)
 
+
+    def get(self):
+        return self.dataset.copy()
+    
     
     def filter_where(self, where_clauses):
         """
         Apply one or more where-clauses to the dataset, using the alias provided in the PandaSQL query.
         """
-        _data = self.data.copy()
+        _data = self.get()
 
         if where_clauses:
             
@@ -66,29 +167,4 @@ class Dataset:
                     where {where_clause}
                 """)
 
-        return _data
-
-
-    def query_sql(self, sql_query, alias, datasets=None):
-        """
-        
-        """
-        _data = self.data.copy()
-
-        if sql_query and alias:
-            exec(f"{alias} = _data")
-
-        if datasets:
-            for dataset_name, dataset in datasets.items():
-                exec(f"{dataset_name} = dataset.copy()")
-
-        _data = psql.sqldf(sql_query)
-
-        return _data
-
-
-    def get_data(self):
-        """
-        Exit the Dataset.
-        """
-        return self.data
+        self.dataset = Dataset(_data)
