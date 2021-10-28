@@ -3,6 +3,8 @@
 definitions:
 
   ### ALL
+  adastra_directory: &adastra_dir /home/jayckaiser/adastra/Adastra-17-linux
+
   is_read: &is_read "is_read is True"
 
 
@@ -55,7 +57,7 @@ definitions:
 
 
 
-# [REQUIRED] Define datasets to build and save when running `build`.
+# [REQUIRED] Define datas to build and save when running `build`.
 build:
 
   dataset_dir: &dataset_dir /home/jayckaiser/adastra/data
@@ -65,15 +67,16 @@ build:
     - !AdastraDataset
       name: adastra
       file: !PATH_JOIN [*dataset_dir, adastra.jsonl]
-      adastra_dir: &adastra_dir /home/jayckaiser/adastra/Adastra-17-linux
+      adastra_dir: *adastra_dir
       main_character: Marco
       use_nlp: True
+
 
     # Define a custom set of main characters to filter on, as well as the colors to display them with in relplots.
     - !Dataset
       name: characters
       file: !PATH_JOIN [*dataset_dir, characters.jsonl]
-      dataset:
+      data:
         columns: [speaker, color]
         data: &characters_palette  # This dictionary is passed to `relplots` as well.
           alexios : '#65ca68'
@@ -84,10 +87,16 @@ build:
           neferu  : '#ffcc00'
           virginia: '#8e389c'
 
-    - !TermFreqs
+
+      # Specify the documents column to be used to build the wordclouds.
+      # - Prebuilt options are 'line', 'words', or 'content_words'.
+      #   * 'line' is the cleaned text of the line.
+      #   * 'words' removes punctuation.
+      #   * 'content_words' removes punctuation and stop-words and converts to lowercase.
+    - !TermFrequencies
       name: term_freqs
       file: !PATH_JOIN [*dataset_dir, term_frequencies.jsonl]
-      dataset:
+      data:
         sql: |
             select
                 file, line_idx, speaker, is_branch, sentiment,
@@ -113,20 +122,23 @@ run:
 
     queries_dir: &queries_dir /home/jayckaiser/adastra/queries
 
+
     # Create one output per key.
     queries:
 
       # Here is the structure of a typical `query`.
       # !Query:
-      #   name   : key to query, accessible via `--queries name`
-      #   file   : output path for Query .jsonl file
-      #   dataset: dataset of the query
+      #   name: key to query, accessible via `--queries name`
+      #   file: output path for Query .jsonl file
+      #   data: data of the query
 
       - !Query
         name: lines_per_file
         file: !PATH_JOIN [*queries_dir, lines_per_file.jsonl]
-        dataset:
-          where: *is_read
+        data:
+          filters:
+            - name : adastra
+              where: *is_read
           sql: |
             select
               file,
@@ -138,8 +150,10 @@ run:
       - !Query
         name: lines_per_speaker
         file: !PATH_JOIN [*queries_dir, lines_per_speaker.jsonl]
-        dataset:
-          where: *is_read
+        data:
+          filters:
+            - name : adastra
+              where: *is_read
           sql: |
             select
               speaker,
@@ -151,8 +165,10 @@ run:
       - !Query
         name: words_per_file
         file: !PATH_JOIN [*queries_dir, words_per_file.jsonl]
-        dataset:
-          where: *is_read
+        data:
+          filters:
+            - name : adastra
+              where: *is_read
           sql: |
             select
               file,
@@ -164,8 +180,10 @@ run:
       - !Query
         name: words_per_speaker
         file: !PATH_JOIN [*queries_dir, words_per_speaker.jsonl]
-        dataset:
-          where: *is_read
+        data:
+          filters:
+            - name : adastra
+              where: *is_read
           sql: |
             select
               speaker,
@@ -177,8 +195,10 @@ run:
       - !Query
         name: total_lines
         file: !PATH_JOIN [*queries_dir, total_lines.jsonl]
-        dataset:
-          where: *is_read
+        data:
+          filters:
+            - name : adastra
+              where: *is_read
           sql: |
             select
               count(*) as total_words
@@ -187,8 +207,10 @@ run:
       - !Query
         name: total_words
         file: !PATH_JOIN [*queries_dir, total_words.jsonl]
-        dataset:
-          where: *is_read
+        data:
+          filters:
+            - name : adastra
+              where: *is_read
           sql: |
             select
               sum(num_words) as total_words
@@ -198,100 +220,129 @@ run:
       - !Query
         name: a1s1
         file: !PATH_JOIN [*queries_dir, contents/a1s1.jsonl]
-        dataset:
-          where: !AND [*is_read, "file = 'a1s1'"]
+        data:
+          filters:
+            - name : adastra
+              where: !AND [*is_read, "file = 'a1s1'"]
           sql: *get_read_content
 
       - !Query
         name: a1s2
         file: !PATH_JOIN [*queries_dir, contents/a1s2.jsonl]
-        dataset:
-          where: !AND [*is_read, "file = 'a1s2'"]
+        data:
+          filters:
+            - name : adastra
+              where: !AND [*is_read, "file = 'a1s2'"]
           sql: *get_read_content
 
       - !Query
         name: a1s3
         file: !PATH_JOIN [*queries_dir, contents/a1s3.jsonl]
-        dataset:
-          where: !AND [*is_read, "file = 'a1s3'"]
+        data:
+          filters:
+            - name : adastra
+              where: !AND [*is_read, "file = 'a1s3'"]
           sql: *get_read_content
 
       - !Query
         name: a1s4
         file: !PATH_JOIN [*queries_dir, contents/a1s4.jsonl]
-        dataset:
-          where: !AND [*is_read, "file = 'a1s4'"]
+        data:
+          filters:
+            - name : adastra
+              where: !AND [*is_read, "file = 'a1s4'"]
           sql: *get_read_content
 
       - !Query
         name: a1s5
         file: !PATH_JOIN [*queries_dir, contents/a1s5.jsonl]
-        dataset:
-          where: !AND [*is_read, "file = 'a1s5'"]
+        data:
+          filters:
+            - name : adastra
+              where: !AND [*is_read, "file = 'a1s5'"]
           sql: *get_read_content
 
       - !Query
         name: a1s6
         file: !PATH_JOIN [*queries_dir, contents/a1s6.jsonl]
-        dataset:
-          where: !AND [*is_read, "file = 'a1s6'"]
+        data:
+          filters:
+            - name : adastra
+              where: !AND [*is_read, "file = 'a1s6'"]
           sql: *get_read_content
 
       - !Query
         name: a1s7
         file: !PATH_JOIN [*queries_dir, contents/a1s7.jsonl]
-        dataset:
-          where: !AND [*is_read, "file = 'a1s7'"]
+        data:
+          filters:
+            - name : adastra
+              where: !AND [*is_read, "file = 'a1s7'"]
           sql: *get_read_content
 
       - !Query
         name: a2s1
         file: !PATH_JOIN [*queries_dir, contents/a2s1.jsonl]
-        dataset:
-          where: !AND [*is_read, "file = 'a2s1'"]
+        data:
+          filters:
+            - name : adastra
+              where: !AND [*is_read, "file = 'a2s1'"]
           sql: *get_read_content
 
       - !Query
         name: a2s2
         file: !PATH_JOIN [*queries_dir, contents/a2s2.jsonl]
-        dataset:
-          where: !AND [*is_read, "file = 'a2s2'"]
+        data:
+          filters:
+            - name : adastra
+              where: !AND [*is_read, "file = 'a2s2'"]
           sql: *get_read_content
 
       - !Query
         name: a2s3
         file: !PATH_JOIN [*queries_dir, contents/a2s3.jsonl]
-        dataset:
-          where: !AND [*is_read, "file = 'a2s3'"]
+        data:
+          filters:
+            - name : adastra
+              where: !AND [*is_read, "file = 'a2s3'"]
           sql: *get_read_content
 
       - !Query
         name: a3s1
         file: !PATH_JOIN [*queries_dir, contents/a3s1.jsonl]
-        dataset:
-          where: !AND [*is_read, "file = 'a3s1'"]
+        data:
+          filters:
+            - name : adastra
+              where: !AND [*is_read, "file = 'a3s1'"]
           sql: *get_read_content
 
       - !Query
         name: a3s2
         file: !PATH_JOIN [*queries_dir, contents/a3s2.jsonl]
-        dataset:
-          where: !AND [*is_read, "file = 'a3s2'"]
+        data:
+          filters:
+            - name : adastra
+              where: !AND [*is_read, "file = 'a3s2'"]
           sql: *get_read_content
 
       - !Query
         name: end_game1
         file: !PATH_JOIN [*queries_dir, contents/end_game1.jsonl]
-        dataset:
-          where: !AND [*is_read, "file = 'end_game1'"]
+        data:
+          filters:
+            - name : adastra
+              where: !AND [*is_read, "file = 'end_game1'"]
           sql: *get_read_content
 
       - !Query
         name: end_game2
         file: !PATH_JOIN [*queries_dir, contents/end_game2.jsonl]
-        dataset:
-          where: !AND [*is_read, "file = 'end_game2'"]
+        data:
+          filters:
+            - name : adastra
+              where: !AND [*is_read, "file = 'end_game2'"]
           sql: *get_read_content
+
 
 
   # Run `--relplots` to run SQL queries to create Seaborn relational plots.
@@ -304,23 +355,24 @@ run:
       kind: line
       palette: *characters_palette
       
+
+    # Create one output per key.
     relplots:
 
       # Here is the structure of a typical `relplot`.
       #
       # !Relplot:
-      #   name              [REQUIRED] key to query, accessible via `--relplots name`
-      #   file              [REQUIRED] output path for Relplot .png file
-      #   sql               [REQUIRED] SQL query to run
-      #   relplot_args:     [REQUIRED] custom `seaborn.relplot` kwargs to define the relplot
-      #   where             [OPTIONAL] where-clause to apply before the query
-      #   axhline           [OPTIONAL] apply a horizontal line to the relplot; defaults to None
-      #   remove_outliers   [OPTIONAL] apply smoothing to the output by filtering within three-sigmas; defaults to False
+      #   name           : key to query, accessible via `--relplots name`
+      #   file           : output path for Relplot .png file
+      #   data           : data for the relplot
+      #   relplot_args   : custom `seaborn.relplot` kwargs to define the relplot
+      #   axhline        : (default None ) apply a horizontal line to the relplot
+      #   remove_outliers: (default False) apply smoothing to the output by filtering within three-sigmas
       
       - !Relplot
         name: lines_per_character
         file: !PATH_JOIN [*relplots_dir, lines_per_character.png]
-        dataset:
+        data:
           sql: |
               select
                   file,
@@ -338,7 +390,7 @@ run:
       - !Relplot
         name: proportion_lines_per_character
         file: !PATH_JOIN [*relplots_dir, proportion_lines_per_character.png]
-        dataset:
+        data:
           sql: |
               select
                   file,
@@ -363,7 +415,7 @@ run:
       - !Relplot
         name: words_per_character
         file: !PATH_JOIN [*relplots_dir, words_per_character.png]
-        dataset:
+        data:
           sql: |
               select
                   file,
@@ -381,7 +433,7 @@ run:
       - !Relplot
         name: proportion_words_per_character
         file: !PATH_JOIN [*relplots_dir, proportion_words_per_character.png]
-        dataset:
+        data:
           sql: |
               select
                   file,
@@ -406,7 +458,7 @@ run:
       - !Relplot
         name: average_sentiment_per_character
         file: !PATH_JOIN [*relplots_dir, average_sentiment_per_character.png]
-        dataset:
+        data:
           sql: |
               select
                   file,
@@ -426,10 +478,12 @@ run:
       - !Relplot
         name: a1s1_sentiment
         file: !PATH_JOIN [*relplots_dir, sentiment/a1s1.png]
-        relplot_args:
-        dataset:
-          where: "file = 'a1s1'"
+        data:
+          filters:
+            - name: adastra
+              where: "file = 'a1s1'"
           sql: *rolling_sentiment
+        relplot_args:
           <<: *relplot_args
           x: line_idx
           y: rolling_sentiment
@@ -440,10 +494,12 @@ run:
       - !Relplot
         name: a1s2_sentiment
         file: !PATH_JOIN [*relplots_dir, sentiment/a1s2.png]
-        relplot_args:
-        dataset:
-          where: "file = 'a1s2'"
+        data:
+          filters:
+            - name: adastra
+              where: "file = 'a1s2'"
           sql: *rolling_sentiment
+        relplot_args:
           <<: *relplot_args
           x: line_idx
           y: rolling_sentiment
@@ -454,10 +510,12 @@ run:
       - !Relplot
         name: a1s3_sentiment
         file: !PATH_JOIN [*relplots_dir, sentiment/a1s3.png]
-        relplot_args:
-        dataset:
-          where: "file = 'a1s3'"
+        data:
+          filters:
+            - name: adastra
+              where: "file = 'a1s3'"
           sql: *rolling_sentiment
+        relplot_args:
           <<: *relplot_args
           x: line_idx
           y: rolling_sentiment
@@ -468,10 +526,12 @@ run:
       - !Relplot
         name: a1s4_sentiment
         file: !PATH_JOIN [*relplots_dir, sentiment/a1s4.png]
-        relplot_args:
-        dataset:
-          where: "file = 'a1s4'"
+        data:
+          filters:
+            - name: adastra
+              where: "file = 'a1s4'"
           sql: *rolling_sentiment
+        relplot_args:
           <<: *relplot_args
           x: line_idx
           y: rolling_sentiment
@@ -482,8 +542,10 @@ run:
       - !Relplot
         name: a1s5_sentiment
         file: !PATH_JOIN [*relplots_dir, sentiment/a1s5.png]
-        dataset:
-          where: "file = 'a1s5'"
+        data:
+          filters:
+            - name: adastra
+              where: "file = 'a1s5'"
           sql: *rolling_sentiment
         relplot_args:
           x: line_idx
@@ -495,8 +557,10 @@ run:
       - !Relplot
         name: a1s6_sentiment
         file: !PATH_JOIN [*relplots_dir, sentiment/a1s6.png]
-        dataset:
-          where: "file = 'a1s6'"
+        data:
+          filters:
+            - name: adastra
+              where: "file = 'a1s6'"
           sql: *rolling_sentiment
         relplot_args:
           x: line_idx
@@ -508,8 +572,10 @@ run:
       - !Relplot
         name: a1s7_sentiment
         file: !PATH_JOIN [*relplots_dir, sentiment/a1s7.png]
-        dataset:
-          where: "file = 'a1s7'"
+        data:
+          filters:
+            - name: adastra
+              where: "file = 'a1s7'"
           sql: *rolling_sentiment
         relplot_args:
           x: line_idx
@@ -521,8 +587,10 @@ run:
       - !Relplot
         name: a2s1_sentiment
         file: !PATH_JOIN [*relplots_dir, sentiment/a2s1.png]
-        dataset:
-          where: "file = 'a2s1'"
+        data:
+          filters:
+            - name: adastra
+              where: "file = 'a2s1'"
           sql: *rolling_sentiment
         relplot_args:
           x: line_idx
@@ -534,8 +602,10 @@ run:
       - !Relplot
         name: a2s2_sentiment
         file: !PATH_JOIN [*relplots_dir, sentiment/a2s2.png]
-        dataset:
-          where: "file = 'a2s2'"
+        data:
+          filters:
+            - name: adastra
+              where: "file = 'a2s2'"
           sql: *rolling_sentiment
         relplot_args:
           x: line_idx
@@ -547,8 +617,10 @@ run:
       - !Relplot
         name: a2s3_sentiment
         file: !PATH_JOIN [*relplots_dir, sentiment/a2s3.png]
-        dataset:
-          where: "file = 'a2s3'"
+        data:
+          filters:
+            - name: adastra
+              where: "file = 'a2s3'"
           sql: *rolling_sentiment
         relplot_args:
           x: line_idx
@@ -560,8 +632,10 @@ run:
       - !Relplot
         name: a3s1_sentiment
         file: !PATH_JOIN [*relplots_dir, sentiment/a3s1.png]
-        dataset:
-          where: "file = 'a3s1'"
+        data:
+          filters:
+            - name: adastra
+              where: "file = 'a3s1'"
           sql: *rolling_sentiment
         relplot_args:
           x: line_idx
@@ -573,8 +647,10 @@ run:
       - !Relplot
         name: a3s2_sentiment
         file: !PATH_JOIN [*relplots_dir, sentiment/a3s2.png]
-        dataset:
-          where: "file = 'a3s2'"
+        data:
+          filters:
+            - name: adastra
+              where: "file = 'a3s2'"
           sql: *rolling_sentiment
         relplot_args:
           x: line_idx
@@ -586,8 +662,10 @@ run:
       - !Relplot
         name: end_game1_sentiment
         file: !PATH_JOIN [*relplots_dir, sentiment/end_game1.png]
-        dataset:
-          where: "file = 'end_game1'"
+        data:
+          filters:
+            - name: adastra
+              where: "file = 'end_game1'"
           sql: *rolling_sentiment
         relplot_args:
           x: line_idx
@@ -599,8 +677,10 @@ run:
       - !Relplot
         name: end_game2_sentiment
         file: !PATH_JOIN [*relplots_dir, sentiment/end_game2.png]
-        dataset:
-          where: "file = 'end_game2'"
+        data:
+          filters:
+            - name: adastra
+              where: "file = 'end_game2'"
           sql: *rolling_sentiment
         relplot_args:
           x: line_idx
@@ -616,195 +696,262 @@ run:
 
     screenplays_dir: &screenplays_dir /home/jayckaiser/adastra/screenplays
 
-    dataset:
-      sql: |
-          select *,
-              LAG(is_branch, 1) OVER (ORDER BY file, line_idx) AS prev_line_is_branch
-          from adastra
-          where is_read or is_choice
+    screenplay_args: &screenplay_args
+      strip_quotes: False
+      upper  : False
+      lower  : False
+      title  : False
+      offset : 0
+      prefix : ""
+      postfix: ""
 
+
+    # Create one output per key.
     screenplays:
 
-      # Here is the structure of a typical `screenplay`.
+      # Here is the structure of a typical `screenplay`:
       #
-      # [screenplay_style1]:     [REQUIRED] key to query, accessible via `--screenplays screenplay_style1`
-      #   folder                 [REQUIRED] output subfolder under {output_directory}
-      #   justify                [REQUIRED] how wide should the output be (justify-width)
-      #   line_sep               [REQUIRED] how should lines be separated
-      #   where                  [OPTIONAL] where-clause to apply before the query
-      #     
-      #   categories:            [REQUIRED] filters to segregate the text into styles
-      #     [category_name1]:    [REQUIRED] name of category (unqueriable, but used to track progress)
-      #       where              [REQUIRED] where-clause to filter which lines use the given category style
-      #       style              [REQUIRED] shape of the output with columns used (i.e. "{column1}: {column2}")
-      #       textwrap_offset    [OPTIONAL] how far should wrapped text be indented; defaults to 0
+      # !Screenplay
+      #   name    : key to query, accessible via `--screenplays screenplay_style1`
+      #   folder  : output subfolder under {output_directory}
+      #   data    : data for the screenplay
+      #   justify : how wide should the output be (justify-width)
+      #   line_sep: how should lines be separated
       # 
-      #       formatting:        [OPTIONAL] special formatting rules for columns specified in `style`; defaults to no-formatting
-      #         [column1]:       [OPTIONAL] part of `style` being formatted; corresponds to a column in the dataset
-      #           strip_quotes   [OPTIONAL] remove wrapper quotes; defaults to False
-      #           upper          [OPTIONAL] cast the column text to uppercase; defaults to False
-      #           lower          [OPTIONAL] cast the column text to lowercase; defaults to False
-      #           title          [OPTIONAL] cast the column text to titlecase; defaults to False
-      #           offset         [OPTIONAL] offset the column text from by left edge with spaces; defaults to 0
-      #           prefix         [OPTIONAL] prefix the column text with a string; defaults to ""
-      #           postfix        [OPTIONAL] postfix the column text with a string; defaults to ""
+      #   categories:
+      #     - name           : name of the category; only used to track progress
+      #       where          : where-clause to filter which lines use the given category style
+      #       style          : shape of the output with columns used (i.e. "{column1}: {column2}")
+      #       textwrap_offset: how far should wrapped text be indented; defaults to 0
+      # 
+      #       columns:
+      #         - name           : name of the column to be inserted into the style
+      #           screenplay_args: formatting arguments to apply the the text of the column
 
       # Emulates 'The Cursed Child'
-      !Screenplay
-      - name: screenplay_style1
+      - !Screenplay
+        name: screenplay_style1
         folder: !PATH_JOIN [*screenplays_dir, style1]
+        data:
+          sql: |
+              select
+                  has_speaker, is_choice, is_branch,
+                  speaker, line, line as screenplay
+              from adastra
+              where is_read or is_choice
         justify: 75
         line_sep: "\n\n"
         categories:
 
           # Player/game choice between branches.
-          is_choice:
+          - name : is_choice
             where: "is_choice IS TRUE"
             style: *default_line
-            formatting:
-              line:
-                prefix: '['
-                postfix: ']'
+            columns:
+              - name: line
+                screenplay_args:
+                  <<: *screenplay_args
+                  prefix : '['
+                  postfix: ']'
 
           # Dialogue explicitly spoken by speaker in branch.
-          has_speaker_in_branch:
+          - name : has_speaker_in_branch
             where: "is_branch IS TRUE AND has_speaker IS TRUE"
             style: "{speaker}\n{line}"
             textwrap_offset: 8
-            formatting:
-              speaker:
-                offset: 8
-                upper: True
-              line:
-                offset: 2
+            columns:
+              - name: speaker
+                screenplay_args:
+                  <<: *screenplay_args
+                  offset: 8
+                  upper : True
+              - name: line
+                screenplay_args:
+                  <<: *screenplay_args
+                  offset: 2
 
           # Internal narration and unspecified speaker in branch.
-          is_narration_in_branch:
+          - name : is_narration_in_branch
             where: "is_branch IS TRUE AND has_speaker IS FALSE"
             style: *default_line
             textwrap_offset: 8
-            formatting:
-              line:
-                offset: 8
+            columns:
+              - name: line
+                screenplay_args:
+                  <<: *screenplay_args
+                  offset: 8
 
           # Dialogue explicitly spoken by speaker.
-          has_speaker_outside_branch:
+          - name : has_speaker_outside_branch
             where: "is_branch IS FALSE AND has_speaker IS TRUE"
             style: "{speaker}\n{line}"
-            formatting:
-              speaker:
-                upper: True
-              line:
-                offset: 2
+            columns:
+              - name: speaker
+                screenplay_args:
+                  <<: *screenplay_args
+                  upper: True
+              - name: line
+                screenplay_args:
+                  <<: *screenplay_args
+                  offset: 2
 
           # Internal narration and unspecified speaker.
-          is_narration_outside_branch:
+          - name : is_narration_outside_branch
             where: "is_branch IS FALSE AND has_speaker IS FALSE"
             style: *default_line
+            columns:
+              - name: line
+                screenplay_args:
+                  <<: *screenplay_args
 
 
       # Custom format
       !Screenplay
       - name: screenplay_style2
         folder: !PATH_JOIN [*screenplays_dir, style2]
+        data:
+          sql: |
+              select
+                  has_speaker, is_choice, is_branch,
+                  speaker, line, line as screenplay
+              from adastra
+              where is_read or is_choice
         justify: 75
         line_sep: "\n\n"
         categories:
 
           # Player/game choice between branches.
-          is_choice:
+          - name: is_choice
             where: "is_choice IS TRUE"
             style: *default_line
-            formatting:
-              line:
-                prefix: "[BRANCH]: "
+            columns:
+              - name: line
+                screenplay_args:
+                  <<: *screenplay_args
+                  prefix: "[BRANCH]: "
 
           # Dialogue explicitly spoken by speaker in branch.
-          has_speaker_in_branch:
+          - name: has_speaker_in_branch
             where: "is_branch IS TRUE AND has_speaker IS TRUE"
             style: "{speaker}: {line}"
             textwrap_offset: 8
-            formatting:
-              speaker:
-                offset: 4
-                upper: True
+            columns:
+              - name: speaker
+                screenplay_args:
+                  <<: *screenplay_args
+                  offset: 4
+                  upper: True
+              - name: line
+                screenplay_args:
+                  <<: *screenplay_args
 
           # Internal narration and unspecified speaker in branch.
-          is_narration_in_branch:
+          - name: is_narration_in_branch
             where: "is_branch IS TRUE AND has_speaker IS FALSE"
             style: *default_line
             textwrap_offset: 4
-            formatting:
-              line:
-                offset: 4
+            columns:
+              - name: line
+                screenplay_args:
+                  <<: *screenplay_args
+                  offset: 4
 
           # Dialogue explicitly spoken by speaker.
-          is_speaker_outside_branch:
+          - name: is_speaker_outside_branch
             where: "is_branch IS FALSE AND has_speaker IS TRUE"
             style: "{speaker}: {line}"
             textwrap_offset: 4
-            formatting:
-              speaker:
-                upper: True
+            columns:
+              - name: speaker
+                screenplay_args:
+                  <<: *screenplay_args
+                  upper: True
+              - name: line
+                screenplay_args:
+                  <<: *screenplay_args
 
           # Internal narration and unspecified speaker.
-          is_narration_outisde_branch:
+          - name: is_narration_outisde_branch
             where: "is_branch IS FALSE AND has_speaker IS FALSE"
             style: *default_line
+            columns:
+              - name: line
+                screenplay_args:
+                  <<: *screenplay_args
 
 
       # Emulates an actual movie screenplay.
       !Screenplay
       - name: screenplay_style3
         folder: !PATH_JOIN [*screenplays_dir, style3]
+        data:
+          sql: |
+              select
+                  has_speaker, is_choice, is_branch,
+                  LAG(is_branch, 1) OVER (ORDER BY file, line_idx) AS prev_line_is_branch,
+                  speaker, line, line as screenplay
+              from adastra
+              where is_read or is_choice
         justify: 75
         line_sep: "\n\n"
-
-        # Add additional columns to the dataset to allow deeper formatting.
-        add_columns:
-          - 'LAG(is_branch, 1) OVER (ORDER BY file, line_idx) AS prev_line_is_branch'
-
         categories:
 
           # Player/game choice between branches.
-          is_choice:
+          - name: is_choice
             where: "is_choice IS TRUE"
             style: *default_line
             add_bar: True
-            formatting: 
-              line:
-                prefix: "[BRANCH]: "
+            columns:
+              - name: line
+                screenplay_args:
+                  <<: *screenplay_args
+                  prefix: "[BRANCH]: "
 
           # Dialogue explicitly spoken by speaker.
-          has_speaker:
+          - name: has_speaker
             where: "has_speaker IS TRUE"
             style: "{speaker}\n{line}"
             justify: 60 
             textwrap_offset: 15
-            formatting:
-              speaker:
-                offset: 15
-                upper: True
+            columns:
+              - name: speaker
+                screenplay_args:
+                  <<: *screenplay_args
+                  offset: 15
+                  upper: True
+              - name: line
+                screenplay_args:
+                  <<: *screenplay_args
 
           # Internal narration and unspecified speaker.
-          is_internal_narration:
+          - name: is_internal_narration
             where: "has_speaker IS FALSE AND speaker = 'internal_narration'"
             style: *default_line
+            columns:
+              - name: line
+                screenplay_args:
+                  <<: *screenplay_args
 
           # Internal narration and unspecified speaker.
-          is_unspecified_speaker:
+          - name: is_unspecified_speaker
             where: "has_speaker IS FALSE AND speaker = 'speaker_unspecified'"
             style: *default_line
             justify: 60
             textwrap_offset: 15
-            formatting: 
-              line:
-                offset: 15
+            columns:
+              - name: line
+                screenplay_args:
+                  <<: *screenplay_args
+                  offset: 15
 
-          is_end_of_branch:
-            where: "cast(prev_line_is_branch as boolean) IS TRUE AND is_branch IS FALSE"
-            style: *default_line
+          - name: is_end_of_branch
+            where: "prev_line_is_branch IS TRUE AND is_branch IS FALSE"
+            style: "{screenplay}"
             add_bar: True
+            columns:
+              - name: screenplay
+                screenplay_args:
+                  <<: *screenplay_args
                 
 
 
@@ -812,17 +959,11 @@ run:
   wordclouds:
 
     wordclouds_dir : &wordclouds_dir  /home/jayckaiser/adastra/wordclouds
-    images_dir     : &images_dir      !PATH_JOIN [*adastra_directory, 'game/images']
-
-    # [REQUIRED] Specify which column in the dataset will be used to build the wordclouds.
-    # - Prebuilt options are 'line', 'words', or 'content_words'.
-    #   * 'line' is the cleaned text of the line.
-    #   * 'words' removes punctuation.
-    #   * 'content_words' removes punctuation and stop-words and converts to lowercase.
+    images_dir     : &images_dir      !PATH_JOIN [*adastra_dir, 'game/images']
 
     # Define universal wordcloud params here. They can be overwritten in any image below.
     wordcloud_args: &wordcloud_args
-      font_path: !PATH_JOIN [*adastra_directory, "game/RobotoSlab-Medium.ttf"]
+      font_path: !PATH_JOIN [*adastra_dir, "game/RobotoSlab-Medium.ttf"]
       max_words: 2500
       max_font_size: 30
       mode: RGB
@@ -831,6 +972,8 @@ run:
       relative_scaling: 0.3
       random_state: 42
 
+
+    # Create one output per key.
     wordclouds:
 
       # Here is the structure of a typical `wordcloud`.
