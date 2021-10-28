@@ -65,22 +65,21 @@ class DataLake:
 
 
 
-    def filter_datasets(self, filters):
+    def _filter_datasets(self, filters):
         """
         
         """
-        if filters:
-            for filter in filters:
-                name = filters['name']
-                where = filters['where']
+        for filter in filters:
+            name = filter['name']
+            where = filter['where']
 
-                _dataset = self.get(name)
-                _dataset = _dataset.filter_where(where)
+            _dataset = self.get(name)
+            _dataset = _dataset.filter_where(where)
 
-                self.data_lake[name] = _dataset
+            self.data_lake[name] = _dataset
 
 
-    def query_sql(self, sql):
+    def _query_datasets(self, sql):
         """
         
         """
@@ -89,7 +88,29 @@ class DataLake:
 
         _data = psql.sqldf(sql)
 
-        return Dataset(_data)
+        return _data
+
+
+    def isolate_dataset(
+        self,
+
+        filters=None,
+
+        name=None,
+        sql=None,
+       
+    ):
+        """
+        
+        """
+        if filters:
+            self._filter_datasets(filters)
+
+        if name:
+            return self.get(name)
+
+        if sql:
+            return self._query_datasets(sql)            
 
 
 
