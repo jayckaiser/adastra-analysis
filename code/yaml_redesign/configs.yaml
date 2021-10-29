@@ -58,9 +58,9 @@ definitions:
 
 
 # [REQUIRED] Define datas to build and save when running `build`.
-build:
+datasets:
 
-  dataset_dir: &dataset_dir /home/jayckaiser/adastra/data
+  dataset_dir: &dataset_dir /home/jayckaiser/adastra_v3/data
 
   datasets:
 
@@ -76,7 +76,7 @@ build:
     - !Dataset
       name: characters
       file: !PATH_JOIN [*dataset_dir, characters.jsonl]
-      data:
+      dataset_args:
         columns: [speaker, color]
         data: &characters_palette  # This dictionary is passed to `relplots` as well.
           alexios : '#65ca68'
@@ -96,7 +96,7 @@ build:
     - !TermFrequencies
       name: term_freqs
       file: !PATH_JOIN [*dataset_dir, term_frequencies.jsonl]
-      data:
+      dataset:
         sql: |
             select
                 file, line_idx, speaker, is_branch, sentiment,
@@ -111,1554 +111,1548 @@ build:
 
 
 
-  
+# Run `--queries` to run SQL queries and save outputs to JSONL files.
+queries:
+
+  queries_dir: &queries_dir /home/jayckaiser/adastra_v3/queries
 
 
-# Main configs for all output runs.
-run:
-
-  # Run `--queries` to run SQL queries and save outputs to JSONL files.
+  # Create one output per key.
   queries:
 
-    queries_dir: &queries_dir /home/jayckaiser/adastra/queries
+    # Here is the structure of a typical `query`.
+    # !Query:
+    #   name   : key to query, accessible via `--queries name`
+    #   file   : output path for Query .jsonl file
+    #   dataset: dataset of the query
 
+    - !Query
+      name: lines_per_file
+      file: !PATH_JOIN [*queries_dir, lines_per_file.jsonl]
+      dataset:
+        filters:
+          - name : adastra
+            where: *is_read
+        sql: |
+          select
+            file,
+            count(*) as num_lines
+          from adastra
+          group by 1
+          order by 1
+    
+    - !Query
+      name: lines_per_speaker
+      file: !PATH_JOIN [*queries_dir, lines_per_speaker.jsonl]
+      dataset:
+        filters:
+          - name : adastra
+            where: *is_read
+        sql: |
+          select
+            speaker,
+            count(*) as num_lines
+          from adastra
+          group by 1
+          order by 1
 
-    # Create one output per key.
-    queries:
+    - !Query
+      name: words_per_file
+      file: !PATH_JOIN [*queries_dir, words_per_file.jsonl]
+      dataset:
+        filters:
+          - name : adastra
+            where: *is_read
+        sql: |
+          select
+            file,
+            sum(num_words) as sum_words
+          from adastra
+          group by 1
+          order by 1
+          
+    - !Query
+      name: words_per_speaker
+      file: !PATH_JOIN [*queries_dir, words_per_speaker.jsonl]
+      dataset:
+        filters:
+          - name : adastra
+            where: *is_read
+        sql: |
+          select
+            speaker,
+            sum(num_words) as sum_words
+          from adastra
+          group by 1
+          order by 1
 
-      # Here is the structure of a typical `query`.
-      # !Query:
-      #   name: key to query, accessible via `--queries name`
-      #   file: output path for Query .jsonl file
-      #   data: data of the query
+    - !Query
+      name: total_lines
+      file: !PATH_JOIN [*queries_dir, total_lines.jsonl]
+      dataset:
+        filters:
+          - name : adastra
+            where: *is_read
+        sql: |
+          select
+            count(*) as total_words
+          from adastra
 
-      - !Query
-        name: lines_per_file
-        file: !PATH_JOIN [*queries_dir, lines_per_file.jsonl]
-        data:
-          filters:
-            - name : adastra
-              where: *is_read
-          sql: |
-            select
-              file,
-              count(*) as num_lines
-            from adastra
-            group by 1
-            order by 1
-      
-      - !Query
-        name: lines_per_speaker
-        file: !PATH_JOIN [*queries_dir, lines_per_speaker.jsonl]
-        data:
-          filters:
-            - name : adastra
-              where: *is_read
-          sql: |
-            select
-              speaker,
-              count(*) as num_lines
-            from adastra
-            group by 1
-            order by 1
+    - !Query
+      name: total_words
+      file: !PATH_JOIN [*queries_dir, total_words.jsonl]
+      dataset:
+        filters:
+          - name : adastra
+            where: *is_read
+        sql: |
+          select
+            sum(num_words) as total_words
+          from adastra
 
-      - !Query
-        name: words_per_file
-        file: !PATH_JOIN [*queries_dir, words_per_file.jsonl]
-        data:
-          filters:
-            - name : adastra
-              where: *is_read
-          sql: |
-            select
-              file,
-              sum(num_words) as sum_words
-            from adastra
-            group by 1
-            order by 1
-            
-      - !Query
-        name: words_per_speaker
-        file: !PATH_JOIN [*queries_dir, words_per_speaker.jsonl]
-        data:
-          filters:
-            - name : adastra
-              where: *is_read
-          sql: |
-            select
-              speaker,
-              sum(num_words) as sum_words
-            from adastra
-            group by 1
-            order by 1
+    # Get read content and metadata from all script files.
+    - !Query
+      name: a1s1
+      file: !PATH_JOIN [*queries_dir, contents/a1s1.jsonl]
+      dataset:
+        filters:
+          - name : adastra
+            where: !AND [*is_read, "file = 'a1s1'"]
+        sql: *get_read_content
 
-      - !Query
-        name: total_lines
-        file: !PATH_JOIN [*queries_dir, total_lines.jsonl]
-        data:
-          filters:
-            - name : adastra
-              where: *is_read
-          sql: |
-            select
-              count(*) as total_words
-            from adastra
+    - !Query
+      name: a1s2
+      file: !PATH_JOIN [*queries_dir, contents/a1s2.jsonl]
+      dataset:
+        filters:
+          - name : adastra
+            where: !AND [*is_read, "file = 'a1s2'"]
+        sql: *get_read_content
 
-      - !Query
-        name: total_words
-        file: !PATH_JOIN [*queries_dir, total_words.jsonl]
-        data:
-          filters:
-            - name : adastra
-              where: *is_read
-          sql: |
-            select
-              sum(num_words) as total_words
-            from adastra
+    - !Query
+      name: a1s3
+      file: !PATH_JOIN [*queries_dir, contents/a1s3.jsonl]
+      dataset:
+        filters:
+          - name : adastra
+            where: !AND [*is_read, "file = 'a1s3'"]
+        sql: *get_read_content
 
-      # Get read content and metadata from all script files.
-      - !Query
-        name: a1s1
-        file: !PATH_JOIN [*queries_dir, contents/a1s1.jsonl]
-        data:
-          filters:
-            - name : adastra
-              where: !AND [*is_read, "file = 'a1s1'"]
-          sql: *get_read_content
+    - !Query
+      name: a1s4
+      file: !PATH_JOIN [*queries_dir, contents/a1s4.jsonl]
+      dataset:
+        filters:
+          - name : adastra
+            where: !AND [*is_read, "file = 'a1s4'"]
+        sql: *get_read_content
 
-      - !Query
-        name: a1s2
-        file: !PATH_JOIN [*queries_dir, contents/a1s2.jsonl]
-        data:
-          filters:
-            - name : adastra
-              where: !AND [*is_read, "file = 'a1s2'"]
-          sql: *get_read_content
+    - !Query
+      name: a1s5
+      file: !PATH_JOIN [*queries_dir, contents/a1s5.jsonl]
+      dataset:
+        filters:
+          - name : adastra
+            where: !AND [*is_read, "file = 'a1s5'"]
+        sql: *get_read_content
 
-      - !Query
-        name: a1s3
-        file: !PATH_JOIN [*queries_dir, contents/a1s3.jsonl]
-        data:
-          filters:
-            - name : adastra
-              where: !AND [*is_read, "file = 'a1s3'"]
-          sql: *get_read_content
+    - !Query
+      name: a1s6
+      file: !PATH_JOIN [*queries_dir, contents/a1s6.jsonl]
+      dataset:
+        filters:
+          - name : adastra
+            where: !AND [*is_read, "file = 'a1s6'"]
+        sql: *get_read_content
 
-      - !Query
-        name: a1s4
-        file: !PATH_JOIN [*queries_dir, contents/a1s4.jsonl]
-        data:
-          filters:
-            - name : adastra
-              where: !AND [*is_read, "file = 'a1s4'"]
-          sql: *get_read_content
+    - !Query
+      name: a1s7
+      file: !PATH_JOIN [*queries_dir, contents/a1s7.jsonl]
+      dataset:
+        filters:
+          - name : adastra
+            where: !AND [*is_read, "file = 'a1s7'"]
+        sql: *get_read_content
 
-      - !Query
-        name: a1s5
-        file: !PATH_JOIN [*queries_dir, contents/a1s5.jsonl]
-        data:
-          filters:
-            - name : adastra
-              where: !AND [*is_read, "file = 'a1s5'"]
-          sql: *get_read_content
+    - !Query
+      name: a2s1
+      file: !PATH_JOIN [*queries_dir, contents/a2s1.jsonl]
+      dataset:
+        filters:
+          - name : adastra
+            where: !AND [*is_read, "file = 'a2s1'"]
+        sql: *get_read_content
 
-      - !Query
-        name: a1s6
-        file: !PATH_JOIN [*queries_dir, contents/a1s6.jsonl]
-        data:
-          filters:
-            - name : adastra
-              where: !AND [*is_read, "file = 'a1s6'"]
-          sql: *get_read_content
+    - !Query
+      name: a2s2
+      file: !PATH_JOIN [*queries_dir, contents/a2s2.jsonl]
+      dataset:
+        filters:
+          - name : adastra
+            where: !AND [*is_read, "file = 'a2s2'"]
+        sql: *get_read_content
 
-      - !Query
-        name: a1s7
-        file: !PATH_JOIN [*queries_dir, contents/a1s7.jsonl]
-        data:
-          filters:
-            - name : adastra
-              where: !AND [*is_read, "file = 'a1s7'"]
-          sql: *get_read_content
+    - !Query
+      name: a2s3
+      file: !PATH_JOIN [*queries_dir, contents/a2s3.jsonl]
+      dataset:
+        filters:
+          - name : adastra
+            where: !AND [*is_read, "file = 'a2s3'"]
+        sql: *get_read_content
 
-      - !Query
-        name: a2s1
-        file: !PATH_JOIN [*queries_dir, contents/a2s1.jsonl]
-        data:
-          filters:
-            - name : adastra
-              where: !AND [*is_read, "file = 'a2s1'"]
-          sql: *get_read_content
+    - !Query
+      name: a3s1
+      file: !PATH_JOIN [*queries_dir, contents/a3s1.jsonl]
+      dataset:
+        filters:
+          - name : adastra
+            where: !AND [*is_read, "file = 'a3s1'"]
+        sql: *get_read_content
 
-      - !Query
-        name: a2s2
-        file: !PATH_JOIN [*queries_dir, contents/a2s2.jsonl]
-        data:
-          filters:
-            - name : adastra
-              where: !AND [*is_read, "file = 'a2s2'"]
-          sql: *get_read_content
+    - !Query
+      name: a3s2
+      file: !PATH_JOIN [*queries_dir, contents/a3s2.jsonl]
+      dataset:
+        filters:
+          - name : adastra
+            where: !AND [*is_read, "file = 'a3s2'"]
+        sql: *get_read_content
 
-      - !Query
-        name: a2s3
-        file: !PATH_JOIN [*queries_dir, contents/a2s3.jsonl]
-        data:
-          filters:
-            - name : adastra
-              where: !AND [*is_read, "file = 'a2s3'"]
-          sql: *get_read_content
+    - !Query
+      name: end_game1
+      file: !PATH_JOIN [*queries_dir, contents/end_game1.jsonl]
+      dataset:
+        filters:
+          - name : adastra
+            where: !AND [*is_read, "file = 'end_game1'"]
+        sql: *get_read_content
 
-      - !Query
-        name: a3s1
-        file: !PATH_JOIN [*queries_dir, contents/a3s1.jsonl]
-        data:
-          filters:
-            - name : adastra
-              where: !AND [*is_read, "file = 'a3s1'"]
-          sql: *get_read_content
-
-      - !Query
-        name: a3s2
-        file: !PATH_JOIN [*queries_dir, contents/a3s2.jsonl]
-        data:
-          filters:
-            - name : adastra
-              where: !AND [*is_read, "file = 'a3s2'"]
-          sql: *get_read_content
-
-      - !Query
-        name: end_game1
-        file: !PATH_JOIN [*queries_dir, contents/end_game1.jsonl]
-        data:
-          filters:
-            - name : adastra
-              where: !AND [*is_read, "file = 'end_game1'"]
-          sql: *get_read_content
-
-      - !Query
-        name: end_game2
-        file: !PATH_JOIN [*queries_dir, contents/end_game2.jsonl]
-        data:
-          filters:
-            - name : adastra
-              where: !AND [*is_read, "file = 'end_game2'"]
-          sql: *get_read_content
+    - !Query
+      name: end_game2
+      file: !PATH_JOIN [*queries_dir, contents/end_game2.jsonl]
+      dataset:
+        filters:
+          - name : adastra
+            where: !AND [*is_read, "file = 'end_game2'"]
+        sql: *get_read_content
 
 
 
-  # Run `--relplots` to run SQL queries to create Seaborn relational plots.
+# Run `--relplots` to run SQL queries to create Seaborn relational plots.
+relplots:
+
+  relplots_dir: &relplots_dir /home/jayckaiser/adastra_v3/relplots
+
+  relplot_args: &relplot_args
+    hue: speaker
+    kind: line
+    palette: *characters_palette
+    
+
+  # Create one output per key.
   relplots:
 
-    relplots_dir: &relplots_dir /home/jayckaiser/adastra/relplots
-
-    relplot_args: &relplot_args
-      hue: speaker
-      kind: line
-      palette: *characters_palette
+    # Here is the structure of a typical `relplot`.
+    #
+    # !Relplot:
+    #   name           : key to query, accessible via `--relplots name`
+    #   file           : output path for Relplot .png file
+    #   dataset        : dataset for the relplot
+    #   relplot_args   : custom `seaborn.relplot` kwargs to define the relplot
+    #   axhline        : (default None ) apply a horizontal line to the relplot
+    #   remove_outliers: (default False) apply smoothing to the output by filtering within three-sigmas
+    
+    - !Relplot
+      name: lines_per_character
+      file: !PATH_JOIN [*relplots_dir, lines_per_character.png]
+      dataset:
+        sql: |
+            select
+                file,
+                speaker,
+                count(*) as num_lines
+            from adastra
+            inner join characters using(speaker)
+            group by 1, 2
+            order by 1, 2
+      relplot_args:
+        <<: *relplot_args
+        x: file
+        y: num_lines
+    
+    - !Relplot
+      name: proportion_lines_per_character
+      file: !PATH_JOIN [*relplots_dir, proportion_lines_per_character.png]
+      dataset:
+        sql: |
+            select
+                file,
+                speaker,
+                count(*) / num_lines_by_file as proportion_lines
+            from adastra
+                inner join characters using(speaker)
+                inner join (
+                    select
+                        file,
+                        cast(count(*) as float) as num_lines_by_file
+                    from adastra
+                    group by 1
+                ) using(file)
+            group by 1, 2
+            order by 1, 2
+      relplot_args:
+        <<: *relplot_args
+        x: file
+        y: proportion_lines
+        
+    - !Relplot
+      name: words_per_character
+      file: !PATH_JOIN [*relplots_dir, words_per_character.png]
+      dataset:
+        sql: |
+            select
+                file,
+                speaker,
+                sum(num_words) as num_words
+            from adastra
+            inner join characters using(speaker)
+            group by 1, 2
+            order by 1, 2
+      relplot_args:
+        <<: *relplot_args
+        x: file
+        y: num_words
       
-
-    # Create one output per key.
-    relplots:
-
-      # Here is the structure of a typical `relplot`.
-      #
-      # !Relplot:
-      #   name           : key to query, accessible via `--relplots name`
-      #   file           : output path for Relplot .png file
-      #   data           : data for the relplot
-      #   relplot_args   : custom `seaborn.relplot` kwargs to define the relplot
-      #   axhline        : (default None ) apply a horizontal line to the relplot
-      #   remove_outliers: (default False) apply smoothing to the output by filtering within three-sigmas
-      
-      - !Relplot
-        name: lines_per_character
-        file: !PATH_JOIN [*relplots_dir, lines_per_character.png]
-        data:
-          sql: |
-              select
-                  file,
-                  speaker,
-                  count(*) as num_lines
-              from adastra
-              inner join characters using(speaker)
-              group by 1, 2
-              order by 1, 2
-        relplot_args:
-          <<: *relplot_args
-          x: file
-          y: num_lines
-      
-      - !Relplot
-        name: proportion_lines_per_character
-        file: !PATH_JOIN [*relplots_dir, proportion_lines_per_character.png]
-        data:
-          sql: |
-              select
-                  file,
-                  speaker,
-                  count(*) / num_lines_by_file as proportion_lines
-              from adastra
-                  inner join characters using(speaker)
-                  inner join (
-                      select
-                          file,
-                          cast(count(*) as float) as num_lines_by_file
-                      from adastra
-                      group by 1
-                  ) using(file)
-              group by 1, 2
-              order by 1, 2
-        relplot_args:
-          <<: *relplot_args
-          x: file
-          y: proportion_lines
+    - !Relplot
+      name: proportion_words_per_character
+      file: !PATH_JOIN [*relplots_dir, proportion_words_per_character.png]
+      dataset:
+        sql: |
+            select
+                file,
+                speaker,
+                sum(num_words) / num_words_by_file as proportion_words
+            from adastra
+                inner join characters using(speaker)
+                inner join (
+                    select
+                        file,
+                        cast(sum(num_words) as float) as num_words_by_file
+                    from adastra
+                    group by 1
+                ) using(file)
+            group by 1, 2
+            order by 1, 2
+      relplot_args:
+        <<: *relplot_args
+        x: file
+        y: proportion_words
           
-      - !Relplot
-        name: words_per_character
-        file: !PATH_JOIN [*relplots_dir, words_per_character.png]
-        data:
-          sql: |
-              select
-                  file,
-                  speaker,
-                  sum(num_words) as num_words
-              from adastra
-              inner join characters using(speaker)
-              group by 1, 2
-              order by 1, 2
-        relplot_args:
-          <<: *relplot_args
-          x: file
-          y: num_words
-        
-      - !Relplot
-        name: proportion_words_per_character
-        file: !PATH_JOIN [*relplots_dir, proportion_words_per_character.png]
-        data:
-          sql: |
-              select
-                  file,
-                  speaker,
-                  sum(num_words) / num_words_by_file as proportion_words
-              from adastra
-                  inner join characters using(speaker)
-                  inner join (
-                      select
-                          file,
-                          cast(sum(num_words) as float) as num_words_by_file
-                      from adastra
-                      group by 1
-                  ) using(file)
-              group by 1, 2
-              order by 1, 2
-        relplot_args:
-          <<: *relplot_args
-          x: file
-          y: proportion_words
-            
-      - !Relplot
-        name: average_sentiment_per_character
-        file: !PATH_JOIN [*relplots_dir, average_sentiment_per_character.png]
-        data:
-          sql: |
-              select
-                  file,
-                  speaker,
-                  avg(sentiment) as avg_sentiment
-              from adastra
-                  inner join characters using(speaker)
-              group by 1, 2
-              order by 1, 2
-        relplot_args:
-          <<: *relplot_args
-          x: file
-          y: avg_sentiment
-        axhline: 0.0
-        
-      # Sentiment graphs, one per file.
-      - !Relplot
-        name: a1s1_sentiment
-        file: !PATH_JOIN [*relplots_dir, sentiment/a1s1.png]
-        data:
-          filters:
-            - name: adastra
-              where: "file = 'a1s1'"
-          sql: *rolling_sentiment
-        relplot_args:
-          <<: *relplot_args
-          x: line_idx
-          y: rolling_sentiment
-        title: "Rolling sentiment by character across Act 1, Scene 1"
-        axhline: 0.0
-        remove_outliers: True
-        
-      - !Relplot
-        name: a1s2_sentiment
-        file: !PATH_JOIN [*relplots_dir, sentiment/a1s2.png]
-        data:
-          filters:
-            - name: adastra
-              where: "file = 'a1s2'"
-          sql: *rolling_sentiment
-        relplot_args:
-          <<: *relplot_args
-          x: line_idx
-          y: rolling_sentiment
-        title: "Rolling sentiment by character across Act 1, Scene 2"
-        axhline: 0.0
-        remove_outliers: True
-        
-      - !Relplot
-        name: a1s3_sentiment
-        file: !PATH_JOIN [*relplots_dir, sentiment/a1s3.png]
-        data:
-          filters:
-            - name: adastra
-              where: "file = 'a1s3'"
-          sql: *rolling_sentiment
-        relplot_args:
-          <<: *relplot_args
-          x: line_idx
-          y: rolling_sentiment
-        title: "Rolling sentiment by character across Act 1, Scene 3"
-        axhline: 0.0
-        remove_outliers: True
-        
-      - !Relplot
-        name: a1s4_sentiment
-        file: !PATH_JOIN [*relplots_dir, sentiment/a1s4.png]
-        data:
-          filters:
-            - name: adastra
-              where: "file = 'a1s4'"
-          sql: *rolling_sentiment
-        relplot_args:
-          <<: *relplot_args
-          x: line_idx
-          y: rolling_sentiment
-        title: "Rolling sentiment by character across Act 1, Scene 4"
-        axhline: 0.0
-        remove_outliers: True
-        
-      - !Relplot
-        name: a1s5_sentiment
-        file: !PATH_JOIN [*relplots_dir, sentiment/a1s5.png]
-        data:
-          filters:
-            - name: adastra
-              where: "file = 'a1s5'"
-          sql: *rolling_sentiment
-        relplot_args:
-          x: line_idx
-          y: rolling_sentiment
-        title: "Rolling sentiment by character across Act 1, Scene 5"
-        axhline: 0.0
-        remove_outliers: True
-        
-      - !Relplot
-        name: a1s6_sentiment
-        file: !PATH_JOIN [*relplots_dir, sentiment/a1s6.png]
-        data:
-          filters:
-            - name: adastra
-              where: "file = 'a1s6'"
-          sql: *rolling_sentiment
-        relplot_args:
-          x: line_idx
-          y: rolling_sentiment
-        title: "Rolling sentiment by character across Act 1, Scene 6"
-        axhline: 0.0
-        remove_outliers: True
-        
-      - !Relplot
-        name: a1s7_sentiment
-        file: !PATH_JOIN [*relplots_dir, sentiment/a1s7.png]
-        data:
-          filters:
-            - name: adastra
-              where: "file = 'a1s7'"
-          sql: *rolling_sentiment
-        relplot_args:
-          x: line_idx
-          y: rolling_sentiment
-        title: "Rolling sentiment by character across Act 1, Scene 7"
-        axhline: 0.0
-        remove_outliers: True
-        
-      - !Relplot
-        name: a2s1_sentiment
-        file: !PATH_JOIN [*relplots_dir, sentiment/a2s1.png]
-        data:
-          filters:
-            - name: adastra
-              where: "file = 'a2s1'"
-          sql: *rolling_sentiment
-        relplot_args:
-          x: line_idx
-          y: rolling_sentiment
-        title: "Rolling sentiment by character across Act 2, Scene 1"
-        axhline: 0.0
-        remove_outliers: True
-        
-      - !Relplot
-        name: a2s2_sentiment
-        file: !PATH_JOIN [*relplots_dir, sentiment/a2s2.png]
-        data:
-          filters:
-            - name: adastra
-              where: "file = 'a2s2'"
-          sql: *rolling_sentiment
-        relplot_args:
-          x: line_idx
-          y: rolling_sentiment
-        title: "Rolling sentiment by character across Act 2, Scene 2"
-        axhline: 0.0
-        remove_outliers: True
-        
-      - !Relplot
-        name: a2s3_sentiment
-        file: !PATH_JOIN [*relplots_dir, sentiment/a2s3.png]
-        data:
-          filters:
-            - name: adastra
-              where: "file = 'a2s3'"
-          sql: *rolling_sentiment
-        relplot_args:
-          x: line_idx
-          y: rolling_sentiment
-        title: "Rolling sentiment by character across Act 2, Scene 3"
-        axhline: 0.0
-        remove_outliers: True
-        
-      - !Relplot
-        name: a3s1_sentiment
-        file: !PATH_JOIN [*relplots_dir, sentiment/a3s1.png]
-        data:
-          filters:
-            - name: adastra
-              where: "file = 'a3s1'"
-          sql: *rolling_sentiment
-        relplot_args:
-          x: line_idx
-          y: rolling_sentiment
-        title: "Rolling sentiment by character across Act 3, Scene 1"
-        axhline: 0.0
-        remove_outliers: True
-        
-      - !Relplot
-        name: a3s2_sentiment
-        file: !PATH_JOIN [*relplots_dir, sentiment/a3s2.png]
-        data:
-          filters:
-            - name: adastra
-              where: "file = 'a3s2'"
-          sql: *rolling_sentiment
-        relplot_args:
-          x: line_idx
-          y: rolling_sentiment
-        title: "Rolling sentiment by character across Act 3, Scene 2"
-        axhline: 0.0
-        remove_outliers: True
-        
-      - !Relplot
-        name: end_game1_sentiment
-        file: !PATH_JOIN [*relplots_dir, sentiment/end_game1.png]
-        data:
-          filters:
-            - name: adastra
-              where: "file = 'end_game1'"
-          sql: *rolling_sentiment
-        relplot_args:
-          x: line_idx
-          y: rolling_sentiment
-        title: "Rolling sentiment by character across End Game 1"
-        axhline: 0.0
-        remove_outliers: True
-        
-      - !Relplot
-        name: end_game2_sentiment
-        file: !PATH_JOIN [*relplots_dir, sentiment/end_game2.png]
-        data:
-          filters:
-            - name: adastra
-              where: "file = 'end_game2'"
-          sql: *rolling_sentiment
-        relplot_args:
-          x: line_idx
-          y: rolling_sentiment
-        title: "Rolling sentiment by character across End Game 2"
-        axhline: 0.0
-        remove_outliers: True
-        
+    - !Relplot
+      name: average_sentiment_per_character
+      file: !PATH_JOIN [*relplots_dir, average_sentiment_per_character.png]
+      dataset:
+        sql: |
+            select
+                file,
+                speaker,
+                avg(sentiment) as avg_sentiment
+            from adastra
+                inner join characters using(speaker)
+            group by 1, 2
+            order by 1, 2
+      relplot_args:
+        <<: *relplot_args
+        x: file
+        y: avg_sentiment
+      axhline: 0.0
+      
+    # Sentiment graphs, one per file.
+    - !Relplot
+      name: a1s1_sentiment
+      file: !PATH_JOIN [*relplots_dir, sentiment/a1s1.png]
+      dataset:
+        filters:
+          - name: adastra
+            where: "file = 'a1s1'"
+        sql: *rolling_sentiment
+      relplot_args:
+        <<: *relplot_args
+        x: line_idx
+        y: rolling_sentiment
+      title: "Rolling sentiment by character across Act 1, Scene 1"
+      axhline: 0.0
+      remove_outliers: True
+      
+    - !Relplot
+      name: a1s2_sentiment
+      file: !PATH_JOIN [*relplots_dir, sentiment/a1s2.png]
+      dataset:
+        filters:
+          - name: adastra
+            where: "file = 'a1s2'"
+        sql: *rolling_sentiment
+      relplot_args:
+        <<: *relplot_args
+        x: line_idx
+        y: rolling_sentiment
+      title: "Rolling sentiment by character across Act 1, Scene 2"
+      axhline: 0.0
+      remove_outliers: True
+      
+    - !Relplot
+      name: a1s3_sentiment
+      file: !PATH_JOIN [*relplots_dir, sentiment/a1s3.png]
+      dataset:
+        filters:
+          - name: adastra
+            where: "file = 'a1s3'"
+        sql: *rolling_sentiment
+      relplot_args:
+        <<: *relplot_args
+        x: line_idx
+        y: rolling_sentiment
+      title: "Rolling sentiment by character across Act 1, Scene 3"
+      axhline: 0.0
+      remove_outliers: True
+      
+    - !Relplot
+      name: a1s4_sentiment
+      file: !PATH_JOIN [*relplots_dir, sentiment/a1s4.png]
+      dataset:
+        filters:
+          - name: adastra
+            where: "file = 'a1s4'"
+        sql: *rolling_sentiment
+      relplot_args:
+        <<: *relplot_args
+        x: line_idx
+        y: rolling_sentiment
+      title: "Rolling sentiment by character across Act 1, Scene 4"
+      axhline: 0.0
+      remove_outliers: True
+      
+    - !Relplot
+      name: a1s5_sentiment
+      file: !PATH_JOIN [*relplots_dir, sentiment/a1s5.png]
+      dataset:
+        filters:
+          - name: adastra
+            where: "file = 'a1s5'"
+        sql: *rolling_sentiment
+      relplot_args:
+        x: line_idx
+        y: rolling_sentiment
+      title: "Rolling sentiment by character across Act 1, Scene 5"
+      axhline: 0.0
+      remove_outliers: True
+      
+    - !Relplot
+      name: a1s6_sentiment
+      file: !PATH_JOIN [*relplots_dir, sentiment/a1s6.png]
+      dataset:
+        filters:
+          - name: adastra
+            where: "file = 'a1s6'"
+        sql: *rolling_sentiment
+      relplot_args:
+        x: line_idx
+        y: rolling_sentiment
+      title: "Rolling sentiment by character across Act 1, Scene 6"
+      axhline: 0.0
+      remove_outliers: True
+      
+    - !Relplot
+      name: a1s7_sentiment
+      file: !PATH_JOIN [*relplots_dir, sentiment/a1s7.png]
+      dataset:
+        filters:
+          - name: adastra
+            where: "file = 'a1s7'"
+        sql: *rolling_sentiment
+      relplot_args:
+        x: line_idx
+        y: rolling_sentiment
+      title: "Rolling sentiment by character across Act 1, Scene 7"
+      axhline: 0.0
+      remove_outliers: True
+      
+    - !Relplot
+      name: a2s1_sentiment
+      file: !PATH_JOIN [*relplots_dir, sentiment/a2s1.png]
+      dataset:
+        filters:
+          - name: adastra
+            where: "file = 'a2s1'"
+        sql: *rolling_sentiment
+      relplot_args:
+        x: line_idx
+        y: rolling_sentiment
+      title: "Rolling sentiment by character across Act 2, Scene 1"
+      axhline: 0.0
+      remove_outliers: True
+      
+    - !Relplot
+      name: a2s2_sentiment
+      file: !PATH_JOIN [*relplots_dir, sentiment/a2s2.png]
+      dataset:
+        filters:
+          - name: adastra
+            where: "file = 'a2s2'"
+        sql: *rolling_sentiment
+      relplot_args:
+        x: line_idx
+        y: rolling_sentiment
+      title: "Rolling sentiment by character across Act 2, Scene 2"
+      axhline: 0.0
+      remove_outliers: True
+      
+    - !Relplot
+      name: a2s3_sentiment
+      file: !PATH_JOIN [*relplots_dir, sentiment/a2s3.png]
+      dataset:
+        filters:
+          - name: adastra
+            where: "file = 'a2s3'"
+        sql: *rolling_sentiment
+      relplot_args:
+        x: line_idx
+        y: rolling_sentiment
+      title: "Rolling sentiment by character across Act 2, Scene 3"
+      axhline: 0.0
+      remove_outliers: True
+      
+    - !Relplot
+      name: a3s1_sentiment
+      file: !PATH_JOIN [*relplots_dir, sentiment/a3s1.png]
+      dataset:
+        filters:
+          - name: adastra
+            where: "file = 'a3s1'"
+        sql: *rolling_sentiment
+      relplot_args:
+        x: line_idx
+        y: rolling_sentiment
+      title: "Rolling sentiment by character across Act 3, Scene 1"
+      axhline: 0.0
+      remove_outliers: True
+      
+    - !Relplot
+      name: a3s2_sentiment
+      file: !PATH_JOIN [*relplots_dir, sentiment/a3s2.png]
+      dataset:
+        filters:
+          - name: adastra
+            where: "file = 'a3s2'"
+        sql: *rolling_sentiment
+      relplot_args:
+        x: line_idx
+        y: rolling_sentiment
+      title: "Rolling sentiment by character across Act 3, Scene 2"
+      axhline: 0.0
+      remove_outliers: True
+      
+    - !Relplot
+      name: end_game1_sentiment
+      file: !PATH_JOIN [*relplots_dir, sentiment/end_game1.png]
+      dataset:
+        filters:
+          - name: adastra
+            where: "file = 'end_game1'"
+        sql: *rolling_sentiment
+      relplot_args:
+        x: line_idx
+        y: rolling_sentiment
+      title: "Rolling sentiment by character across End Game 1"
+      axhline: 0.0
+      remove_outliers: True
+      
+    - !Relplot
+      name: end_game2_sentiment
+      file: !PATH_JOIN [*relplots_dir, sentiment/end_game2.png]
+      dataset:
+        filters:
+          - name: adastra
+            where: "file = 'end_game2'"
+        sql: *rolling_sentiment
+      relplot_args:
+        x: line_idx
+        y: rolling_sentiment
+      title: "Rolling sentiment by character across End Game 2"
+      axhline: 0.0
+      remove_outliers: True
+      
 
 
-  # Run `--screenplays` to create normalized text of the game in a specified format.
+# Run `--screenplays` to create normalized text of the game in a specified format.
+screenplays:
+
+  screenplays_dir: &screenplays_dir /home/jayckaiser/adastra_v3/screenplays
+
+  screenplay_args: &screenplay_args
+    strip_quotes: False
+    upper  : False
+    lower  : False
+    title  : False
+    offset : 0
+    prefix : ""
+    postfix: ""
+
+
+  # Create one output per key.
   screenplays:
 
-    screenplays_dir: &screenplays_dir /home/jayckaiser/adastra/screenplays
+    # Here is the structure of a typical `screenplay`:
+    #
+    # !Screenplay
+    #   name    : key to query, accessible via `--screenplays screenplay_style1`
+    #   folder  : output subfolder under {output_directory}
+    #   data    : data for the screenplay
+    #   justify : how wide should the output be (justify-width)
+    #   line_sep: how should lines be separated
+    # 
+    #   categories:
+    #     - name               : name of the category; only used to track progress
+    #       where              : where-clause to filter which lines use the given category style
+    #       style              : shape of the output with columns used (i.e. "{column1}: {column2}")
+    #       textwrap_offset    : how far should wrapped text be indented; defaults to 0
+    # 
+    #       columns:
+    #         - name           : name of the column to be inserted into the style
+    #           screenplay_args: formatting arguments to apply the the text of the column
 
-    screenplay_args: &screenplay_args
-      strip_quotes: False
-      upper  : False
-      lower  : False
-      title  : False
-      offset : 0
-      prefix : ""
-      postfix: ""
+    # Emulates 'The Cursed Child'
+    - !Screenplay
+      name: screenplay_style1
+      folder: !PATH_JOIN [*screenplays_dir, style1]
+      dataset:
+        sql: |
+            select
+                has_speaker, is_choice, is_branch,
+                speaker, line, line as screenplay
+            from adastra
+            where is_read or is_choice
+      justify: 75
+      line_sep: "\n\n"
+      categories:
 
+        # Player/game choice between branches.
+        - name : is_choice
+          where: "is_choice IS TRUE"
+          style: *default_line
+          columns:
+            - name: line
+              screenplay_args:
+                <<: *screenplay_args
+                prefix : '['
+                postfix: ']'
 
-    # Create one output per key.
-    screenplays:
+        # Dialogue explicitly spoken by speaker in branch.
+        - name : has_speaker_in_branch
+          where: "is_branch IS TRUE AND has_speaker IS TRUE"
+          style: "{speaker}\n{line}"
+          textwrap_offset: 8
+          columns:
+            - name: speaker
+              screenplay_args:
+                <<: *screenplay_args
+                offset: 8
+                upper : True
+            - name: line
+              screenplay_args:
+                <<: *screenplay_args
+                offset: 2
 
-      # Here is the structure of a typical `screenplay`:
-      #
-      # !Screenplay
-      #   name    : key to query, accessible via `--screenplays screenplay_style1`
-      #   folder  : output subfolder under {output_directory}
-      #   data    : data for the screenplay
-      #   justify : how wide should the output be (justify-width)
-      #   line_sep: how should lines be separated
-      # 
-      #   categories:
-      #     - name           : name of the category; only used to track progress
-      #       where          : where-clause to filter which lines use the given category style
-      #       style          : shape of the output with columns used (i.e. "{column1}: {column2}")
-      #       textwrap_offset: how far should wrapped text be indented; defaults to 0
-      # 
-      #       columns:
-      #         - name           : name of the column to be inserted into the style
-      #           screenplay_args: formatting arguments to apply the the text of the column
+        # Internal narration and unspecified speaker in branch.
+        - name : is_narration_in_branch
+          where: "is_branch IS TRUE AND has_speaker IS FALSE"
+          style: *default_line
+          textwrap_offset: 8
+          columns:
+            - name: line
+              screenplay_args:
+                <<: *screenplay_args
+                offset: 8
 
-      # Emulates 'The Cursed Child'
-      - !Screenplay
-        name: screenplay_style1
-        folder: !PATH_JOIN [*screenplays_dir, style1]
-        data:
-          sql: |
-              select
-                  has_speaker, is_choice, is_branch,
-                  speaker, line, line as screenplay
-              from adastra
-              where is_read or is_choice
-        justify: 75
-        line_sep: "\n\n"
-        categories:
+        # Dialogue explicitly spoken by speaker.
+        - name : has_speaker_outside_branch
+          where: "is_branch IS FALSE AND has_speaker IS TRUE"
+          style: "{speaker}\n{line}"
+          columns:
+            - name: speaker
+              screenplay_args:
+                <<: *screenplay_args
+                upper: True
+            - name: line
+              screenplay_args:
+                <<: *screenplay_args
+                offset: 2
 
-          # Player/game choice between branches.
-          - name : is_choice
-            where: "is_choice IS TRUE"
-            style: *default_line
-            columns:
-              - name: line
-                screenplay_args:
-                  <<: *screenplay_args
-                  prefix : '['
-                  postfix: ']'
-
-          # Dialogue explicitly spoken by speaker in branch.
-          - name : has_speaker_in_branch
-            where: "is_branch IS TRUE AND has_speaker IS TRUE"
-            style: "{speaker}\n{line}"
-            textwrap_offset: 8
-            columns:
-              - name: speaker
-                screenplay_args:
-                  <<: *screenplay_args
-                  offset: 8
-                  upper : True
-              - name: line
-                screenplay_args:
-                  <<: *screenplay_args
-                  offset: 2
-
-          # Internal narration and unspecified speaker in branch.
-          - name : is_narration_in_branch
-            where: "is_branch IS TRUE AND has_speaker IS FALSE"
-            style: *default_line
-            textwrap_offset: 8
-            columns:
-              - name: line
-                screenplay_args:
-                  <<: *screenplay_args
-                  offset: 8
-
-          # Dialogue explicitly spoken by speaker.
-          - name : has_speaker_outside_branch
-            where: "is_branch IS FALSE AND has_speaker IS TRUE"
-            style: "{speaker}\n{line}"
-            columns:
-              - name: speaker
-                screenplay_args:
-                  <<: *screenplay_args
-                  upper: True
-              - name: line
-                screenplay_args:
-                  <<: *screenplay_args
-                  offset: 2
-
-          # Internal narration and unspecified speaker.
-          - name : is_narration_outside_branch
-            where: "is_branch IS FALSE AND has_speaker IS FALSE"
-            style: *default_line
-            columns:
-              - name: line
-                screenplay_args:
-                  <<: *screenplay_args
+        # Internal narration and unspecified speaker.
+        - name : is_narration_outside_branch
+          where: "is_branch IS FALSE AND has_speaker IS FALSE"
+          style: *default_line
+          columns:
+            - name: line
+              screenplay_args:
+                <<: *screenplay_args
 
 
-      # Custom format
-      !Screenplay
-      - name: screenplay_style2
-        folder: !PATH_JOIN [*screenplays_dir, style2]
-        data:
-          sql: |
-              select
-                  has_speaker, is_choice, is_branch,
-                  speaker, line, line as screenplay
-              from adastra
-              where is_read or is_choice
-        justify: 75
-        line_sep: "\n\n"
-        categories:
+    # Custom format
+    !Screenplay
+    - name: screenplay_style2
+      folder: !PATH_JOIN [*screenplays_dir, style2]
+      dataset:
+        sql: |
+            select
+                has_speaker, is_choice, is_branch,
+                speaker, line, line as screenplay
+            from adastra
+            where is_read or is_choice
+      justify: 75
+      line_sep: "\n\n"
+      categories:
 
-          # Player/game choice between branches.
-          - name: is_choice
-            where: "is_choice IS TRUE"
-            style: *default_line
-            columns:
-              - name: line
-                screenplay_args:
-                  <<: *screenplay_args
-                  prefix: "[BRANCH]: "
+        # Player/game choice between branches.
+        - name: is_choice
+          where: "is_choice IS TRUE"
+          style: *default_line
+          columns:
+            - name: line
+              screenplay_args:
+                <<: *screenplay_args
+                prefix: "[BRANCH]: "
 
-          # Dialogue explicitly spoken by speaker in branch.
-          - name: has_speaker_in_branch
-            where: "is_branch IS TRUE AND has_speaker IS TRUE"
-            style: "{speaker}: {line}"
-            textwrap_offset: 8
-            columns:
-              - name: speaker
-                screenplay_args:
-                  <<: *screenplay_args
-                  offset: 4
-                  upper: True
-              - name: line
-                screenplay_args:
-                  <<: *screenplay_args
+        # Dialogue explicitly spoken by speaker in branch.
+        - name: has_speaker_in_branch
+          where: "is_branch IS TRUE AND has_speaker IS TRUE"
+          style: "{speaker}: {line}"
+          textwrap_offset: 8
+          columns:
+            - name: speaker
+              screenplay_args:
+                <<: *screenplay_args
+                offset: 4
+                upper: True
+            - name: line
+              screenplay_args:
+                <<: *screenplay_args
 
-          # Internal narration and unspecified speaker in branch.
-          - name: is_narration_in_branch
-            where: "is_branch IS TRUE AND has_speaker IS FALSE"
-            style: *default_line
-            textwrap_offset: 4
-            columns:
-              - name: line
-                screenplay_args:
-                  <<: *screenplay_args
-                  offset: 4
+        # Internal narration and unspecified speaker in branch.
+        - name: is_narration_in_branch
+          where: "is_branch IS TRUE AND has_speaker IS FALSE"
+          style: *default_line
+          textwrap_offset: 4
+          columns:
+            - name: line
+              screenplay_args:
+                <<: *screenplay_args
+                offset: 4
 
-          # Dialogue explicitly spoken by speaker.
-          - name: is_speaker_outside_branch
-            where: "is_branch IS FALSE AND has_speaker IS TRUE"
-            style: "{speaker}: {line}"
-            textwrap_offset: 4
-            columns:
-              - name: speaker
-                screenplay_args:
-                  <<: *screenplay_args
-                  upper: True
-              - name: line
-                screenplay_args:
-                  <<: *screenplay_args
+        # Dialogue explicitly spoken by speaker.
+        - name: is_speaker_outside_branch
+          where: "is_branch IS FALSE AND has_speaker IS TRUE"
+          style: "{speaker}: {line}"
+          textwrap_offset: 4
+          columns:
+            - name: speaker
+              screenplay_args:
+                <<: *screenplay_args
+                upper: True
+            - name: line
+              screenplay_args:
+                <<: *screenplay_args
 
-          # Internal narration and unspecified speaker.
-          - name: is_narration_outisde_branch
-            where: "is_branch IS FALSE AND has_speaker IS FALSE"
-            style: *default_line
-            columns:
-              - name: line
-                screenplay_args:
-                  <<: *screenplay_args
-
-
-      # Emulates an actual movie screenplay.
-      !Screenplay
-      - name: screenplay_style3
-        folder: !PATH_JOIN [*screenplays_dir, style3]
-        data:
-          sql: |
-              select
-                  has_speaker, is_choice, is_branch,
-                  LAG(is_branch, 1) OVER (ORDER BY file, line_idx) AS prev_line_is_branch,
-                  speaker, line, line as screenplay
-              from adastra
-              where is_read or is_choice
-        justify: 75
-        line_sep: "\n\n"
-        categories:
-
-          # Player/game choice between branches.
-          - name: is_choice
-            where: "is_choice IS TRUE"
-            style: *default_line
-            add_bar: True
-            columns:
-              - name: line
-                screenplay_args:
-                  <<: *screenplay_args
-                  prefix: "[BRANCH]: "
-
-          # Dialogue explicitly spoken by speaker.
-          - name: has_speaker
-            where: "has_speaker IS TRUE"
-            style: "{speaker}\n{line}"
-            justify: 60 
-            textwrap_offset: 15
-            columns:
-              - name: speaker
-                screenplay_args:
-                  <<: *screenplay_args
-                  offset: 15
-                  upper: True
-              - name: line
-                screenplay_args:
-                  <<: *screenplay_args
-
-          # Internal narration and unspecified speaker.
-          - name: is_internal_narration
-            where: "has_speaker IS FALSE AND speaker = 'internal_narration'"
-            style: *default_line
-            columns:
-              - name: line
-                screenplay_args:
-                  <<: *screenplay_args
-
-          # Internal narration and unspecified speaker.
-          - name: is_unspecified_speaker
-            where: "has_speaker IS FALSE AND speaker = 'speaker_unspecified'"
-            style: *default_line
-            justify: 60
-            textwrap_offset: 15
-            columns:
-              - name: line
-                screenplay_args:
-                  <<: *screenplay_args
-                  offset: 15
-
-          - name: is_end_of_branch
-            where: "prev_line_is_branch IS TRUE AND is_branch IS FALSE"
-            style: "{screenplay}"
-            add_bar: True
-            columns:
-              - name: screenplay
-                screenplay_args:
-                  <<: *screenplay_args
-                
+        # Internal narration and unspecified speaker.
+        - name: is_narration_outisde_branch
+          where: "is_branch IS FALSE AND has_speaker IS FALSE"
+          style: *default_line
+          columns:
+            - name: line
+              screenplay_args:
+                <<: *screenplay_args
 
 
-  # Run `--wordclouds` to create TF-IDF wordclouds using custom filters. 
+    # Emulates an actual movie screenplay.
+    !Screenplay
+    - name: screenplay_style3
+      folder: !PATH_JOIN [*screenplays_dir, style3]
+      dataset:
+        sql: |
+            select
+                has_speaker, is_choice, is_branch,
+                LAG(is_branch, 1) OVER (ORDER BY file, line_idx) AS prev_line_is_branch,
+                speaker, line, line as screenplay
+            from adastra
+            where is_read or is_choice
+      justify: 75
+      line_sep: "\n\n"
+      categories:
+
+        # Player/game choice between branches.
+        - name: is_choice
+          where: "is_choice IS TRUE"
+          style: *default_line
+          add_bar: True
+          columns:
+            - name: line
+              screenplay_args:
+                <<: *screenplay_args
+                prefix: "[BRANCH]: "
+
+        # Dialogue explicitly spoken by speaker.
+        - name: has_speaker
+          where: "has_speaker IS TRUE"
+          style: "{speaker}\n{line}"
+          justify: 60 
+          textwrap_offset: 15
+          columns:
+            - name: speaker
+              screenplay_args:
+                <<: *screenplay_args
+                offset: 15
+                upper: True
+            - name: line
+              screenplay_args:
+                <<: *screenplay_args
+
+        # Internal narration and unspecified speaker.
+        - name: is_internal_narration
+          where: "has_speaker IS FALSE AND speaker = 'internal_narration'"
+          style: *default_line
+          columns:
+            - name: line
+              screenplay_args:
+                <<: *screenplay_args
+
+        # Internal narration and unspecified speaker.
+        - name: is_unspecified_speaker
+          where: "has_speaker IS FALSE AND speaker = 'speaker_unspecified'"
+          style: *default_line
+          justify: 60
+          textwrap_offset: 15
+          columns:
+            - name: line
+              screenplay_args:
+                <<: *screenplay_args
+                offset: 15
+
+        - name: is_end_of_branch
+          where: "prev_line_is_branch IS TRUE AND is_branch IS FALSE"
+          style: "{screenplay}"
+          add_bar: True
+          columns:
+            - name: screenplay
+              screenplay_args:
+                <<: *screenplay_args
+              
+
+
+# Run `--wordclouds` to create TF-IDF wordclouds using custom filters. 
+wordclouds:
+
+  wordclouds_dir : &wordclouds_dir  /home/jayckaiser/adastra_v3/wordclouds
+  images_dir     : &images_dir      !PATH_JOIN [*adastra_dir, 'game/images']
+
+  # Define universal wordcloud params here. They can be overwritten in any image below.
+  wordcloud_args: &wordcloud_args
+    font_path: !PATH_JOIN [*adastra_dir, "game/RobotoSlab-Medium.ttf"]
+    max_words: 2500
+    max_font_size: 30
+    mode: RGB
+    background_color: black
+    repeat: True
+    relative_scaling: 0.3
+    random_state: 42
+
+
+  # Create one output per key.
   wordclouds:
 
-    wordclouds_dir : &wordclouds_dir  /home/jayckaiser/adastra/wordclouds
-    images_dir     : &images_dir      !PATH_JOIN [*adastra_dir, 'game/images']
-
-    # Define universal wordcloud params here. They can be overwritten in any image below.
-    wordcloud_args: &wordcloud_args
-      font_path: !PATH_JOIN [*adastra_dir, "game/RobotoSlab-Medium.ttf"]
-      max_words: 2500
-      max_font_size: 30
-      mode: RGB
-      background_color: black
-      repeat: True
-      relative_scaling: 0.3
-      random_state: 42
-
-
-    # Create one output per key.
-    wordclouds:
-
-      # Here is the structure of a typical `wordcloud`.
-      #
-      # !Wordcloud
-      #   name          : key to query, accessible via `--wordclouds wordcloud1`
-      #   file          : output path for wordcloud
-      #   image         : path to image mask
-      #   where         : where-clause to subset term frequencies used in the wordcloud
-      #   wordcloud_args: `wordcloud.Wordcloud` kwargs to define the wordcloud
-
-      # Alexios
-      - !Wordcloud
-        name : alexios
-        file : !PATH_JOIN [*wordclouds_dir, sprites/alexios.png]
-        image: !PATH_JOIN [*images_dir, sprites/alexios/alexios.png]
-        where: *is_alexios
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : alexios-vshocked-e
-        file : !PATH_JOIN [*wordclouds_dir, sprites/alexios.png]
-        image: !PATH_JOIN [*images_dir, sprites/alexios/alexios-vshocked-e.png]
-        where: *is_alexios
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : alexios-alexios-shocked
-        file : !PATH_JOIN [*wordclouds_dir, sprites/alexios.png]
-        image: !PATH_JOIN [*images_dir, sprites/alexios/alexios-shocked.png]
-        where: *is_alexios
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : alexios-embarrassed
-        file : !PATH_JOIN [*wordclouds_dir, sprites/alexios.png]
-        image: !PATH_JOIN [*images_dir, sprites/alexios/alexios-embarrassed.png]
-        where: *is_alexios
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : alexios-angry-e-u
-        file : !PATH_JOIN [*wordclouds_dir, sprites/alexios-angry-e-u.png]
-        image: !PATH_JOIN [*images_dir, sprites/alexios/alexios-angry-e-u.png]
-        where: !AND [*is_alexios, "sentiment < 0"]
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : garden1
-        file : !PATH_JOIN [*wordclouds_dir, backgrounds/garden1.png]
-        image: !PATH_JOIN [*images_dir, backgrounds/garden1.png]
-        where: *is_alexios
-        wordcloud_args:
-          <<: *wordcloud_args
-
-
-      # Amicus
-      - !Wordcloud
-        name : amicus
-        file : !PATH_JOIN [*wordclouds_dir, sprites/amicus.png]
-        image: !PATH_JOIN [*images_dir, sprites/amicus/amicus.png]
-        where: *is_amicus
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name: amicus-tears
-        file:  !PATH_JOIN [*wordclouds_dir, sprites/amicus-tears.png]
-        image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-tears.png]
-        where: !AND [*is_amicus, "sentiment < 0"]
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : amicus-smile
-        file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-smile.png]
-        image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-smile.png]
-        where: !AND [*is_amicus, "sentiment > 0"]
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : amicus-shocked
-        file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-shocked.png]
-        image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-shocked.png]
-        where: *is_amicus
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : amicus-crossed-serious
-        file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-crossed-serious.png]
-        image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-crossed-serious.png]
-        where: *is_amicus
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : amicus-angry-n
-        file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-angry-n.png]
-        image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-angry-n.png]
-        where: !AND [*is_amicus, "sentiment < 0"]
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : sleep
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/sleep.png]
-        image: !PATH_JOIN [*images_dir, illustrations/sleep.png]
-        where: *is_amicus
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : amicusend
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/amicusend.png]
-        image: !PATH_JOIN [*images_dir, illustrations/amicusend.png]
-        where: *is_amicus
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : amicusroom
-        file : !PATH_JOIN [*wordclouds_dir, backgrounds/amicusroom.png]
-        image: !PATH_JOIN [*images_dir, backgrounds/amicusroom.png]
-        where: *is_amicus
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      # From Marco on ship until untie Amicus
-      - !Wordcloud
-        name : introspection
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/introspection.png]
-        image: !PATH_JOIN [*images_dir, illustrations/introspection.png]
-        where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"  
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : spaceship
-        file : !PATH_JOIN [*wordclouds_dir, backgrounds/spaceship.png]
-        image: !PATH_JOIN [*images_dir, backgrounds/spaceship.png]
-        where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : spaceshipnebula
-        file : !PATH_JOIN [*wordclouds_dir, backgrounds/spaceshipnebula.png]
-        image: !PATH_JOIN [*images_dir, backgrounds/spaceshipnebula.png]
-        where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : spaceshipstar
-        file : !PATH_JOIN [*wordclouds_dir, backgrounds/spaceshipstar.png]
-        image: !PATH_JOIN [*images_dir, backgrounds/spaceshipstar.png]
-        where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-
-      # Visit to town after 2nd trial
-      - !Wordcloud
-        name : dinner1
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner1.png]
-        image: !PATH_JOIN [*images_dir, illustrations/dinner1.PNG]
-        where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"  
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : dinner2
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner2.png]
-        image: !PATH_JOIN [*images_dir, illustrations/dinner2.PNG]
-        where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : dinner3
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner3.png]
-        image: !PATH_JOIN [*images_dir, illustrations/dinner3.PNG]
-        where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : dinner4
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner4.png]
-        image: !PATH_JOIN [*images_dir, illustrations/dinner4.PNG]
-        where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-
-      # Cassius
-      - !Wordcloud
-        name : cassius
-        file : !PATH_JOIN [*wordclouds_dir, sprites/cassius.png]
-        image: !PATH_JOIN [*images_dir, sprites/cassius/cassius.png]
-        where: *is_cassius
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : cassius-angry-u
-        file : !PATH_JOIN [*wordclouds_dir, sprites/cassius-angry-u.png] 
-        image: !PATH_JOIN [*images_dir, sprites/cassius/cassius-angry-u.png]
-        where: !AND [*is_cassius, "sentiment < 0"]
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : cassius-paw
-        file : !PATH_JOIN [*wordclouds_dir, sprites/cassius-paw.png] 
-        image: !PATH_JOIN [*images_dir, sprites/cassius/cassius-paw.png]
-        where: *is_cassius
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : cassius-furious
-        file : !PATH_JOIN [*wordclouds_dir, sprites/cassius-furious.png] 
-        image: !PATH_JOIN [*images_dir, sprites/cassius/cassius-furious.png]
-        where: !AND [*is_cassius, "sentiment < 0"]
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : cassius-disappointed-u
-        file : !PATH_JOIN [*wordclouds_dir, sprites/cassius-disappointed-u.png] 
-        image: !PATH_JOIN [*images_dir, sprites/cassius/cassius-disappointed-u.png]
-        where: *is_cassius
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-
-      # Cato
-      - !Wordcloud
-        name : cato
-        file : !PATH_JOIN [*wordclouds_dir, sprites/cato.png] 
-        image: !PATH_JOIN [*images_dir, sprites/cato/cato.png]
-        where: *is_cato
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : cato-bow-v
-        file : !PATH_JOIN [*wordclouds_dir, sprites/cato-bow-v.png] 
-        image: !PATH_JOIN [*images_dir, sprites/cato/cato-bow-v.png]
-        where: *is_cato
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : cato-angry-u
-        file : !PATH_JOIN [*wordclouds_dir, sprites/cato-angry-u.png] 
-        image: !PATH_JOIN [*images_dir, sprites/cato/cato-angry-u.png]
-        where: !AND [*is_cato, "sentiment < 0"]
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-
-      # Neferu
-      - !Wordcloud
-        name : neferu
-        file : !PATH_JOIN [*wordclouds_dir, sprites/neferu.png] 
-        image: !PATH_JOIN [*images_dir, sprites/neferu/neferu.png]
-        where: *is_neferu
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : neferu-wink-f
-        file : !PATH_JOIN [*wordclouds_dir, sprites/neferu-wink-f.png] 
-        image: !PATH_JOIN [*images_dir, sprites/neferu/neferu-wink-f.png]
-        where: *is_neferu
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name: neferu-talking-n
-        file: !PATH_JOIN [*wordclouds_dir, sprites/neferu-talking-n.png] 
-        image: !PATH_JOIN [*images_dir, sprites/neferu/neferu-talking-n.png]
-        where: *is_neferu
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : neferu-talking-a
-        file : !PATH_JOIN [*wordclouds_dir, sprites/neferu-talking-a.png] 
-        image: !PATH_JOIN [*images_dir, sprites/neferu/neferu-talking-a.png]
-        where: *is_neferu
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : neferu-silly-f-n
-        file : !PATH_JOIN [*wordclouds_dir, sprites/neferu-silly-f-n.png] 
-        image: !PATH_JOIN [*images_dir, sprites/neferu/neferu-silly-f-n.png]
-        where: *is_neferu
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : neferu-shocked
-        file : !PATH_JOIN [*wordclouds_dir, sprites/neferu-shocked.png] 
-        image: !PATH_JOIN [*images_dir, sprites/neferu/neferu-shocked.png]
-        where: *is_neferu
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : neferu-fury
-        file : !PATH_JOIN [*wordclouds_dir, sprites/neferu-fury.png] 
-        image: !PATH_JOIN [*images_dir, sprites/neferu/neferu-fury.png]
-        where: !AND [*is_neferu, "sentiment < 0"]
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-
-      # Virginia
-      - !Wordcloud
-        name : virginia
-        file : !PATH_JOIN [*wordclouds_dir, sprites/virginia.png] 
-        image: !PATH_JOIN [*images_dir, sprites/virginia/virginia.png]
-        where: *is_virginia
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : virginia-tilt-p
-        file : !PATH_JOIN [*wordclouds_dir, sprites/virginia-tilt-p.png] 
-        image: !PATH_JOIN [*images_dir, sprites/virginia/virginia-tilt-p.png]
-        where: *is_virginia
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : virginia-annoyed
-        file : !PATH_JOIN [*wordclouds_dir, sprites/virginia-annoyed.png] 
-        image: !PATH_JOIN [*images_dir, sprites/virginia/virginia-annoyed.png]
-        where: !AND [*is_virginia, "sentiment < 0"]
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-      - !Wordcloud
-        name : archives1
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/archives1.png] 
-        image: !PATH_JOIN [*images_dir, illustrations/archives1.png]
-        where: "file = 'a2s3' AND line_idx BETWEEN 795 AND 925"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-
-      # Meera 
-      - !Wordcloud
-        name : meera
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/meera.png] 
-        image: !PATH_JOIN [*images_dir, illustrations/meera.png]
-        where: "speaker = 'meera'"
-        wordcloud_args:
-          <<: *wordcloud_args
-          contour_width: 1
-          contour_color: white
-
-
-      # Monitor
-      - !Wordcloud
-        name : monitor
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/monitor.png] 
-        image: !PATH_JOIN [*images_dir, illustrations/monitor.png]
-        where: "speaker = 'monitor'"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-
-      # Cassius and Alexios
-      - !Wordcloud
-        name : poisoned
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/poisoned.png] 
-        image: !PATH_JOIN [*images_dir, illustrations/poisoned.png]
-        where: "file = 'a3s1' AND line_idx BETWEEN 784 AND 990"  # A3S1 Breakfast
-        wordcloud_args:
-          <<: *wordcloud_args
-          relative_scaling: 0.2
-
-      - !Wordcloud
-        name : alexandcassius
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/alexandcassius.PNG] 
-        image: !PATH_JOIN [*images_dir, illustrations/alexandcassius.PNG]
-        where: "file = 'a1s5' AND line_idx BETWEEN 62 AND 626"  # 1st trial
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : alexandcassiuskiss
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/alexandcassiuskiss.PNG] 
-        image: !PATH_JOIN [*images_dir, illustrations/alexandcassiuskiss.PNG]
-        where: "file = 'a1s5' AND line_idx BETWEEN 62 AND 626"  # 1st trial
-        wordcloud_args:
-          <<: *wordcloud_args
-
-
-      # Cato and Neferu
-      - !Wordcloud
-        name : nefandcat1
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/nefandcat1.PNG] 
-        image: !PATH_JOIN [*images_dir, illustrations/nefandcat1.PNG]
-        where: "file = 'a2s2' AND line_idx BETWEEN 590 AND 882"  # Neferu/Cato rendezvous
-        wordcloud_args:
-          <<: *wordcloud_args
-          relative_scaling: 0.2
-
-      - !Wordcloud
-        name : nefandcat2
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/nefandcat2.PNG] 
-        image: !PATH_JOIN [*images_dir, illustrations/nefandcat2.PNG]
-        where: "file = 'a2s2' AND line_idx BETWEEN 590 AND 882"  # Neferu/Cato rendezvous
-        wordcloud_args:
-          <<: *wordcloud_args
-          relative_scaling: 0.2
-
-
-      # Amicus and Neferu rendezvous
-      - !Wordcloud
-        name : amicusandneferu1
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/amicusandneferu1.png] 
-        image: !PATH_JOIN [*images_dir, illustrations/amicusandneferu1.png]
-        where: "file = 'a1s6' AND line_idx BETWEEN 670 AND 930"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : amicusandneferu2
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/amicusandneferu2.png] 
-        image: !PATH_JOIN [*images_dir, illustrations/amicusandneferu2.png]
-        where: "file = 'a1s6' AND line_idx BETWEEN 670 AND 930"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : amicusandneferu3
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/amicusandneferu3.png] 
-        image: !PATH_JOIN [*images_dir, illustrations/amicusandneferu3.png]
-        where: "file = 'a1s6' AND line_idx BETWEEN 670 AND 930"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-
-      # Communal baths
-      - !Wordcloud
-        name: backoff2
-        file: !PATH_JOIN [*wordclouds_dir, illustrations/backoff2.PNG] 
-        image: !PATH_JOIN [*images_dir, illustrations/backoff2.PNG]
-        where: "file = 'a1s4' AND line_idx BETWEEN 552 AND 1162"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name: backoff3
-        file: !PATH_JOIN [*wordclouds_dir, illustrations/backoff3.PNG] 
-        image: !PATH_JOIN [*images_dir, illustrations/backoff3.PNG]
-        where: "file = 'a1s4' AND line_idx BETWEEN 552 AND 1162"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-
-      # Island
-      - !Wordcloud
-        name : islandday
-        file : !PATH_JOIN [*wordclouds_dir, backgrounds/islandday.png] 
-        image: !PATH_JOIN [*images_dir, backgrounds/islandday.png]
-        where: "speaker IN ('alexios', 'marco', 'amicus')"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-
-      # All text
-      - !Wordcloud
-        name : adastra
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/adastra.png] 
-        image: !PATH_JOIN [*images_dir, illustrations/adastra.png]
-        where: "TRUE"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : Adastranl
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/Adastranl.png] 
-        image: !PATH_JOIN [*images_dir, illustrations/Adastranl.png]
-        where: "TRUE"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : bg
-        file : !PATH_JOIN [*wordclouds_dir, gui/bg.png] 
-        image: !PATH_JOIN [*images_dir, gui/bg.png]
-        where: "TRUE"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-
-      # Amicus and Marco in end-game
-      - !Wordcloud
-        name : farewell1
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/farewell1.png] 
-        image: !PATH_JOIN [*images_dir, illustrations/farewell1.png]
-        where: "file = 'end_game1' AND line_idx BETWEEN 2712 AND 3036"  # Ride home with Amicus
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : farewell3
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/farewell3.png] 
-        image: !PATH_JOIN [*images_dir, illustrations/farewell3.png]
-        where: "file = 'end_game1' AND line_idx BETWEEN 2712 AND 3036"  # Ride home with Amicus
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : wemadeit1
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/wemadeit1.png] 
-        image: !PATH_JOIN [*images_dir, illustrations/wemadeit1.PNG]
-        where: "file = 'end_game1' AND line_idx BETWEEN 81 AND 2711"  # end_game1 from life to leave
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : wemadeit4
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/wemadeit4.png] 
-        image: !PATH_JOIN [*images_dir, illustrations/wemadeit4.PNG]
-        where: "file = 'end_game1' AND line_idx BETWEEN 81 AND 2711"  # end_game1 from life to leave
-        wordcloud_args:
-          <<: *wordcloud_args
-
-
-      # A3S2 fight
-      - !Wordcloud
-        name : lastmoment
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/lastmoment.png] 
-        image: !PATH_JOIN [*images_dir, illustrations/lastmoment.png]
-        where: "file = 'a3s2' AND line_idx BETWEEN 310 AND 670"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-
-      # Meeting with the parents
-      - !Wordcloud
-        name : finalspace
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/finalspace.png] 
-        image: !PATH_JOIN [*images_dir, illustrations/finalspace.png]
-        where: "(file = 'a3s2' AND line_idx BETWEEN 675 AND 959) OR (file = 'end_game1' AND line_idx BETWEEN 0 AND 80)" 
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : finalspace2
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/finalspace2.png] 
-        image: !PATH_JOIN [*images_dir, illustrations/finalspace2.png]
-        where: "(file = 'a3s2' AND line_idx BETWEEN 675 AND 959) OR (file = 'end_game1' AND line_idx BETWEEN 0 AND 80)"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : watching
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/watching.PNG] 
-        image: !PATH_JOIN [*images_dir, illustrations/watching.PNG]
-        where: "(file = 'a3s2' AND line_idx BETWEEN 675 AND 959) OR (file = 'end_game1' AND line_idx BETWEEN 0 AND 80)" 
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      
-
-      # Amicus & Marco ;)
-      - !Wordcloud
-        name : amiscene1
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/amiscene1.png] 
-        image: !PATH_JOIN [*images_dir, illustrations/amiscene1.png]
-        where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : amiscene3
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/amiscene3.png] 
-        image: !PATH_JOIN [*images_dir, illustrations/amiscene3.png]
-        where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : ss1
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/ss1.png] 
-        image: !PATH_JOIN [*images_dir, illustrations/ss1.png]
-        where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : ss3
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/ss3.png] 
-        image: !PATH_JOIN [*images_dir, illustrations/ss3.png]
-        where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : 2ss
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/2ss.png] 
-        image: !PATH_JOIN [*images_dir, illustrations/2ss.png]
-        where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
-        wordcloud_args:
-          <<: *wordcloud_args
-
-      - !Wordcloud
-        name : 2ss3
-        file : !PATH_JOIN [*wordclouds_dir, illustrations/2ss3.png] 
-        image: !PATH_JOIN [*images_dir, illustrations/2ss3.png]
-        where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
-        wordcloud_args:
-          <<: *wordcloud_args
+    # Here is the structure of a typical `wordcloud`.
+    #
+    # !Wordcloud
+    #   name          : key to query, accessible via `--wordclouds wordcloud1`
+    #   file          : output path for wordcloud
+    #   image         : path to image mask
+    #   where         : where-clause to subset term frequencies used in the wordcloud
+    #   wordcloud_args: `wordcloud.Wordcloud` kwargs to define the wordcloud
+
+    # Alexios
+    - !Wordcloud
+      name : alexios
+      file : !PATH_JOIN [*wordclouds_dir, sprites/alexios.png]
+      image: !PATH_JOIN [*images_dir, sprites/alexios/alexios.png]
+      where: *is_alexios
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : alexios-vshocked-e
+      file : !PATH_JOIN [*wordclouds_dir, sprites/alexios.png]
+      image: !PATH_JOIN [*images_dir, sprites/alexios/alexios-vshocked-e.png]
+      where: *is_alexios
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : alexios-alexios-shocked
+      file : !PATH_JOIN [*wordclouds_dir, sprites/alexios.png]
+      image: !PATH_JOIN [*images_dir, sprites/alexios/alexios-shocked.png]
+      where: *is_alexios
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : alexios-embarrassed
+      file : !PATH_JOIN [*wordclouds_dir, sprites/alexios.png]
+      image: !PATH_JOIN [*images_dir, sprites/alexios/alexios-embarrassed.png]
+      where: *is_alexios
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : alexios-angry-e-u
+      file : !PATH_JOIN [*wordclouds_dir, sprites/alexios-angry-e-u.png]
+      image: !PATH_JOIN [*images_dir, sprites/alexios/alexios-angry-e-u.png]
+      where: !AND [*is_alexios, "sentiment < 0"]
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : garden1
+      file : !PATH_JOIN [*wordclouds_dir, backgrounds/garden1.png]
+      image: !PATH_JOIN [*images_dir, backgrounds/garden1.png]
+      where: *is_alexios
+      wordcloud_args:
+        <<: *wordcloud_args
+
+
+    # Amicus
+    - !Wordcloud
+      name : amicus
+      file : !PATH_JOIN [*wordclouds_dir, sprites/amicus.png]
+      image: !PATH_JOIN [*images_dir, sprites/amicus/amicus.png]
+      where: *is_amicus
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name: amicus-tears
+      file:  !PATH_JOIN [*wordclouds_dir, sprites/amicus-tears.png]
+      image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-tears.png]
+      where: !AND [*is_amicus, "sentiment < 0"]
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : amicus-smile
+      file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-smile.png]
+      image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-smile.png]
+      where: !AND [*is_amicus, "sentiment > 0"]
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : amicus-shocked
+      file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-shocked.png]
+      image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-shocked.png]
+      where: *is_amicus
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : amicus-crossed-serious
+      file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-crossed-serious.png]
+      image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-crossed-serious.png]
+      where: *is_amicus
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : amicus-angry-n
+      file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-angry-n.png]
+      image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-angry-n.png]
+      where: !AND [*is_amicus, "sentiment < 0"]
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : sleep
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/sleep.png]
+      image: !PATH_JOIN [*images_dir, illustrations/sleep.png]
+      where: *is_amicus
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : amicusend
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/amicusend.png]
+      image: !PATH_JOIN [*images_dir, illustrations/amicusend.png]
+      where: *is_amicus
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : amicusroom
+      file : !PATH_JOIN [*wordclouds_dir, backgrounds/amicusroom.png]
+      image: !PATH_JOIN [*images_dir, backgrounds/amicusroom.png]
+      where: *is_amicus
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    # From Marco on ship until untie Amicus
+    - !Wordcloud
+      name : introspection
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/introspection.png]
+      image: !PATH_JOIN [*images_dir, illustrations/introspection.png]
+      where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"  
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : spaceship
+      file : !PATH_JOIN [*wordclouds_dir, backgrounds/spaceship.png]
+      image: !PATH_JOIN [*images_dir, backgrounds/spaceship.png]
+      where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : spaceshipnebula
+      file : !PATH_JOIN [*wordclouds_dir, backgrounds/spaceshipnebula.png]
+      image: !PATH_JOIN [*images_dir, backgrounds/spaceshipnebula.png]
+      where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : spaceshipstar
+      file : !PATH_JOIN [*wordclouds_dir, backgrounds/spaceshipstar.png]
+      image: !PATH_JOIN [*images_dir, backgrounds/spaceshipstar.png]
+      where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+
+    # Visit to town after 2nd trial
+    - !Wordcloud
+      name : dinner1
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner1.png]
+      image: !PATH_JOIN [*images_dir, illustrations/dinner1.PNG]
+      where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"  
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : dinner2
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner2.png]
+      image: !PATH_JOIN [*images_dir, illustrations/dinner2.PNG]
+      where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : dinner3
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner3.png]
+      image: !PATH_JOIN [*images_dir, illustrations/dinner3.PNG]
+      where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : dinner4
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner4.png]
+      image: !PATH_JOIN [*images_dir, illustrations/dinner4.PNG]
+      where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+
+    # Cassius
+    - !Wordcloud
+      name : cassius
+      file : !PATH_JOIN [*wordclouds_dir, sprites/cassius.png]
+      image: !PATH_JOIN [*images_dir, sprites/cassius/cassius.png]
+      where: *is_cassius
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : cassius-angry-u
+      file : !PATH_JOIN [*wordclouds_dir, sprites/cassius-angry-u.png] 
+      image: !PATH_JOIN [*images_dir, sprites/cassius/cassius-angry-u.png]
+      where: !AND [*is_cassius, "sentiment < 0"]
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : cassius-paw
+      file : !PATH_JOIN [*wordclouds_dir, sprites/cassius-paw.png] 
+      image: !PATH_JOIN [*images_dir, sprites/cassius/cassius-paw.png]
+      where: *is_cassius
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : cassius-furious
+      file : !PATH_JOIN [*wordclouds_dir, sprites/cassius-furious.png] 
+      image: !PATH_JOIN [*images_dir, sprites/cassius/cassius-furious.png]
+      where: !AND [*is_cassius, "sentiment < 0"]
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : cassius-disappointed-u
+      file : !PATH_JOIN [*wordclouds_dir, sprites/cassius-disappointed-u.png] 
+      image: !PATH_JOIN [*images_dir, sprites/cassius/cassius-disappointed-u.png]
+      where: *is_cassius
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+
+    # Cato
+    - !Wordcloud
+      name : cato
+      file : !PATH_JOIN [*wordclouds_dir, sprites/cato.png] 
+      image: !PATH_JOIN [*images_dir, sprites/cato/cato.png]
+      where: *is_cato
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : cato-bow-v
+      file : !PATH_JOIN [*wordclouds_dir, sprites/cato-bow-v.png] 
+      image: !PATH_JOIN [*images_dir, sprites/cato/cato-bow-v.png]
+      where: *is_cato
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : cato-angry-u
+      file : !PATH_JOIN [*wordclouds_dir, sprites/cato-angry-u.png] 
+      image: !PATH_JOIN [*images_dir, sprites/cato/cato-angry-u.png]
+      where: !AND [*is_cato, "sentiment < 0"]
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+
+    # Neferu
+    - !Wordcloud
+      name : neferu
+      file : !PATH_JOIN [*wordclouds_dir, sprites/neferu.png] 
+      image: !PATH_JOIN [*images_dir, sprites/neferu/neferu.png]
+      where: *is_neferu
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : neferu-wink-f
+      file : !PATH_JOIN [*wordclouds_dir, sprites/neferu-wink-f.png] 
+      image: !PATH_JOIN [*images_dir, sprites/neferu/neferu-wink-f.png]
+      where: *is_neferu
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name: neferu-talking-n
+      file: !PATH_JOIN [*wordclouds_dir, sprites/neferu-talking-n.png] 
+      image: !PATH_JOIN [*images_dir, sprites/neferu/neferu-talking-n.png]
+      where: *is_neferu
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : neferu-talking-a
+      file : !PATH_JOIN [*wordclouds_dir, sprites/neferu-talking-a.png] 
+      image: !PATH_JOIN [*images_dir, sprites/neferu/neferu-talking-a.png]
+      where: *is_neferu
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : neferu-silly-f-n
+      file : !PATH_JOIN [*wordclouds_dir, sprites/neferu-silly-f-n.png] 
+      image: !PATH_JOIN [*images_dir, sprites/neferu/neferu-silly-f-n.png]
+      where: *is_neferu
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : neferu-shocked
+      file : !PATH_JOIN [*wordclouds_dir, sprites/neferu-shocked.png] 
+      image: !PATH_JOIN [*images_dir, sprites/neferu/neferu-shocked.png]
+      where: *is_neferu
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : neferu-fury
+      file : !PATH_JOIN [*wordclouds_dir, sprites/neferu-fury.png] 
+      image: !PATH_JOIN [*images_dir, sprites/neferu/neferu-fury.png]
+      where: !AND [*is_neferu, "sentiment < 0"]
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+
+    # Virginia
+    - !Wordcloud
+      name : virginia
+      file : !PATH_JOIN [*wordclouds_dir, sprites/virginia.png] 
+      image: !PATH_JOIN [*images_dir, sprites/virginia/virginia.png]
+      where: *is_virginia
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : virginia-tilt-p
+      file : !PATH_JOIN [*wordclouds_dir, sprites/virginia-tilt-p.png] 
+      image: !PATH_JOIN [*images_dir, sprites/virginia/virginia-tilt-p.png]
+      where: *is_virginia
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : virginia-annoyed
+      file : !PATH_JOIN [*wordclouds_dir, sprites/virginia-annoyed.png] 
+      image: !PATH_JOIN [*images_dir, sprites/virginia/virginia-annoyed.png]
+      where: !AND [*is_virginia, "sentiment < 0"]
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+    - !Wordcloud
+      name : archives1
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/archives1.png] 
+      image: !PATH_JOIN [*images_dir, illustrations/archives1.png]
+      where: "file = 'a2s3' AND line_idx BETWEEN 795 AND 925"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+
+    # Meera 
+    - !Wordcloud
+      name : meera
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/meera.png] 
+      image: !PATH_JOIN [*images_dir, illustrations/meera.png]
+      where: "speaker = 'meera'"
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+
+
+    # Monitor
+    - !Wordcloud
+      name : monitor
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/monitor.png] 
+      image: !PATH_JOIN [*images_dir, illustrations/monitor.png]
+      where: "speaker = 'monitor'"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+
+    # Cassius and Alexios
+    - !Wordcloud
+      name : poisoned
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/poisoned.png] 
+      image: !PATH_JOIN [*images_dir, illustrations/poisoned.png]
+      where: "file = 'a3s1' AND line_idx BETWEEN 784 AND 990"  # A3S1 Breakfast
+      wordcloud_args:
+        <<: *wordcloud_args
+        relative_scaling: 0.2
+
+    - !Wordcloud
+      name : alexandcassius
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/alexandcassius.PNG] 
+      image: !PATH_JOIN [*images_dir, illustrations/alexandcassius.PNG]
+      where: "file = 'a1s5' AND line_idx BETWEEN 62 AND 626"  # 1st trial
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : alexandcassiuskiss
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/alexandcassiuskiss.PNG] 
+      image: !PATH_JOIN [*images_dir, illustrations/alexandcassiuskiss.PNG]
+      where: "file = 'a1s5' AND line_idx BETWEEN 62 AND 626"  # 1st trial
+      wordcloud_args:
+        <<: *wordcloud_args
+
+
+    # Cato and Neferu
+    - !Wordcloud
+      name : nefandcat1
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/nefandcat1.PNG] 
+      image: !PATH_JOIN [*images_dir, illustrations/nefandcat1.PNG]
+      where: "file = 'a2s2' AND line_idx BETWEEN 590 AND 882"  # Neferu/Cato rendezvous
+      wordcloud_args:
+        <<: *wordcloud_args
+        relative_scaling: 0.2
+
+    - !Wordcloud
+      name : nefandcat2
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/nefandcat2.PNG] 
+      image: !PATH_JOIN [*images_dir, illustrations/nefandcat2.PNG]
+      where: "file = 'a2s2' AND line_idx BETWEEN 590 AND 882"  # Neferu/Cato rendezvous
+      wordcloud_args:
+        <<: *wordcloud_args
+        relative_scaling: 0.2
+
+
+    # Amicus and Neferu rendezvous
+    - !Wordcloud
+      name : amicusandneferu1
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/amicusandneferu1.png] 
+      image: !PATH_JOIN [*images_dir, illustrations/amicusandneferu1.png]
+      where: "file = 'a1s6' AND line_idx BETWEEN 670 AND 930"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : amicusandneferu2
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/amicusandneferu2.png] 
+      image: !PATH_JOIN [*images_dir, illustrations/amicusandneferu2.png]
+      where: "file = 'a1s6' AND line_idx BETWEEN 670 AND 930"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : amicusandneferu3
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/amicusandneferu3.png] 
+      image: !PATH_JOIN [*images_dir, illustrations/amicusandneferu3.png]
+      where: "file = 'a1s6' AND line_idx BETWEEN 670 AND 930"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+
+    # Communal baths
+    - !Wordcloud
+      name: backoff2
+      file: !PATH_JOIN [*wordclouds_dir, illustrations/backoff2.PNG] 
+      image: !PATH_JOIN [*images_dir, illustrations/backoff2.PNG]
+      where: "file = 'a1s4' AND line_idx BETWEEN 552 AND 1162"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name: backoff3
+      file: !PATH_JOIN [*wordclouds_dir, illustrations/backoff3.PNG] 
+      image: !PATH_JOIN [*images_dir, illustrations/backoff3.PNG]
+      where: "file = 'a1s4' AND line_idx BETWEEN 552 AND 1162"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+
+    # Island
+    - !Wordcloud
+      name : islandday
+      file : !PATH_JOIN [*wordclouds_dir, backgrounds/islandday.png] 
+      image: !PATH_JOIN [*images_dir, backgrounds/islandday.png]
+      where: "speaker IN ('alexios', 'marco', 'amicus')"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+
+    # All text
+    - !Wordcloud
+      name : adastra
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/adastra.png] 
+      image: !PATH_JOIN [*images_dir, illustrations/adastra.png]
+      where: "TRUE"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : Adastranl
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/Adastranl.png] 
+      image: !PATH_JOIN [*images_dir, illustrations/Adastranl.png]
+      where: "TRUE"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : bg
+      file : !PATH_JOIN [*wordclouds_dir, gui/bg.png] 
+      image: !PATH_JOIN [*images_dir, gui/bg.png]
+      where: "TRUE"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+
+    # Amicus and Marco in end-game
+    - !Wordcloud
+      name : farewell1
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/farewell1.png] 
+      image: !PATH_JOIN [*images_dir, illustrations/farewell1.png]
+      where: "file = 'end_game1' AND line_idx BETWEEN 2712 AND 3036"  # Ride home with Amicus
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : farewell3
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/farewell3.png] 
+      image: !PATH_JOIN [*images_dir, illustrations/farewell3.png]
+      where: "file = 'end_game1' AND line_idx BETWEEN 2712 AND 3036"  # Ride home with Amicus
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : wemadeit1
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/wemadeit1.png] 
+      image: !PATH_JOIN [*images_dir, illustrations/wemadeit1.PNG]
+      where: "file = 'end_game1' AND line_idx BETWEEN 81 AND 2711"  # end_game1 from life to leave
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : wemadeit4
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/wemadeit4.png] 
+      image: !PATH_JOIN [*images_dir, illustrations/wemadeit4.PNG]
+      where: "file = 'end_game1' AND line_idx BETWEEN 81 AND 2711"  # end_game1 from life to leave
+      wordcloud_args:
+        <<: *wordcloud_args
+
+
+    # A3S2 fight
+    - !Wordcloud
+      name : lastmoment
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/lastmoment.png] 
+      image: !PATH_JOIN [*images_dir, illustrations/lastmoment.png]
+      where: "file = 'a3s2' AND line_idx BETWEEN 310 AND 670"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+
+    # Meeting with the parents
+    - !Wordcloud
+      name : finalspace
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/finalspace.png] 
+      image: !PATH_JOIN [*images_dir, illustrations/finalspace.png]
+      where: "(file = 'a3s2' AND line_idx BETWEEN 675 AND 959) OR (file = 'end_game1' AND line_idx BETWEEN 0 AND 80)" 
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : finalspace2
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/finalspace2.png] 
+      image: !PATH_JOIN [*images_dir, illustrations/finalspace2.png]
+      where: "(file = 'a3s2' AND line_idx BETWEEN 675 AND 959) OR (file = 'end_game1' AND line_idx BETWEEN 0 AND 80)"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : watching
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/watching.PNG] 
+      image: !PATH_JOIN [*images_dir, illustrations/watching.PNG]
+      where: "(file = 'a3s2' AND line_idx BETWEEN 675 AND 959) OR (file = 'end_game1' AND line_idx BETWEEN 0 AND 80)" 
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    
+
+    # Amicus & Marco ;)
+    - !Wordcloud
+      name : amiscene1
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/amiscene1.png] 
+      image: !PATH_JOIN [*images_dir, illustrations/amiscene1.png]
+      where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : amiscene3
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/amiscene3.png] 
+      image: !PATH_JOIN [*images_dir, illustrations/amiscene3.png]
+      where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : ss1
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/ss1.png] 
+      image: !PATH_JOIN [*images_dir, illustrations/ss1.png]
+      where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : ss3
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/ss3.png] 
+      image: !PATH_JOIN [*images_dir, illustrations/ss3.png]
+      where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : 2ss
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/2ss.png] 
+      image: !PATH_JOIN [*images_dir, illustrations/2ss.png]
+      where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
+      wordcloud_args:
+        <<: *wordcloud_args
+
+    - !Wordcloud
+      name : 2ss3
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/2ss3.png] 
+      image: !PATH_JOIN [*images_dir, illustrations/2ss3.png]
+      where: "speaker IN ('amicus', 'marco', 'internal_narration') AND is_branch"
+      wordcloud_args:
+        <<: *wordcloud_args

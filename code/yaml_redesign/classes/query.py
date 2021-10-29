@@ -9,22 +9,19 @@ class Query:
     """
     def __init__(
         self,
+        datasets,
 
-        data,
-        columns=None,
-        where=None,
-        sql=None,
-        dataset_alias=None,
-        datasets=None, 
+        name,
+        file,
+        dataset,
     ):
-        self.data = Dataset(
-            data,
-            columns=columns,
-            where=where,
-            sql=sql,
-            dataset_alias=dataset_alias,
-            datasets=datasets,
-        ).get_data()
+        self.datasets = datasets
+
+        self.name = name
+        self.file = file
+        self.dataset = dataset
+
+        self.run_query()
 
 
     @staticmethod
@@ -32,10 +29,15 @@ class Query:
         return Query(**loader.construct_mapping(node))
 
 
-    # Functions to write the Dataset in different formats.
-    def to_disk(self, filepath):
+    def run_query(self):
         """
-        Write the dataset as JSON lines.
+        
         """
-        prepare_directories(filepath)
-        self.data.to_json(filepath, orient='records', lines=True)
+        try:
+            data = Dataset(datasets = self.datasets, **self.dataset)
+            Dataset.to_disk(data, self.file)
+
+            print(f"* Query `{self.name}` completed: {self.file}")
+
+        except Exception as err:
+            print(f"! Query `{self.name}` failed: {err}")

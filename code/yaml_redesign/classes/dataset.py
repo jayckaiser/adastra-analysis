@@ -7,140 +7,107 @@ import pandasql as psql
 from utils.utils import prepare_directories
 
 
-class DataLake:
-    """
-    A collection of Datasets.
-    """
-    def __init__(
-        self,
-        data_lake=None,
-    ):
-        if data_lake:
-            self.data_lake = data_lake
-        else:
-            self.data_lake = {}
-
-    
-    def add_dataset(
-        self,
-
-        name,
-        file=None,
-        dataset=None,
-    ):
-        """
-        
-        """
-        # 
-        if dataset:
-            _dataset = Dataset(**dataset)
-
-            if file:
-                _dataset.to_disk(file)
-
-        # 
-        elif file:
-            _dataset = Dataset.load_dataset(file)
-
-        # 
-        elif name in self.data_lake:
-            _dataset = self.data_lake.get(name)
-        else:
-            print("#> A dataset needs a `file` or `dataset` specified!")
-            sys.exit()
-
-        # 
-        self.data_lake[name] = _dataset
-
-
-    def get(self, name):
-        """
-        
-        """
-        if name not in self.data_lake:
-            print(f"`! Dataset {name}` undefined!")
-            sys.exit(0)
-        else:
-            return self.data_lake.get('name')
-
-
-
-    def _filter_datasets(self, filters):
-        """
-        
-        """
-        for filter in filters:
-            name = filter['name']
-            where = filter['where']
-
-            _dataset = self.get(name)
-            _dataset = _dataset.filter_where(where)
-
-            self.data_lake[name] = _dataset
-
-
-    def _query_datasets(self, sql):
-        """
-        
-        """
-        for name, dataset in self.data_lake.items():
-                exec(f"{name} = dataset.copy()")
-
-        _data = psql.sqldf(sql)
-
-        return _data
-
-
-    def isolate_dataset(
-        self,
-
-        filters=None,
-
-        name=None,
-        sql=None,
-       
-    ):
-        """
-        
-        """
-        if filters:
-            self._filter_datasets(filters)
-
-        if name:
-            return self.get(name)
-
-        if sql:
-            return self._query_datasets(sql)            
-
-
-
-    def copy(self):
-        """
-        
-        """
-        return {
-            key: data.copy() for key, data in self.data_lake.items()
-        }
-                
-
-
-
-
 class Dataset:
     """
     Extension of pandas DataFrame for interfacing with SQL commands.
     """
     def __init__(
         self,
+        datasets: dict = {},
 
-        data,
-        columns=None,
+        name: str = None,
+        file: str = None,
+        sql : str = None,
+        filters: list = None,
+        dataset_args: dict = None,
     ):
-        self.dataset = self.build_dataset(data, columns)
+        self.datasets = datasets.deepcopy()
+
+        # OPTIONAL: Filter the datasets before creating this one.
+        if filters:
+            self.filter_datasets(filters)
+
+        # REQUIRED
+        if file and not (dataset_args or sql):
+            dataset = Dataset.load_dataset(file)
+        elif dataset_args:
+            dataset = Dataset.build_dataset(**dataset_args)
+        elif sql:
+            dataset = self.query_datasets(sql)
+        else:
+            print("! No dataset logic defined! Provide `dataset_args` or `sql` to a dataset!")
+
+         # OPTIONAL: Save or alias the dataset.
+        if file and (dataset_args or sql):
+            Dataset.to_disk(dataset, file)
+
+        if name:
+            self.datasets[name] = dataset
+
+        return self.datasets
 
 
-    @classmethod
-    def load_dataset(self, file):
+    def get(self, key):
+        """
+        
+        """
+        if key in self.datasets:
+            return self.datasts[key]
+        else:
+            print(f"! Dataset `{key}` not found in datasets!")
+
+
+    ###
+    def filter_datasets(self, filters):
+        """
+        
+        """
+        if filters is None:
+            return self.datasets
+
+        # 
+        _datasets = self.datasets.deepcopy()
+        
+        for filter in filters:
+            name = filter['name']
+            where = filter['where']
+
+            dataset = self.get(name)
+            dataset = Dataset.filter_where(dataset, where)
+
+            _datasets[name] = dataset
+
+        self.datasets = _datasets
+
+
+    def query_datasets(self, sql_query):
+        """
+        
+        """
+        for name, _dataset in self.datasets.items():
+            exec(f"{name} = _dataset")
+
+        return psql.sqldf(sql_query)
+
+
+
+    ### 
+    @staticmethod
+    def build_dataset(data, columns=None):
+        """
+        
+        """
+        # Dataset or DataFrame is given.
+        if isinstance(data, pd.DataFrame):
+            return data
+        
+        # Dictionary and column names are given.
+        else: 
+            return pd.Dataframe(data, columns=columns)
+
+
+    @staticmethod
+    def load_dataset(file):
         """
         
         """
@@ -149,43 +116,32 @@ class Dataset:
             orient='records',
             lines=True
         )
-        return Dataset(_dataframe)
-
+        return _dataframe
 
 
     @staticmethod
-    def build_dataset(data, columns=None):
-
-        # Dataset or DataFrame is given.
-        if isinstance(data, Dataset) or isinstance(data, pd.DataFrame):
-            return data
-        
-        # Dictionary and column names are given.
-        else: 
-            return pd.Dataframe(data, columns=columns)
-
-
-    def get(self):
-        return self.dataset.copy()
-    
-    
-    def filter_where(self, where_clauses):
+    def filter_where(dataset, where_clause):
         """
         Apply one or more where-clauses to the dataset, using the alias provided in the PandaSQL query.
         """
-        _data = self.get()
+        _dataset = dataset.copy()
 
-        if where_clauses:
+        if where_clause:
             
             # Allow either a str or List[str].
-            if isinstance(where_clauses, str):
-                filters = [where_clauses]
-            
-            for where_clause in filters:
+            _dataset = psql.sqldf(f"""
+                select * from _data
+                where {where_clause}
+            """)
+    
+        return _dataset
 
-                _data = psql.sqldf(f"""
-                    select * from _data
-                    where {where_clause}
-                """)
 
-        self.dataset = Dataset(_data)
+    @staticmethod
+    def to_disk(dataset, path):
+        """
+        Write the dataset as JSON lines.
+        """
+        prepare_directories(path)
+        dataset.to_json(path, orient='records', lines=True)
+
