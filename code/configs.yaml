@@ -20,6 +20,7 @@ definitions:
           is_branch,
           line
       from adastra
+      where is_read
 
 
   ### RELPLOTS
@@ -86,29 +87,6 @@ datasets:
           marco   : '#0000FF'
           neferu  : '#ffcc00'
           virginia: '#8e389c'
-
-
-      # Specify the documents column to be used to build the wordclouds.
-      # - Prebuilt options are 'line', 'words', or 'content_words'.
-      #   * 'line' is the cleaned text of the line.
-      #   * 'words' removes punctuation.
-      #   * 'content_words' removes punctuation and stop-words and converts to lowercase.
-    # - !TermFrequenciesDataset
-    #   name: term_freqs
-    #   file: !PATH_JOIN [*dataset_dir, term_frequencies.jsonl]
-    #   dataset:
-    #     sql: |
-    #         select
-    #             file, line_idx, speaker, is_branch, sentiment,
-    #             content_words
-    #         from adastra
-    #         where is_read
-    #   documents_col: content_words
-    #   countvectorizer_args:
-    #     stop_words: english
-    #     ngram_range: [1, 1]
-    #     max_df: 0.3
-    #     min_df: 5
 
 
 
@@ -218,7 +196,7 @@ queries:
       dataset:
         filters:
           - name : adastra
-            where: !AND [*is_read, "file = 'a1s1'"]
+            where: "file = 'a1s1'"
         sql: *get_read_content
 
     - !Query
@@ -227,7 +205,7 @@ queries:
       dataset:
         filters:
           - name : adastra
-            where: !AND [*is_read, "file = 'a1s2'"]
+            where: "file = 'a1s2'"
         sql: *get_read_content
 
     - !Query
@@ -236,7 +214,7 @@ queries:
       dataset:
         filters:
           - name : adastra
-            where: !AND [*is_read, "file = 'a1s3'"]
+            where: "file = 'a1s3'"
         sql: *get_read_content
 
     - !Query
@@ -245,7 +223,7 @@ queries:
       dataset:
         filters:
           - name : adastra
-            where: !AND [*is_read, "file = 'a1s4'"]
+            where: "file = 'a1s4'"
         sql: *get_read_content
 
     - !Query
@@ -254,7 +232,7 @@ queries:
       dataset:
         filters:
           - name : adastra
-            where: !AND [*is_read, "file = 'a1s5'"]
+            where: "file = 'a1s5'"
         sql: *get_read_content
 
     - !Query
@@ -263,7 +241,7 @@ queries:
       dataset:
         filters:
           - name : adastra
-            where: !AND [*is_read, "file = 'a1s6'"]
+            where: "file = 'a1s6'"
         sql: *get_read_content
 
     - !Query
@@ -272,7 +250,7 @@ queries:
       dataset:
         filters:
           - name : adastra
-            where: !AND [*is_read, "file = 'a1s7'"]
+            where: "file = 'a1s7'"
         sql: *get_read_content
 
     - !Query
@@ -281,7 +259,7 @@ queries:
       dataset:
         filters:
           - name : adastra
-            where: !AND [*is_read, "file = 'a2s1'"]
+            where: "file = 'a2s1'"
         sql: *get_read_content
 
     - !Query
@@ -290,7 +268,7 @@ queries:
       dataset:
         filters:
           - name : adastra
-            where: !AND [*is_read, "file = 'a2s2'"]
+            where: "file = 'a2s2'"
         sql: *get_read_content
 
     - !Query
@@ -299,7 +277,7 @@ queries:
       dataset:
         filters:
           - name : adastra
-            where: !AND [*is_read, "file = 'a2s3'"]
+            where: "file = 'a2s3'"
         sql: *get_read_content
 
     - !Query
@@ -308,7 +286,7 @@ queries:
       dataset:
         filters:
           - name : adastra
-            where: !AND [*is_read, "file = 'a3s1'"]
+            where: "file = 'a3s1'"
         sql: *get_read_content
 
     - !Query
@@ -317,7 +295,7 @@ queries:
       dataset:
         filters:
           - name : adastra
-            where: !AND [*is_read, "file = 'a3s2'"]
+            where: "file = 'a3s2'"
         sql: *get_read_content
 
     - !Query
@@ -326,7 +304,7 @@ queries:
       dataset:
         filters:
           - name : adastra
-            where: !AND [*is_read, "file = 'end_game1'"]
+            where: "file = 'end_game1'"
         sql: *get_read_content
 
     - !Query
@@ -335,7 +313,7 @@ queries:
       dataset:
         filters:
           - name : adastra
-            where: !AND [*is_read, "file = 'end_game2'"]
+            where: "file = 'end_game2'"
         sql: *get_read_content
 
 
@@ -723,7 +701,7 @@ screenplays:
     #   justify : how wide should the output be (justify-width)
     #   line_sep: how should lines be separated
     # 
-    #   categories:
+    #   contexts:
     #     - name               : name of the category; only used to track progress
     #       where              : where-clause to filter which lines use the given category style
     #       style              : shape of the output with columns used (i.e. "{column1}: {column2}")
@@ -1005,6 +983,13 @@ wordclouds:
           where is_read
     documents_col: content_words
     countvectorizer_args: *countvectorizer_args
+
+    # Note: wordclouds use a defined `documents_col`.
+    # This specifies the text column to be used to build the wordclouds.
+    # Prebuilt options are 'line', 'words', or 'content_words'.
+    # * 'line' is the cleaned text of the line.
+    # * 'words' is the line with punctuation removed.
+    # * 'content_words' is the line with punctuation and stop-words removed, and all words converted to lowercase.
 
 
 
