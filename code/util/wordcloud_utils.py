@@ -5,8 +5,6 @@ import pandas as pd
 from PIL import Image
 from wordcloud import WordCloud, ImageColorGenerator
 
-from utils.utils import prepare_directories
-
 
 def _get_image_mask(image_path):
     """
@@ -17,13 +15,13 @@ def _get_image_mask(image_path):
     return image_mask
 
 
-def build_wordcloud(word_freqs, image_filepath, wordcloud_args):
+def word_freqs_to_wordcloud(word_freqs, image, wordcloud_args):
     """
     Create a word-frequency wordcloud from the user-provided arguments.
     
     Use a source image as a mask for its design.
     """
-    image_mask = _get_image_mask(image_filepath)
+    image_mask = _get_image_mask(image)
     height, width, _ = image_mask.shape
     
     # Create the wordcloud shaped by the image.
@@ -38,15 +36,3 @@ def build_wordcloud(word_freqs, image_filepath, wordcloud_args):
     wc = wc.recolor(color_func=image_colors)
 
     return wc
-
-
-def wordcloud_to_disk(wordcloud, filepath):
-    """
-    Save the wordcloud to disk as an image, then reset memory.
-    """
-    prepare_directories(filepath)
-    wordcloud.to_file(filepath)
-    
-    # Reset the wordcloud to prevent memory overflows.
-    wordcloud = None
-    gc.collect()

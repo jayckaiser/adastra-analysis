@@ -1,6 +1,6 @@
 import sys
 
-from utils.yaml_utils import load_yaml
+from util.yaml_utils import load_yaml
 
 
 class Configs(dict):

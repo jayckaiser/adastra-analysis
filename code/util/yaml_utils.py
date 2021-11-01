@@ -1,18 +1,23 @@
 import os
 import yaml
 
+from classes.dataset import Dataset
+from classes.adastra_dataset import AdastraDataset
+
+from classes.query import Query
+from classes.relplot import Relplot
+from classes.screenplay import Screenplay
+from classes.wordcloud import Wordcloud
 
 
 
-# These allow for cleaner YAML customization in `configs.yml`.
-
-
+# These allow for more dynamic YAML customization in `configs.yml`.
 def _os_path_join(loader, node):
     """
     # https://stackoverflow.com/questions/5484016
     """
     seq = loader.construct_sequence(node)
-    return os.path.join(map(str, seq))
+    return os.path.join(*seq)
 
 
 def _and_join(loader, node):
@@ -33,7 +38,7 @@ def get_extended_yaml_loader():
     """
     Extend `yaml.SafeLoader` with additional constructors.
     """
-    loader = yaml.SafeLoader
+    loader = yaml.FullLoader
 
     # String-join helpers
     loader.add_constructor('!PATH_JOIN', _os_path_join)
@@ -41,10 +46,14 @@ def get_extended_yaml_loader():
     loader.add_constructor('!OR', _or_join)
 
     # Run-process constructors
-    loader.add_constructor('!Query'     , query_constructor)
-    loader.add_constructor('!Relplot'   , relplot_constructor)
-    loader.add_constructor('!Screenplay', screenplay_constructor)
-    loader.add_constructor('!Wordcloud' , wordcloud_constructor)
+    loader.add_constructor('!Dataset'   , Dataset.dataset_constructor)
+    loader.add_constructor('!AdastraDataset', AdastraDataset.adastra_dataset_constructor)
+    
+    loader.add_constructor('!Query'     , Query.query_constructor)
+    loader.add_constructor('!Relplot'   , Relplot.relplot_constructor)
+    loader.add_constructor('!Screenplay', Screenplay.screenplay_constructor)
+    loader.add_constructor('!Wordcloud' , Wordcloud.wordcloud_constructor)
+    
     return loader
 
 

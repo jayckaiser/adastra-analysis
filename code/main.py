@@ -1,17 +1,19 @@
 import argparse
+import sys
 
-from adastra_analytics import AdastraAnalytics
+from adastra_analysis import AdastraAnalysis
 
 
 def main():
 
     parser = argparse.ArgumentParser()
+
     subparser = parser.add_subparsers(dest='command')
 
     # Build subprocess
     build = subparser.add_parser('build')
-    build.add_argument('--nlp', required=False, action='store_true')
-
+    build.add_argument('-d', '--datasets', required=False, type=str, nargs='*')
+    
     # Run subprocess
     run = subparser.add_parser('run')
     run.add_argument('-q', '--queries'    , required=False, type=str, nargs='*')
@@ -21,22 +23,22 @@ def main():
 
     # A custom configs path can be supplied.
     # Otherwise, it defaults to a library-internal one.
-    default_configs_path = '../configs.yml'
+    default_configs_path = './configs.yaml'
     parser.add_argument('--configs', required=False, type=str, default=default_configs_path)
 
     args = parser.parse_args()
+    # print(args)
 
     # Establish the AA.
-    aa = AdastraAnalytics(args.configs)
+    aa = AdastraAnalysis(args.configs)
     print(f"@ Retrieved configs from `{args.configs}`")
 
-    # Build the dataset if specified.
+    # Rebuild the datasets if specified.
     if args.command == 'build':
-
-        aa.build_adastra_dataset(args.nlp)
-        aa.save_adastra_dataset()
+        aa.build_datasets(args.datasets)
 
     elif args.command == 'run':
+        aa.load_datasets()
 
         ###
         # Set the run options.
@@ -62,10 +64,6 @@ def main():
         # Retrieve the datasets and complete each run.
         ### 
 
-        # Retrieve the datasets.
-        aa.load_adastra_dataset()
-        aa.build_datasets()
-
         # Retrieve the runs from the arguments.
         run_lambdas = {
             'queries'    : aa.run_queries,
@@ -83,7 +81,7 @@ def main():
 
             # Apply the specified lambda using the provided arguments.
             run_lambdas[run_type](run_args)
-           
+        
 
 
 if __name__ == '__main__':

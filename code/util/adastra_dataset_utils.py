@@ -15,8 +15,8 @@ ADASTRA_RENPY_SCRIPT_FILES = [
 
 def build_adastra_data(
         adastra_directory,
-        renpy_script_files=ADASTRA_RENPY_SCRIPT_FILES,
         main_character='Marco',
+        renpy_script_files=ADASTRA_RENPY_SCRIPT_FILES,
     ):
     """
     Load the DataFrame from text and complete all transformations.

@@ -21,13 +21,16 @@ def _get_doc_freqs(term_freqs):
 
 
 
-def get_term_freqs(data, index, doc_col, tfidf_args):
+def get_term_freqs(data, doc_col, countvectorizer_args):
     """
     Convert a dataframe into term-freqs using CountVectorizer.
 
     The searchable index and documents column are arguments.
     Use user-provided TFIDF-arguments (none hard-coded).
     """
+    index = list(data.columns)
+    index.remove(doc_col)
+
     # Build out the list of documents to feed to the vectorizer.
     documents = (
         data.copy()
@@ -37,7 +40,7 @@ def get_term_freqs(data, index, doc_col, tfidf_args):
     )
 
     # Establish the CountVectorizer with the user-provided arguments.
-    vectorizer = CountVectorizer(**tfidf_args)
+    vectorizer = CountVectorizer(**countvectorizer_args)
 
     # Get the term frequencies and document frequencies.
     X = vectorizer.fit_transform(documents)
@@ -48,10 +51,13 @@ def get_term_freqs(data, index, doc_col, tfidf_args):
         columns=features
     ).set_index(documents.index)
 
+    # term_freqs['_term_frequencies'] = term_freqs[features].agg(lambda x: x.to_json(), axis=1)
+    # term_freqs.drop(columns=features, inplace=True)
+
     return term_freqs
 
 
-def filter_term_freqs(term_freqs, filters):
+def filter_term_freqs(term_freqs, where):
     """
     Subset term-freqs of a dataframe by specified filters.
     """
@@ -63,14 +69,14 @@ def filter_term_freqs(term_freqs, filters):
     index_cols = index.columns
 
     # Run the user-provided filter on this index.
-    filtered_index = (
-        Dataset(index.reset_index()).filter_where(filters)
-            .set_index('index')
-    )
+    filtered_index = Dataset.filter_where(
+        index.reset_index(),
+        where
+    ).set_index('index')
 
     # Verify the filter hasn't truncated the dataset.
     if filtered_index.empty:
-        raise Exception(f"! Filter query `{filters}` returned 0 rows!")
+        raise Exception(f"! Filter query `{where}` returned 0 rows!")
 
     # Filter the term freqs to only rows in user-provided filter.
     filtered_term_freqs = (

@@ -1,127 +1,161 @@
+from os import stat
+import sys
+
 import pandas as pd
 import pandasql as psql
 
-from utils.utils import prepare_directories
+from util.utils import prepare_directories
 
 
-class Dataset(pd.DataFrame):
+class Dataset:
     """
-    Extension of Pandas DataFrame.
-
-    This contains several PandaSQL helpers and disk-output helpers.
+    Extension of pandas DataFrame for interfacing with SQL commands.
     """
-    def __init__(self, data, columns=None):
-        # Create the DataFrame, depending on type of input.
+    def __init__(
+        self,
 
-        # Dataset or DataFrame is given.
-        if isinstance(data, Dataset) or isinstance(data, pd.DataFrame):
-            super().__init__(data=data)
+        name: str = None,
+        file: str = None,
+        sql : str = None,
+        filters: list = None,
+        dataset_args: dict = None,
+    ):
+        self.name = name
+        self.file = file
+        self.sql  = sql
+        self.filters = filters
+        self.dataset_args = dataset_args
+
+        self.result = None
+
+
+    @staticmethod
+    def dataset_constructor(loader, node):
+        return Dataset(**loader.construct_mapping(node, deep=True))
+
+
+    def build_dataset(self, datasets):
+        """
+        Note: This relies on Python passing the same `datasets` around in memory.
+        """
+
+        _datasets = datasets.copy()
+
+        # OPTIONAL: Filter the datasets before creating this one.
+        if self.filters and self.sql:
+            _datasets = Dataset.filter_datasets(self.filters, _datasets)
+
+        # REQUIRED
+        if self.dataset_args:
+            dataset = Dataset.data_to_dataset(**self.dataset_args)
+        elif self.file:
+            dataset = Dataset.load_dataset(self.file)
+        elif self.sql:
+            dataset = Dataset.query_datasets(self.sql, _datasets)
+        elif self.name:
+            dataset = datasets.get(self.name)
+            if dataset is None:
+                print(f"! No dataset logic defined! Dataset `{self.name}` has not been defined yet!")
+        else:
+            print("! No dataset logic defined! Provide `dataset_args` or `sql` to a dataset!")
+            sys.exit(0)
+
+        #  # OPTIONAL: Save or alias the dataset.
+        # if self.file and (self.dataset_args or self.sql):
+        #     self.to_disk(self.file)
+
+        if self.name:
+            datasets[self.name] = dataset
+
+        self.result = dataset
+        return dataset
+
+
+    ###
+    @staticmethod
+    def filter_datasets(filters, datasets):
+        """
         
-        # Local filepath is given.
-        elif isinstance(data, str):
-            _data = pd.read_json(
-                data,
-                orient='records',
-                lines=True
-            )
-            super().__init__(data=_data)
+        """
+        # 
+        _datasets = datasets.copy()
+        
+        for filter in filters:
+            name = filter['name']
+            where = filter['where']
+
+            dataset = _datasets.get(name)
+            dataset = Dataset.filter_where(dataset, where)
+
+            _datasets[name] = dataset
+
+        return _datasets
+
+
+    @staticmethod
+    def query_datasets(sql, datasets):
+        """
+        
+        """
+        for name, _dataset in datasets.items():
+            exec(f"{name} = _dataset")
+
+        return psql.sqldf(sql)
+
+
+    ### 
+    @staticmethod
+    def data_to_dataset(data, columns=None):
+        """
+        
+        """
+        # Dataset or DataFrame is given.
+        if isinstance(data, pd.DataFrame):
+            return data
         
         # Dictionary and column names are given.
         else: 
-            super().__init__(
-                data=list(data.items()),
-                columns=columns
-            )
+            return pd.DataFrame(data.items(), columns=columns)
 
-    def copy(self):
+
+    @staticmethod
+    def load_dataset(file):
         """
-        Extend copy to return a Dataset.
+        
         """
-        return Dataset(super().copy())
+        return pd.read_json(
+            file,
+            orient='records',
+            lines=True
+        )
 
 
-    def filter_where(self, filters):
+    @staticmethod
+    def filter_where(dataset, where_clause):
         """
         Apply one or more where-clauses to the dataset, using the alias provided in the PandaSQL query.
         """
-        _data = self.copy()
+        _dataset = dataset.copy()
 
-        if filters is not None:
+        if where_clause:
             
             # Allow either a str or List[str].
-            if isinstance(filters, str):
-                filters = [filters]
-            
-            for where_clause in filters:
-
-                _data = psql.sqldf(f"""
-                    select * from _data
-                    where {where_clause}
-                """)
-
-        return Dataset(_data)
-
-    
-    def add_columns(self, selects):
-        """
-        Logic to add additional columns to a dataset.
-        """
-        _data = self.copy()
-
-        if selects is not None:
-            formatted_selects = ',\n'.join(selects)
-           
-            _data = psql.sqldf(f"""
-                select *,
-                    {formatted_selects}
-                from _data
+            _dataset = psql.sqldf(f"""
+                select * from _dataset
+                where {where_clause}
             """)
-        
-        return Dataset(_data)
+    
+        return _dataset
 
 
-    @classmethod
-    def query_psql(cls, datasets, sql_query):
-        """
-        Complete a full SQL query, using one or more provided datasets.
-
-        (This is a wrapper to simplify executing PandaSQL queries.)
-        """
-        for dataset_name, _dataset in datasets.items():
-            exec(f"{dataset_name} = _dataset")
-
-        _data = psql.sqldf(sql_query)
-
-        return Dataset(_data)
-
-
-
-    # Functions to write the Dataset in different formats.
-    def to_jsonl(self, filepath):
+    @staticmethod
+    def to_disk(dataset, file, info=False):
         """
         Write the dataset as JSON lines.
         """
-        prepare_directories(filepath)
-        self.to_json(filepath, orient='records', lines=True)
-    
+        prepare_directories(file)
 
-    def to_tsv(self, filepath):
-        """
-        Write the dataset as TSV.
-        (Maybe this would be useful for displaying?)
-        """
-        prepare_directories(filepath)
-        self.to_csv(filepath, sep='\t', index=False)
-
-
-    def to_txt(self, filepath, column, sep='\n'):
-        """
-        Write a given column to a filepath as text.
-        """
-        prepare_directories(filepath)
-
-        lines = self[column].tolist()
-
-        with open(filepath, 'w') as fp:
-            fp.write( sep.join(lines) )
+        dataset.to_json(file, orient='records', lines=True)
         
+        if print:
+            print(f"* Dataset saved: {file}")
