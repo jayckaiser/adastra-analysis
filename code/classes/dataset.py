@@ -1,13 +1,12 @@
-from os import stat
 import sys
 
 import pandas as pd
 import pandasql as psql
 
-from util.utils import prepare_directories
+from classes.run import Run
 
 
-class Dataset:
+class Dataset(Run):
     """
     Extension of pandas DataFrame for interfacing with SQL commands.
     """
@@ -27,11 +26,6 @@ class Dataset:
         self.dataset_args = dataset_args
 
         self.result = None
-
-
-    @staticmethod
-    def dataset_constructor(loader, node):
-        return Dataset(**loader.construct_mapping(node, deep=True))
 
 
     def build_dataset(self, datasets):
@@ -153,9 +147,9 @@ class Dataset:
         """
         Write the dataset as JSON lines.
         """
-        prepare_directories(file)
+        Run.prepare_directories(file)
 
         dataset.to_json(file, orient='records', lines=True)
         
-        if print:
+        if info:
             print(f"* Dataset saved: {file}")

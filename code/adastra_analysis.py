@@ -1,9 +1,7 @@
-import os
 import sys
 
-from classes.configs import Configs
 from classes.dataset import Dataset
-
+from util.yaml_utils import load_yaml
 
 
 class AdastraAnalysis:
@@ -11,13 +9,13 @@ class AdastraAnalysis:
 
     def __init__(self, configs_filepath):
         
-        self.yaml_configs = Configs.load_configs(configs_filepath)
+        self.yaml_configs = load_yaml(configs_filepath)
 
-        self.dataset_configs    = self.yaml_configs.get('datasets', {}).get('datasets')
-        self.query_configs      = self.yaml_configs.get('queries', {}).get('queries')
-        self.relplot_configs    = self.yaml_configs.get('relplots', {}).get('relplots')
+        self.dataset_configs    = self.yaml_configs.get('datasets'   , {}).get('datasets')
+        self.query_configs      = self.yaml_configs.get('queries'    , {}).get('queries')
+        self.relplot_configs    = self.yaml_configs.get('relplots'   , {}).get('relplots')
         self.screenplay_configs = self.yaml_configs.get('screenplays', {}).get('screenplays')
-        self.wordcloud_configs  = self.yaml_configs.get('wordclouds', {}).get('wordclouds')
+        self.wordcloud_configs  = self.yaml_configs.get('wordclouds' , {}).get('wordclouds')
 
         self.datasets = {}
 
@@ -35,17 +33,18 @@ class AdastraAnalysis:
             return
 
         # Iterate and build each query.
-        for dataset_obj in self.dataset_configs:
-            name = dataset_obj.name
-            file = dataset_obj.file
+        for config in self.dataset_configs:
+            name = config.name
+            file = config.file
 
             # Process selected queries if specified. Otherwise, run all.
             if datasets and name not in datasets:
+
                 # Still load the dataset so it can be used in other datasets.
                 _dataset = Dataset.load_dataset(file)
 
             else:
-                _dataset = dataset_obj.build_dataset(self.datasets)
+                _dataset = config.build_dataset(self.datasets)
                 Dataset.to_disk(_dataset, file, info=True)
 
             self.datasets[name] = _dataset
@@ -58,13 +57,13 @@ class AdastraAnalysis:
         """
         print("\nLoading datasets for run...")
 
-        for dataset_obj in self.dataset_configs:
+        for config in self.dataset_configs:
 
             try:
-                name = dataset_obj.name
-                file = dataset_obj.file
+                name = config.name
+                file = config.file
 
-                _dataset = dataset_obj.load_dataset(file)
+                _dataset = config.load_dataset(file)
                 self.datasets[name] = _dataset
                 print(f"* Dataset `{name}` loaded: `{file}`")
 
@@ -76,6 +75,7 @@ class AdastraAnalysis:
                 )
                 print(err)
                 sys.exit(0)
+
 
 
     def run_queries(self, queries=None):
@@ -103,6 +103,7 @@ class AdastraAnalysis:
 
             except Exception as err:
                 print(f"! Query `{query.name}` failed build: {err}")            
+
 
 
     def run_relplots(self, relplots=None):
@@ -158,9 +159,7 @@ class AdastraAnalysis:
 
             except Exception as err:
                 print(f"! Screenplay `{screenplay.name}` failed build: {err}")
-            
 
-            
 
     
     def run_wordclouds(self, wordclouds=None):

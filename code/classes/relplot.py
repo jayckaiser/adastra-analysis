@@ -6,10 +6,10 @@ import seaborn as sns
 from scipy import stats
 
 from classes.dataset import Dataset
-from util.utils import prepare_directories
+from classes.run import Run
 
 
-class Relplot:
+class Relplot(Run):
     """
 ​
     """
@@ -39,11 +39,6 @@ class Relplot:
         self.remove_outliers = remove_outliers
 
         self.result = None
-
-
-    @staticmethod
-    def relplot_constructor(loader, node):
-        return Relplot(**loader.construct_mapping(node, deep=True))
 
 
     def build_relplot(self, datasets):
@@ -86,7 +81,7 @@ class Relplot:
         """
         file = file or self.file
 
-        prepare_directories(file)
+        self.prepare_directories(file)
         self.result.savefig(file, bbox_inches='tight')
     
         # Reset the environment (Pyplot is memory-hungry).

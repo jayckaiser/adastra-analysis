@@ -4,10 +4,10 @@ import textwrap
 from dataclasses import dataclass
 
 from classes.dataset import Dataset
-from util.utils import prepare_directories
+from classes.run import Run
 
 
-class Screenplay:
+class Screenplay(Run):
     """
 ​
     """
@@ -36,11 +36,6 @@ class Screenplay:
         self.contexts = contexts
 
         self.result = None
-
-
-    @staticmethod
-    def screenplay_constructor(loader, node):
-        return Screenplay(**loader.construct_mapping(node, deep=True))
 
 
     def build_screenplay(self, datasets):
@@ -105,7 +100,7 @@ class Screenplay:
             file_lines = file_data[self.screenplay_col].tolist()
 
             file_path = os.path.join(folder, file + '.txt')
-            prepare_directories(file_path)
+            self.prepare_directories(file_path)
             with open(file_path, 'w') as fp:
                 fp.write(
                     self.line_sep.join(file_lines)

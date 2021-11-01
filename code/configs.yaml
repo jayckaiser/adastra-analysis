@@ -1020,321 +1020,321 @@ wordclouds:
     #   where         : where-clause to subset term frequencies used in the wordcloud
     #   wordcloud_args: `wordcloud.Wordcloud` kwargs to define the wordcloud
 
-    # # Alexios
-    # - !Wordcloud
-    #   name : alexios
-    #   file : !PATH_JOIN [*wordclouds_dir, sprites/alexios.png]
-    #   image: !PATH_JOIN [*images_dir, sprites/alexios/alexios.png]
-    #   where: *is_alexios
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #     contour_width: 1
-    #     contour_color: white
-    #   <<: *wordcloud_universals
+    # Alexios
+    - !Wordcloud
+      name : alexios
+      file : !PATH_JOIN [*wordclouds_dir, sprites/alexios.png]
+      image: !PATH_JOIN [*images_dir, sprites/alexios/alexios.png]
+      where: *is_alexios
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+      <<: *wordcloud_universals
 
-    # - !Wordcloud
-    #   name : alexios-vshocked-e
-    #   file : !PATH_JOIN [*wordclouds_dir, sprites/alexios-vshocked-e.png]
-    #   image: !PATH_JOIN [*images_dir, sprites/alexios/alexios-vshocked-e.png]
-    #   where: *is_alexios
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #     contour_width: 1
-    #     contour_color: white
-    #   <<: *wordcloud_universals
+    - !Wordcloud
+      name : alexios-vshocked-e
+      file : !PATH_JOIN [*wordclouds_dir, sprites/alexios-vshocked-e.png]
+      image: !PATH_JOIN [*images_dir, sprites/alexios/alexios-vshocked-e.png]
+      where: *is_alexios
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+      <<: *wordcloud_universals
 
-    # - !Wordcloud
-    #   name : alexios-alexios-shocked
-    #   file : !PATH_JOIN [*wordclouds_dir, sprites/alexios-shocked.png]
-    #   image: !PATH_JOIN [*images_dir, sprites/alexios/alexios-shocked.png]
-    #   where: *is_alexios
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #     contour_width: 1
-    #     contour_color: white
-    #   <<: *wordcloud_universals
+    - !Wordcloud
+      name : alexios-alexios-shocked
+      file : !PATH_JOIN [*wordclouds_dir, sprites/alexios-shocked.png]
+      image: !PATH_JOIN [*images_dir, sprites/alexios/alexios-shocked.png]
+      where: *is_alexios
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+      <<: *wordcloud_universals
 
-    # - !Wordcloud
-    #   name : alexios-embarrassed
-    #   file : !PATH_JOIN [*wordclouds_dir, sprites/alexios-embarrassed.png]
-    #   image: !PATH_JOIN [*images_dir, sprites/alexios/alexios-embarrassed.png]
-    #   where: *is_alexios
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #     contour_width: 1
-    #     contour_color: white
-    #   <<: *wordcloud_universals
+    - !Wordcloud
+      name : alexios-embarrassed
+      file : !PATH_JOIN [*wordclouds_dir, sprites/alexios-embarrassed.png]
+      image: !PATH_JOIN [*images_dir, sprites/alexios/alexios-embarrassed.png]
+      where: *is_alexios
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+      <<: *wordcloud_universals
 
-    # - !Wordcloud
-    #   name : alexios-angry-e-u
-    #   file : !PATH_JOIN [*wordclouds_dir, sprites/alexios-angry-e-u.png]
-    #   image: !PATH_JOIN [*images_dir, sprites/alexios/alexios-angry-e-u.png]
-    #   where: !AND [*is_alexios, "sentiment < 0"]
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #     contour_width: 1
-    #     contour_color: white
-    #   <<: *wordcloud_universals
+    - !Wordcloud
+      name : alexios-angry-e-u
+      file : !PATH_JOIN [*wordclouds_dir, sprites/alexios-angry-e-u.png]
+      image: !PATH_JOIN [*images_dir, sprites/alexios/alexios-angry-e-u.png]
+      where: !AND [*is_alexios, "sentiment < 0"]
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+      <<: *wordcloud_universals
 
-    # - !Wordcloud
-    #   name : garden1
-    #   file : !PATH_JOIN [*wordclouds_dir, backgrounds/garden1.png]
-    #   image: !PATH_JOIN [*images_dir, backgrounds/garden1.png]
-    #   where: *is_alexios
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #   <<: *wordcloud_universals
-
-
-    # # Amicus
-    # - !Wordcloud
-    #   name : amicus
-    #   file : !PATH_JOIN [*wordclouds_dir, sprites/amicus.png]
-    #   image: !PATH_JOIN [*images_dir, sprites/amicus/amicus.png]
-    #   where: *is_amicus
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #     contour_width: 1
-    #     contour_color: white
-    #   <<: *wordcloud_universals
-
-    # - !Wordcloud
-    #   name: amicus-tears
-    #   file:  !PATH_JOIN [*wordclouds_dir, sprites/amicus-tears.png]
-    #   image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-tears.png]
-    #   where: !AND [*is_amicus, "sentiment < 0"]
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #     contour_width: 1
-    #     contour_color: white
-    #   <<: *wordcloud_universals
-
-    # - !Wordcloud
-    #   name : amicus-smile
-    #   file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-smile.png]
-    #   image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-smile.png]
-    #   where: !AND [*is_amicus, "sentiment > 0"]
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #     contour_width: 1
-    #     contour_color: white
-    #   <<: *wordcloud_universals
-
-    # - !Wordcloud
-    #   name : amicus-shocked
-    #   file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-shocked.png]
-    #   image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-shocked.png]
-    #   where: *is_amicus
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #     contour_width: 1
-    #     contour_color: white
-    #   <<: *wordcloud_universals
-
-    # - !Wordcloud
-    #   name : amicus-crossed-serious
-    #   file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-crossed-serious.png]
-    #   image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-crossed-serious.png]
-    #   where: *is_amicus
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #     contour_width: 1
-    #     contour_color: white
-    #   <<: *wordcloud_universals
-
-    # - !Wordcloud
-    #   name : amicus-angry-n
-    #   file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-angry-n.png]
-    #   image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-angry-n.png]
-    #   where: !AND [*is_amicus, "sentiment < 0"]
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #     contour_width: 1
-    #     contour_color: white
-    #   <<: *wordcloud_universals
-
-    # - !Wordcloud
-    #   name : sleep
-    #   file : !PATH_JOIN [*wordclouds_dir, illustrations/sleep.png]
-    #   image: !PATH_JOIN [*images_dir, illustrations/sleep.png]
-    #   where: *is_amicus
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #   <<: *wordcloud_universals
-
-    # - !Wordcloud
-    #   name : amicusend
-    #   file : !PATH_JOIN [*wordclouds_dir, illustrations/amicusend.png]
-    #   image: !PATH_JOIN [*images_dir, illustrations/amicusend.png]
-    #   where: *is_amicus
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #   <<: *wordcloud_universals
-
-    # - !Wordcloud
-    #   name : amicusroom
-    #   file : !PATH_JOIN [*wordclouds_dir, backgrounds/amicusroom.png]
-    #   image: !PATH_JOIN [*images_dir, backgrounds/amicusroom.png]
-    #   where: *is_amicus
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #   <<: *wordcloud_universals
-
-    # # From Marco on ship until untie Amicus
-    # - !Wordcloud
-    #   name : introspection
-    #   file : !PATH_JOIN [*wordclouds_dir, illustrations/introspection.png]
-    #   image: !PATH_JOIN [*images_dir, illustrations/introspection.png]
-    #   where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"  
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #   <<: *wordcloud_universals
-
-    # - !Wordcloud
-    #   name : spaceship
-    #   file : !PATH_JOIN [*wordclouds_dir, backgrounds/spaceship.png]
-    #   image: !PATH_JOIN [*images_dir, backgrounds/spaceship.png]
-    #   where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #   <<: *wordcloud_universals
-
-    # - !Wordcloud
-    #   name : spaceshipnebula
-    #   file : !PATH_JOIN [*wordclouds_dir, backgrounds/spaceshipnebula.png]
-    #   image: !PATH_JOIN [*images_dir, backgrounds/spaceshipnebula.png]
-    #   where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #   <<: *wordcloud_universals
-
-    # - !Wordcloud
-    #   name : spaceshipstar
-    #   file : !PATH_JOIN [*wordclouds_dir, backgrounds/spaceshipstar.png]
-    #   image: !PATH_JOIN [*images_dir, backgrounds/spaceshipstar.png]
-    #   where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #   <<: *wordcloud_universals
+    - !Wordcloud
+      name : garden1
+      file : !PATH_JOIN [*wordclouds_dir, backgrounds/garden1.png]
+      image: !PATH_JOIN [*images_dir, backgrounds/garden1.png]
+      where: *is_alexios
+      wordcloud_args:
+        <<: *wordcloud_args
+      <<: *wordcloud_universals
 
 
-    # # Visit to town after 2nd trial
-    # - !Wordcloud
-    #   name : dinner1
-    #   file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner1.png]
-    #   image: !PATH_JOIN [*images_dir, illustrations/dinner1.PNG]
-    #   where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"  
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #   <<: *wordcloud_universals
+    # Amicus
+    - !Wordcloud
+      name : amicus
+      file : !PATH_JOIN [*wordclouds_dir, sprites/amicus.png]
+      image: !PATH_JOIN [*images_dir, sprites/amicus/amicus.png]
+      where: *is_amicus
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+      <<: *wordcloud_universals
 
-    # - !Wordcloud
-    #   name : dinner2
-    #   file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner2.png]
-    #   image: !PATH_JOIN [*images_dir, illustrations/dinner2.PNG]
-    #   where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #   <<: *wordcloud_universals
+    - !Wordcloud
+      name: amicus-tears
+      file:  !PATH_JOIN [*wordclouds_dir, sprites/amicus-tears.png]
+      image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-tears.png]
+      where: !AND [*is_amicus, "sentiment < 0"]
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+      <<: *wordcloud_universals
 
-    # - !Wordcloud
-    #   name : dinner3
-    #   file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner3.png]
-    #   image: !PATH_JOIN [*images_dir, illustrations/dinner3.PNG]
-    #   where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #   <<: *wordcloud_universals
+    - !Wordcloud
+      name : amicus-smile
+      file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-smile.png]
+      image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-smile.png]
+      where: !AND [*is_amicus, "sentiment > 0"]
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+      <<: *wordcloud_universals
 
-    # - !Wordcloud
-    #   name : dinner4
-    #   file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner4.png]
-    #   image: !PATH_JOIN [*images_dir, illustrations/dinner4.PNG]
-    #   where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #   <<: *wordcloud_universals
+    - !Wordcloud
+      name : amicus-shocked
+      file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-shocked.png]
+      image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-shocked.png]
+      where: *is_amicus
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+      <<: *wordcloud_universals
+
+    - !Wordcloud
+      name : amicus-crossed-serious
+      file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-crossed-serious.png]
+      image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-crossed-serious.png]
+      where: *is_amicus
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+      <<: *wordcloud_universals
+
+    - !Wordcloud
+      name : amicus-angry-n
+      file : !PATH_JOIN [*wordclouds_dir, sprites/amicus-angry-n.png]
+      image: !PATH_JOIN [*images_dir, sprites/amicus/amicus-angry-n.png]
+      where: !AND [*is_amicus, "sentiment < 0"]
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+      <<: *wordcloud_universals
+
+    - !Wordcloud
+      name : sleep
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/sleep.png]
+      image: !PATH_JOIN [*images_dir, illustrations/sleep.png]
+      where: *is_amicus
+      wordcloud_args:
+        <<: *wordcloud_args
+      <<: *wordcloud_universals
+
+    - !Wordcloud
+      name : amicusend
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/amicusend.png]
+      image: !PATH_JOIN [*images_dir, illustrations/amicusend.png]
+      where: *is_amicus
+      wordcloud_args:
+        <<: *wordcloud_args
+      <<: *wordcloud_universals
+
+    - !Wordcloud
+      name : amicusroom
+      file : !PATH_JOIN [*wordclouds_dir, backgrounds/amicusroom.png]
+      image: !PATH_JOIN [*images_dir, backgrounds/amicusroom.png]
+      where: *is_amicus
+      wordcloud_args:
+        <<: *wordcloud_args
+      <<: *wordcloud_universals
+
+    # From Marco on ship until untie Amicus
+    - !Wordcloud
+      name : introspection
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/introspection.png]
+      image: !PATH_JOIN [*images_dir, illustrations/introspection.png]
+      where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"  
+      wordcloud_args:
+        <<: *wordcloud_args
+      <<: *wordcloud_universals
+
+    - !Wordcloud
+      name : spaceship
+      file : !PATH_JOIN [*wordclouds_dir, backgrounds/spaceship.png]
+      image: !PATH_JOIN [*images_dir, backgrounds/spaceship.png]
+      where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"
+      wordcloud_args:
+        <<: *wordcloud_args
+      <<: *wordcloud_universals
+
+    - !Wordcloud
+      name : spaceshipnebula
+      file : !PATH_JOIN [*wordclouds_dir, backgrounds/spaceshipnebula.png]
+      image: !PATH_JOIN [*images_dir, backgrounds/spaceshipnebula.png]
+      where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"
+      wordcloud_args:
+        <<: *wordcloud_args
+      <<: *wordcloud_universals
+
+    - !Wordcloud
+      name : spaceshipstar
+      file : !PATH_JOIN [*wordclouds_dir, backgrounds/spaceshipstar.png]
+      image: !PATH_JOIN [*images_dir, backgrounds/spaceshipstar.png]
+      where: "file = 'a1s1' AND line_idx BETWEEN 249 AND 1248"
+      wordcloud_args:
+        <<: *wordcloud_args
+      <<: *wordcloud_universals
 
 
-    # # Cassius
-    # - !Wordcloud
-    #   name : cassius
-    #   file : !PATH_JOIN [*wordclouds_dir, sprites/cassius.png]
-    #   image: !PATH_JOIN [*images_dir, sprites/cassius/cassius.png]
-    #   where: *is_cassius
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #     contour_width: 1
-    #     contour_color: white
-    #   <<: *wordcloud_universals
+    # Visit to town after 2nd trial
+    - !Wordcloud
+      name : dinner1
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner1.png]
+      image: !PATH_JOIN [*images_dir, illustrations/dinner1.PNG]
+      where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"  
+      wordcloud_args:
+        <<: *wordcloud_args
+      <<: *wordcloud_universals
 
-    # - !Wordcloud
-    #   name : cassius-angry-u
-    #   file : !PATH_JOIN [*wordclouds_dir, sprites/cassius-angry-u.png] 
-    #   image: !PATH_JOIN [*images_dir, sprites/cassius/cassius-angry-u.png]
-    #   where: !AND [*is_cassius, "sentiment < 0"]
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #     contour_width: 1
-    #     contour_color: white
-    #   <<: *wordcloud_universals
+    - !Wordcloud
+      name : dinner2
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner2.png]
+      image: !PATH_JOIN [*images_dir, illustrations/dinner2.PNG]
+      where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"
+      wordcloud_args:
+        <<: *wordcloud_args
+      <<: *wordcloud_universals
 
-    # - !Wordcloud
-    #   name : cassius-paw
-    #   file : !PATH_JOIN [*wordclouds_dir, sprites/cassius-paw.png] 
-    #   image: !PATH_JOIN [*images_dir, sprites/cassius/cassius-paw.png]
-    #   where: *is_cassius
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #     contour_width: 1
-    #     contour_color: white
-    #   <<: *wordcloud_universals
+    - !Wordcloud
+      name : dinner3
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner3.png]
+      image: !PATH_JOIN [*images_dir, illustrations/dinner3.PNG]
+      where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"
+      wordcloud_args:
+        <<: *wordcloud_args
+      <<: *wordcloud_universals
 
-    # - !Wordcloud
-    #   name : cassius-furious
-    #   file : !PATH_JOIN [*wordclouds_dir, sprites/cassius-furious.png] 
-    #   image: !PATH_JOIN [*images_dir, sprites/cassius/cassius-furious.png]
-    #   where: !AND [*is_cassius, "sentiment < 0"]
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #     contour_width: 1
-    #     contour_color: white
-    #   <<: *wordcloud_universals
-
-    # - !Wordcloud
-    #   name : cassius-disappointed-u
-    #   file : !PATH_JOIN [*wordclouds_dir, sprites/cassius-disappointed-u.png] 
-    #   image: !PATH_JOIN [*images_dir, sprites/cassius/cassius-disappointed-u.png]
-    #   where: *is_cassius
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #     contour_width: 1
-    #     contour_color: white
-    #   <<: *wordcloud_universals
+    - !Wordcloud
+      name : dinner4
+      file : !PATH_JOIN [*wordclouds_dir, illustrations/dinner4.png]
+      image: !PATH_JOIN [*images_dir, illustrations/dinner4.PNG]
+      where: "file = 'a1s7' AND line_idx BETWEEN 470 AND 793"
+      wordcloud_args:
+        <<: *wordcloud_args
+      <<: *wordcloud_universals
 
 
-    # # Cato
-    # - !Wordcloud
-    #   name : cato
-    #   file : !PATH_JOIN [*wordclouds_dir, sprites/cato.png] 
-    #   image: !PATH_JOIN [*images_dir, sprites/cato/cato.png]
-    #   where: *is_cato
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #     contour_width: 1
-    #     contour_color: white
-    #   <<: *wordcloud_universals
+    # Cassius
+    - !Wordcloud
+      name : cassius
+      file : !PATH_JOIN [*wordclouds_dir, sprites/cassius.png]
+      image: !PATH_JOIN [*images_dir, sprites/cassius/cassius.png]
+      where: *is_cassius
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+      <<: *wordcloud_universals
 
-    # - !Wordcloud
-    #   name : cato-bow-v
-    #   file : !PATH_JOIN [*wordclouds_dir, sprites/cato-bow-v.png] 
-    #   image: !PATH_JOIN [*images_dir, sprites/cato/cato-bow-v.png]
-    #   where: *is_cato
-    #   wordcloud_args:
-    #     <<: *wordcloud_args
-    #     contour_width: 1
-    #     contour_color: white
-    #   <<: *wordcloud_universals
+    - !Wordcloud
+      name : cassius-angry-u
+      file : !PATH_JOIN [*wordclouds_dir, sprites/cassius-angry-u.png] 
+      image: !PATH_JOIN [*images_dir, sprites/cassius/cassius-angry-u.png]
+      where: !AND [*is_cassius, "sentiment < 0"]
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+      <<: *wordcloud_universals
+
+    - !Wordcloud
+      name : cassius-paw
+      file : !PATH_JOIN [*wordclouds_dir, sprites/cassius-paw.png] 
+      image: !PATH_JOIN [*images_dir, sprites/cassius/cassius-paw.png]
+      where: *is_cassius
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+      <<: *wordcloud_universals
+
+    - !Wordcloud
+      name : cassius-furious
+      file : !PATH_JOIN [*wordclouds_dir, sprites/cassius-furious.png] 
+      image: !PATH_JOIN [*images_dir, sprites/cassius/cassius-furious.png]
+      where: !AND [*is_cassius, "sentiment < 0"]
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+      <<: *wordcloud_universals
+
+    - !Wordcloud
+      name : cassius-disappointed-u
+      file : !PATH_JOIN [*wordclouds_dir, sprites/cassius-disappointed-u.png] 
+      image: !PATH_JOIN [*images_dir, sprites/cassius/cassius-disappointed-u.png]
+      where: *is_cassius
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+      <<: *wordcloud_universals
+
+
+    # Cato
+    - !Wordcloud
+      name : cato
+      file : !PATH_JOIN [*wordclouds_dir, sprites/cato.png] 
+      image: !PATH_JOIN [*images_dir, sprites/cato/cato.png]
+      where: *is_cato
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+      <<: *wordcloud_universals
+
+    - !Wordcloud
+      name : cato-bow-v
+      file : !PATH_JOIN [*wordclouds_dir, sprites/cato-bow-v.png] 
+      image: !PATH_JOIN [*images_dir, sprites/cato/cato-bow-v.png]
+      where: *is_cato
+      wordcloud_args:
+        <<: *wordcloud_args
+        contour_width: 1
+        contour_color: white
+      <<: *wordcloud_universals
 
     - !Wordcloud
       name : cato-angry-u

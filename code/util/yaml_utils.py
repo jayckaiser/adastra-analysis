@@ -46,13 +46,13 @@ def get_extended_yaml_loader():
     loader.add_constructor('!OR', _or_join)
 
     # Run-process constructors
-    loader.add_constructor('!Dataset'   , Dataset.dataset_constructor)
-    loader.add_constructor('!AdastraDataset', AdastraDataset.adastra_dataset_constructor)
+    loader.add_constructor('!Dataset', Dataset.yaml_constructor)
+    loader.add_constructor('!AdastraDataset', AdastraDataset.yaml_constructor)
     
-    loader.add_constructor('!Query'     , Query.query_constructor)
-    loader.add_constructor('!Relplot'   , Relplot.relplot_constructor)
-    loader.add_constructor('!Screenplay', Screenplay.screenplay_constructor)
-    loader.add_constructor('!Wordcloud' , Wordcloud.wordcloud_constructor)
+    loader.add_constructor('!Query'     , Query.yaml_constructor)
+    loader.add_constructor('!Relplot'   , Relplot.yaml_constructor)
+    loader.add_constructor('!Screenplay', Screenplay.yaml_constructor)
+    loader.add_constructor('!Wordcloud' , Wordcloud.yaml_constructor)
     
     return loader
 

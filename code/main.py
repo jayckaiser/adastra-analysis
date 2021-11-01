@@ -1,5 +1,4 @@
 import argparse
-import sys
 
 from adastra_analysis import AdastraAnalysis
 

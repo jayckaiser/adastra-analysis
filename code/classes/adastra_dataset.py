@@ -26,11 +26,6 @@ class AdastraDataset(Dataset):
         self.result = None
 
 
-    @staticmethod
-    def adastra_dataset_constructor(loader, node):
-        return AdastraDataset(**loader.construct_mapping(node, deep=True))
-
-
     def build_dataset(self, datasets=None):
         print(f"\nBuilding Adastra dataset using script files in `{self.adastra_dir}`...")
         adastra_dataset = build_adastra_data(

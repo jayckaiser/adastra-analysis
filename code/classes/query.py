@@ -1,6 +1,8 @@
 from classes.dataset import Dataset
+from classes.run import Run
 
-class Query:
+
+class Query(Run):
     """
 ​
     """
@@ -17,11 +19,6 @@ class Query:
         self.dataset = dataset
 
         self.result = None
-        
-
-    @staticmethod
-    def query_constructor(loader, node):
-        return Query(**loader.construct_mapping(node))
 
 
     def build_query(self, datasets):
@@ -37,5 +34,5 @@ class Query:
         """
         file = file or self.file
 
-        prepare_directories(file)
+        self.prepare_directories(file)
         Dataset.to_disk(self.result, file)
