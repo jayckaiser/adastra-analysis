@@ -1,67 +1,9 @@
-# [OPTIONAL] These are defined variables used across multiple scripts.
-# (These are only passed around the yaml file, not used in Python.)
-definitions:
-
-  ### ALL
-  adastra_directory: &adastra_dir /home/jayckaiser/adastra/Adastra-17-linux
-
-  is_read: &is_read "is_read is True"
-
-
-  ### QUERIES
-
-  # Useful for identifying scenes by file_idx.
-  get_read_content: &get_read_content |
-      select 
-          file,
-          line_idx,
-          is_read,
-          is_choice,
-          is_branch,
-          line
-      from adastra
-      where is_read
-
-
-  ### RELPLOTS
-
-  # Long identical SQL query used across 14 sentiment relplots
-  rolling_sentiment: &rolling_sentiment |
-      select
-          line_idx,
-          speaker,
-          avg(sentiment) over (
-              partition by speaker
-              order by line_idx
-              rows between 9 preceding and current row
-          ) as rolling_sentiment
-      from adastra
-          inner join characters using(speaker)
-
-
-  ### SCREENPLAYS
-
-  # Default format-style in screenplays
-  default_line : &default_line "{line}"
-
-
-  ### WORDCLOUDS
-
-  # Repeated where-clauses used across wordclouds
-  is_alexios : &is_alexios  "speaker = 'alexios'"
-  is_amicus  : &is_amicus   "speaker = 'amicus'"
-  is_cassius : &is_cassius  "speaker = 'cassius'"
-  is_cato    : &is_cato     "speaker = 'cato'"
-  is_marco   : &is_marco    "speaker = 'marco'"
-  is_neferu  : &is_neferu   "speaker = 'neferu'"
-  is_virginia: &is_virginia "speaker = 'virginia'"
-
-
-
-# [REQUIRED] Define datas to build and save when running `build`.
+# [REQUIRED] Define datasets to build and save using `build`.
 datasets:
 
+  ### [SANDBOX] ###
   dataset_dir: &dataset_dir /home/jayckaiser/adastra_v3/data
+  adastra_dir: &adastra_dir /home/jayckaiser/adastra/Adastra-17-linux
 
   datasets:
 
@@ -93,7 +35,21 @@ datasets:
 # Run `--queries` to run SQL queries and save outputs to JSONL files.
 queries:
 
+  ### [SANDBOX] ###
   queries_dir: &queries_dir /home/jayckaiser/adastra_v3/queries
+
+  # Get most important columns of read lines.
+  # (This query is beneficial for isolating scenes for wordclouds.)
+  get_read_content: &get_read_content |
+      select 
+          file,
+          line_idx,
+          is_read,
+          is_choice,
+          is_branch,
+          line
+      from adastra
+      where is_read
 
 
   # Create one output per key.
@@ -109,14 +65,12 @@ queries:
       name: lines_per_file
       file: !PATH_JOIN [*queries_dir, lines_per_file.jsonl]
       dataset:
-        filters:
-          - name : adastra
-            where: *is_read
         sql: |
           select
             file,
             count(*) as num_lines
           from adastra
+          where is_read
           group by 1
           order by 1
     
@@ -124,14 +78,12 @@ queries:
       name: lines_per_speaker
       file: !PATH_JOIN [*queries_dir, lines_per_speaker.jsonl]
       dataset:
-        filters:
-          - name : adastra
-            where: *is_read
         sql: |
           select
             speaker,
             count(*) as num_lines
           from adastra
+          where is_read
           group by 1
           order by 1
 
@@ -139,14 +91,12 @@ queries:
       name: words_per_file
       file: !PATH_JOIN [*queries_dir, words_per_file.jsonl]
       dataset:
-        filters:
-          - name : adastra
-            where: *is_read
         sql: |
           select
             file,
             sum(num_words) as sum_words
           from adastra
+          where is_read
           group by 1
           order by 1
           
@@ -154,14 +104,12 @@ queries:
       name: words_per_speaker
       file: !PATH_JOIN [*queries_dir, words_per_speaker.jsonl]
       dataset:
-        filters:
-          - name : adastra
-            where: *is_read
         sql: |
           select
             speaker,
             sum(num_words) as sum_words
           from adastra
+          where is_read
           group by 1
           order by 1
 
@@ -169,25 +117,21 @@ queries:
       name: total_lines
       file: !PATH_JOIN [*queries_dir, total_lines.jsonl]
       dataset:
-        filters:
-          - name : adastra
-            where: *is_read
         sql: |
           select
             count(*) as total_words
           from adastra
+          where is_read
 
     - !Query
       name: total_words
       file: !PATH_JOIN [*queries_dir, total_words.jsonl]
       dataset:
-        filters:
-          - name : adastra
-            where: *is_read
         sql: |
           select
             sum(num_words) as total_words
           from adastra
+          where is_read
 
     # Get read content and metadata from all script files.
     - !Query
@@ -321,12 +265,28 @@ queries:
 # Run `--relplots` to run SQL queries to create Seaborn relational plots.
 relplots:
 
+  ### [SANDBOX] ###
   relplots_dir: &relplots_dir /home/jayckaiser/adastra_v3/relplots
 
+  # Universal arguments to feed to all relplots.
   relplot_args: &relplot_args
     hue: speaker
     kind: line
     palette: *characters_palette
+
+  # Long identical SQL query used across 14 sentiment relplots.
+  # File filters are externally applied to each dataset.
+  rolling_sentiment: &rolling_sentiment |
+      select
+          line_idx,
+          speaker,
+          avg(sentiment) over (
+              partition by speaker
+              order by line_idx
+              rows between 9 preceding and current row
+          ) as rolling_sentiment
+      from adastra
+          inner join characters using(speaker)
     
 
   # Create one output per key.
@@ -677,8 +637,10 @@ relplots:
 # Run `--screenplays` to create normalized text of the game in a specified format.
 screenplays:
 
+  ### [SANDBOX] ###
   screenplays_dir: &screenplays_dir /home/jayckaiser/adastra_v3/screenplays
 
+  # Default formatting args for each column that builds a screenplay line.
   screenplay_args: &screenplay_args
     strip_quotes: False
     upper  : False
@@ -687,6 +649,9 @@ screenplays:
     offset : 0
     prefix : ""
     postfix: ""
+
+  # Default style of a screenplay line built only from the `line` column.
+  default_line : &default_line "{line}"
 
 
   # Create one output per key.
@@ -950,6 +915,7 @@ screenplays:
 # Run `--wordclouds` to create TF-IDF wordclouds using custom filters. 
 wordclouds:
 
+  ### [SANDBOX] ###
   wordclouds_dir : &wordclouds_dir  /home/jayckaiser/adastra_v3/wordclouds
   images_dir     : &images_dir      !PATH_JOIN [*adastra_dir, 'game/images']
 
@@ -991,7 +957,14 @@ wordclouds:
     # * 'words' is the line with punctuation removed.
     # * 'content_words' is the line with punctuation and stop-words removed, and all words converted to lowercase.
 
-
+    # Filter to isolate certain characters' speech.
+    is_alexios : &is_alexios  "speaker = 'alexios'"
+    is_amicus  : &is_amicus   "speaker = 'amicus'"
+    is_cassius : &is_cassius  "speaker = 'cassius'"
+    is_cato    : &is_cato     "speaker = 'cato'"
+    is_marco   : &is_marco    "speaker = 'marco'"
+    is_neferu  : &is_neferu   "speaker = 'neferu'"
+    is_virginia: &is_virginia "speaker = 'virginia'"
 
   # Create one output per key.
   wordclouds:
