@@ -18,21 +18,17 @@ class Query(Run):
         self.file = file
         self.dataset = dataset
 
-        self.result = None
 
-
-    def build_query(self, datasets):
+    def build(self, datasets):
         """
         
         """
-        self.result =  Dataset(**self.dataset).build_dataset(datasets=datasets)
+        return Dataset(**self.dataset).build_dataset(datasets=datasets)
 
 
-    def to_disk(self, file=None):
+    def save(self, result):
         """
         
         """
-        file = file or self.file
-
-        self.prepare_directories(file)
-        Dataset.to_disk(self.result, file)
+        self.prepare_directories(self.file)
+        Dataset.to_disk(result, self.file)

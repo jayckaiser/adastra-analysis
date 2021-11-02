@@ -37,10 +37,8 @@ class Wordcloud(Run):
         self.countvectorizer_args = countvectorizer_args
         self.wordcloud_args = wordcloud_args
 
-        self.result = None
 
-
-    def build_wordcloud(self, datasets):
+    def build(self, datasets):
         """
         
         """
@@ -63,23 +61,21 @@ class Wordcloud(Run):
             _term_freqs, _filtered_term_freqs
         )
         
-        self.result = word_freqs_to_wordcloud(
+        return word_freqs_to_wordcloud(
             _word_freqs,
             image=self.image,
             wordcloud_args=self.wordcloud_args
         )
         
 
-    def to_disk(self, file=None):
+    def save(self, result):
         """
         
         """
-        file = file or self.file
-
-        self.prepare_directories(file)
-        self.result.to_file(file)
+        self.prepare_directories(self.file)
+        result.to_file(self.file)
         
         # Reset the wordcloud to prevent memory overflows.
-        self.result = None
+        wordcloud = None
         gc.collect()
     

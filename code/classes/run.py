@@ -16,11 +16,23 @@ class Run:
         self.file = file
         self.dataset = dataset
 
-        self.result = None
+
+    def build(self, datasets=None):
+        pass
+
+    def save(self):
+        pass
+
+    def run(self, datasets):
+        result = self.build(datasets)
+        self.save(result)
 
 
     @classmethod
     def yaml_constructor(cls, loader, node):
+        """
+        Each subclass should have a YAML initiator.
+        """
         return cls(**loader.construct_mapping(node, deep=True))
 
 
@@ -28,6 +40,7 @@ class Run:
     def prepare_directories(file):
         """
         Create missing directories and notify the user.
+        This is used in all write steps.
         """
         directory = os.path.dirname(file)
 

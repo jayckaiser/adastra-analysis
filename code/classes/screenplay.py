@@ -35,10 +35,8 @@ class Screenplay(Run):
         self.screenplay_col = screenplay_col
         self.contexts = contexts
 
-        self.result = None
 
-
-    def build_screenplay(self, datasets):
+    def build(self, datasets):
         """
         
         """
@@ -83,23 +81,25 @@ class Screenplay(Run):
             
             print(f"* `{context.name}` logic applied.", flush=True, end='\r')
 
-            self.result = _data
+            return _data
 
 
-    def to_disk(self, folder=None):
+    def save(self, result):
         """
+        Screenplays differ from other Runs.
+        They are written out to a folder as many files.
         
+        `file_col` determines how to divide the files.
+        (i.e. `file` for acts, `speaker` for monologues, etc.)
         """
-        folder = folder or self.folder
-
         # Iterate the file names and output each as a separate file.
-        for file in self.result[self.file_col].unique():
+        for file in result[self.file_col].unique():
             where = f'{self.file_col} = "{file}"'
 
-            file_data = Dataset.filter_where(self.result, where)
+            file_data = Dataset.filter_where(result, where)
             file_lines = file_data[self.screenplay_col].tolist()
 
-            file_path = os.path.join(folder, file + '.txt')
+            file_path = os.path.join(self.folder, file + '.txt')
             self.prepare_directories(file_path)
             with open(file_path, 'w') as fp:
                 fp.write(

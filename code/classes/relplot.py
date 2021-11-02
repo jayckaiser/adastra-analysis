@@ -38,10 +38,8 @@ class Relplot(Run):
         self.axhline = axhline
         self.remove_outliers = remove_outliers
 
-        self.result = None
 
-
-    def build_relplot(self, datasets):
+    def build(self, datasets):
         """
         Standardized method to build a Seaborn relplot.
         """
@@ -72,17 +70,15 @@ class Relplot(Run):
         fig = plt.gcf()
         fig.set_size_inches(*self.figsize)
 
-        self.result = fig
+        return fig
 
 
-    def to_disk(self, file=None):
+    def save(self, result):
         """
         Write the plot out as a PNG file.
         """
-        file = file or self.file
-
-        self.prepare_directories(file)
-        self.result.savefig(file, bbox_inches='tight')
+        self.prepare_directories(self.file)
+        result.savefig(self.file, bbox_inches='tight')
     
         # Reset the environment (Pyplot is memory-hungry).
         plt.close('all')

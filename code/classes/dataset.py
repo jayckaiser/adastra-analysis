@@ -54,10 +54,6 @@ class Dataset(Run):
             print("! No dataset logic defined! Provide `dataset_args` or `sql` to a dataset!")
             sys.exit(0)
 
-        #  # OPTIONAL: Save or alias the dataset.
-        # if self.file and (self.dataset_args or self.sql):
-        #     self.to_disk(self.file)
-
         if self.name:
             datasets[self.name] = dataset
 
@@ -143,7 +139,7 @@ class Dataset(Run):
 
 
     @staticmethod
-    def to_disk(dataset, file, info=False):
+    def save(dataset, file, info=False):
         """
         Write the dataset as JSON lines.
         """

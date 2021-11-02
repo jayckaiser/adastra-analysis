@@ -45,7 +45,7 @@ class AdastraAnalysis:
 
             else:
                 _dataset = config.build_dataset(self.datasets)
-                Dataset.to_disk(_dataset, file, info=True)
+                Dataset.save(_dataset, file, info=True)
 
             self.datasets[name] = _dataset
 
@@ -97,8 +97,7 @@ class AdastraAnalysis:
                 continue
 
             try:
-                query.build_query(self.datasets)
-                query.to_disk()
+                query.run(self.datasets)
                 print(f"* Query `{query.name}` completed: {query.file}")
 
             except Exception as err:
@@ -125,8 +124,7 @@ class AdastraAnalysis:
                 continue
 
             try:
-                relplot.build_relplot(self.datasets)
-                relplot.to_disk(relplot.file)
+                relplot.run(self.datasets)
                 print(f"* Relplot `{relplot.name}` completed: {relplot.file}")
 
             except Exception as err:
@@ -153,8 +151,7 @@ class AdastraAnalysis:
                 continue
 
             try:
-                screenplay.build_screenplay(self.datasets)
-                screenplay.to_disk(screenplay.folder)
+                screenplay.run(self.datasets)
                 print(f"* Screenplay `{screenplay.name}` completed: {screenplay.folder}")
 
             except Exception as err:
@@ -181,8 +178,7 @@ class AdastraAnalysis:
                 continue
 
             try:
-                wordcloud.build_wordcloud(self.datasets)
-                wordcloud.to_disk(wordcloud.file)
+                wordcloud.run(self.datasets)
                 print(f"* Screenplay `{wordcloud.name}` completed: {wordcloud.file}")
 
             except Exception as err:
