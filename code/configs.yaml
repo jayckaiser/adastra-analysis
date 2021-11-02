@@ -1584,15 +1584,6 @@ wordclouds:
         <<: *wordcloud_args
       <<: *wordcloud_universals
 
-    - !Wordcloud
-      name : bg
-      file : !PATH_JOIN [*wordclouds_dir, gui/bg.png] 
-      image: !PATH_JOIN [*images_dir, gui/bg.png]
-      where: "TRUE"
-      wordcloud_args:
-        <<: *wordcloud_args
-      <<: *wordcloud_universals
-
 
     # Amicus and Marco in end-game
     - !Wordcloud
