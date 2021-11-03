@@ -22,7 +22,7 @@ def run():
 
     # A custom configs path can be supplied.
     # Otherwise, it defaults to a library-internal one.
-    default_configs_path = (Path(__file__).parent / '../run_configs.yaml').resolve()
+    default_configs_path = (Path(__file__).parent / '../adastra_analysis_configs.yaml').resolve()
     parser.add_argument('--configs', required=False, type=str, default=default_configs_path)
 
     args = parser.parse_args()

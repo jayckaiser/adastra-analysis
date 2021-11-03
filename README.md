@@ -44,21 +44,13 @@ Read on to learn how you can play with this data yourself!
 
 Create a new environment in which to play with this code (e.g. using `venv`). A `requirements.txt` file has been included to try to circumvent dependency errors.
 
-Download the latest Linux version of Adastra. Unzip the directory and put it somewhere easily accessible. The location should be added to the configs file under `dataset_configs.adastra_directory`.
+Download the latest Linux version of Adastra. Unzip the directory and put it somewhere easily accessible.
 
-All logic for this library's outputs is derived from a single YAML config file. This is where you can specify exactly how you want to interact with the dataset, as well as how you want to output your queries, relplots, screenplays, and wordclouds. By default, this is defined at `configs.yml`; you can specify another path using `--configs`.
+All logic for this library's outputs is derived from a single YAML config file. This is where you can specify exactly how you want to interact with the dataset, as well as how you want to output your queries, relplots, screenplays, and wordclouds. By default, this is defined within the library at `adastra_analysis_configs.yaml`; you can specify another path using `--configs`.
 
-Example runs are already filled in. You can comment these out (`Ctrl + /` on most modern IDEs) and add your own, or customize them as you see fit.
+Example runs are already filled into the configs. You can comment these out (`Ctrl + /` on most modern IDEs) and add your own, or customize them as you see fit.
 
-Before you run any code, you need to populate a manually fill some fields that specify where to output generated files on your machine:
-- `dataset_configs.adastra_directory`
-- `dataset_configs.adastra_datapath`
-- `adastra_analytics.queries.output_directory`
-- `adastra_analytics.screenplays.output_directory`
-- `adastra_analytics.relplots.output_directory`
-- `adastra_analytics.wordclouds.output_directory`
-
-Below, I will document the structure of the file, its keys and their meanings, and suggestions for how to interact with the library.
+Below, I will document the structure of the file, its structure, and suggestions for how to interact with the library.
 
 -----
 
@@ -70,12 +62,23 @@ Below, I will document the structure of the file, its keys and their meanings, a
 
 # Scripts
 
-`main.py` is the powerhouse to complete all processes defined in the configs file.
+All functionality of this library is completed using the following command:
+```
+python -m adastra_analysis
+```
+Attempt to run this command before changing any configs or running any subroutines.
 
 
 ## Build
 
-Before you can run additional processes, you must build the dataset. The dataset contains the text of each line, its index, and metadata for querying the its contents. By default, the dataset contains these columns:
+Before you can run additional processes, you must build the datasets. There are two classes of dataset logic defined:
+* `AdastraDataset`: main logic for collecting and transforming raw Adastra game files into a DataFrame
+* `Dataset`: any other DataFrame built from either provided data, read in from a filepath, or built using SQL transformations on a preexisting DataFrame
+
+One example of each dataset has been predefined: `adastra`, an `AdastraDataset`; and `characters`, a mapping of character names to color codes used in plotting
+
+
+The `adastra` dataset contains the text of each line, its index, and metadata for querying the its contents. By default, the dataset contains these columns:
 
 | Column | Type | Description |
 | ------ | ---- | ----------- |
@@ -106,15 +109,7 @@ Additionally, I have built optional NLP functionality that can extend the datase
 | num_content_words | int | number of extracted content words |
 
 
-To build the standard dataset:
-```
-python main.py build
-```
-
-To build the extended NLP dataset:
-```
-python main.py build --nlp
-```
+To extend the dataset with NLP, set the `use_nlp` flag in the dataset's configs to `True`.
 
 Once a dataset is built and saved, it can be queried in runs.
 
@@ -130,56 +125,52 @@ There are four types of runs I have defined in this library. The functionality o
 To run the processes:
 
 ```
-python main.py run [--queries] [--relplots] [--screenplays] [--wordclouds]
+python -m adastra_analysis run [--queries] [--relplots] [--screenplays] [--wordclouds]
 ```
 
-If no arguments are specified after `--run`, everything in the configs file will be run.
+If no arguments are specified after `run`, all runs in the configs file will be run.
 
-*(Regardless of what is selected, they will be run in order of fastest to slowest in the order listed above.)*
+*Regardless of what is selected, run types will be completed in order of fastest-to-complete to slowest-to-complete (in the order listed above).*
 
 
+All runs are specified under separate headers in the configs file. Under each run name, a sandbox area is provided for YAML anchors that define variables used in the runs. (These are ignored by the YAML parser.)
 
 -----
 
 ### Queries
-SQL statements can be defined to query off the Adastra dataset and any other custom datasets defined in the configs. These are saved as JSON-lines.
+Define SQL statements to query against the datasets. The outputs of these are saved as JSON-lines.
 
-Specific queries can be provided. Otherwise, all are run.
+Names of specific queries can be provided on the command line. Otherwise, all are run.
 ```
-python main.py run --queries [query1 [query2 ...]]
+python -m adastra_analysis run --queries [query1 [query2 ...]]
 ```
 
-These are defined in `adastra_analytics.queries` in the configs file.
+Each run should be prefaced with `!Query`.
 ```
 queries:
 
-  output_directory    [REQUIRED] base output directory to save queries
-  dataset_alias       [REQUIRED] Adastra dataset alias used in SQL queries
-  where               [OPTIONAL] where-clause to apply before every query
+  [YAML DEFINITIONS SANDBOX]
 
   queries:
 
-    [query1]:         [REQUIRED] key to query, accessible via `--queries query1`
-      file            [REQUIRED] output subpath under {output_directory}
-      sql             [REQUIRED] SQL query to run
-      where           [OPTIONAL] where-clause to apply before the query
-
-    [query2]:
-      ...
+    - !Query
+      name   : key to query, accessible via `--queries name`
+      file   : output path for Query .jsonl file
+      dataset: dataset of the query
 ```
 
-*(See `examples/queries` for a preselected list of generated queries.)*
+*(See `examples/queries` for a predefined list of generated queries.)*
 
 
 
 -----
 
 ### Relational Plots
-Create custom relational plots based off of SQL statements queried off the Adastra dataset and any other custom datasets defined in the configs. These are saved as PNG files.
+Create custom relational plots using SQL queried against the datasets. These are saved as PNG files.
 
-Specific relplots can be provided. Otherwise, all are run.
+Names of specific relplots can be provided on the command line. Otherwise, all are run.
 ```
-python main.py run --relplots [relplot1 [relplot2 ...]]
+python -m adastra_analysis run --relplots [relplot1 [relplot2 ...]]
 ```
 
 These are defined in `adastra_analytics.relplots` in the configs file.
@@ -189,26 +180,24 @@ Relplot arguments are entirely customizable based on standard Seaborn relplot kw
 ```
 relplots:
 
-  output_directory      [REQUIRED] base output directory to save relplots
-  dataset_alias         [REQUIRED] Adastra dataset alias used in SQL queries
-  where                 [OPTIONAL] where-clause to apply before every query
-  relplot_args:         [OPTIONAL] `seaborn.relplot` kwargs applied to all relplots
+  [YAML DEFINITIONS SANDBOX]
 
   relplots:
 
-    [relplot1]:         [REQUIRED] key to query, accessible via `--relplots relplot1`
-      file              [REQUIRED] output subpath under {output_directory}
-      sql               [REQUIRED] SQL query to run
-      where             [OPTIONAL] where-clause to apply before the query
-      axhline           [OPTIONAL] apply a horizontal line to the relplot; defaults to None
-      remove_outliers   [OPTIONAL] apply smoothing to the output by filtering within three-sigmas; defaults to False
-      relplot_args:     [OPTIONAL] `seaborn.relplot` kwargs applied to this specific relplot
+    - !Relplot:
+      name           : key to query, accessible via `--relplots name`
+      file           : output path for Relplot .png file
+      dataset        : dataset for the relplot
+      relplot_args   : custom `seaborn.relplot` kwargs to define the relplot
+      figsize        : (default (16, 10))  ; the size of the relplot figure
+      title          : (default None)      ; a custom title for the relplot
+      style          : (default 'darkgrid'); the background style of the relplot
+      axhline        : (default None)      ; height of a horizontal line applied to the relplot
+      remove_outliers: (default False)     ; apply smoothing to the output by filtering y data within within three-sigmas
 
-    [relplot2]:
-      ...
 ```
 
-*(See `examples/relplots` for a preselected list of generated plots.)*
+*(See `examples/relplots` for a predefined list of generated plots.)*
 
 
 ![a1s7_sentiment](examples/relplots/sentiment/a1s7.png)
@@ -217,52 +206,41 @@ relplots:
 -----
 
 ### Screenplays
-The text contents of Adastra are cleaned into formatted screenplays, separated by chapter. Specify formatting by line-type using where-filters. These are saved as TXT files in a specified folder.
+The text contents of Adastra are cleaned into formatted screenplays, separated by chapter. Specify formatting by line-type using where-filters. Screenplays are saved as TXT files in a specified folder.
 
-Specific screenplays can be provided. Otherwise, all are run.
+Names of specific screenplays can be provided on the command line. Otherwise, all are run.
 ```
-python main.py run --screenplays [screenplay1 [screenplay2 ...]]
+python -m adastra_analysis run --screenplays [screenplay1 [screenplay2 ...]]
 ```
 
 These are defined in `adastra_analytics.screenplays` in the configs file.
 ```
 screenplays:
 
-  output_directory:        [REQUIRED] base output directory to save screenplays
-  where:                   [OPTIONAL] where-clause to apply to the dataset before every screenplay
+  [YAML DEFINITIONS SANDBOX]
 
   screenplays:
 
-  [screenplay1]:           [REQUIRED] key to query, accessible via `--screenplays screenplay1`
-    folder                 [REQUIRED] output subfolder under {output_directory}
-    justify                [REQUIRED] how wide should the output be (justify-width)
-    line_sep               [REQUIRED] how should lines be separated
-    where:                 [OPTIONAL] where-clause to apply before the query
+    - !Screenplay
+      name          : key to query, accessible via `--screenplays screenplay_style1`
+      folder        : output subfolder under {output_directory}
+      dataset       : dataset for the screenplay
+      justify       : how wide should the output be (justify-width)
+      line_sep      : how should lines be separated
+      file_col      : name of the column to split into files based on unique values
+      screenplay_col: name of the column to output formatting to
 
-    categories:            [REQUIRED] filters to segregate the text into styles
-      [category_name1]:    [REQUIRED] name of category (unqueriable, but used to track progress)
-        where              [REQUIRED] where-clause to filter which lines use the given category style
-        style              [REQUIRED] shape of the output with columns used (i.e. "{column1}: {column2}")
-        textwrap_offset    [OPTIONAL] how far should wrapped text be indented; defaults to 0
+      contexts:
+        - name               : name of the category; only used to track progress
+          where              : where-clause to filter which lines use the given category style
+          justify            : (optional) custom justify-width that overwrites the screenplay-global one defined above
+          style              : shape of the output with columns used (i.e. "{column1}: {column2}")
+          textwrap_offset    : (default 0); how far should wrapped text be indented; defaults to 0
 
-        formatting:        [OPTIONAL] special formatting rules for columns specified in `style`; defaults to no-formatting
-          [column1]:       [OPTIONAL] part of `style` being formatted; corresponds to a column in the dataset
-            strip_quotes   [OPTIONAL] remove wrapper quotes; defaults to False
-            upper          [OPTIONAL] cast the column text to uppercase; defaults to False
-            lower          [OPTIONAL] cast the column text to lowercase; defaults to False
-            title          [OPTIONAL] cast the column text to titlecase; defaults to False
-            offset         [OPTIONAL] offset the column text from by left edge with spaces; defaults to 0
-            prefix         [OPTIONAL] prefix the column text with a string; defaults to ""
-            postfix        [OPTIONAL] postfix the column text with a string; defaults to ""
+          columns:
+            - name           : name of the column to be inserted into the style
+              screenplay_args: formatting arguments to apply the the text of the column
 
-          [column2]:
-            ...
-
-      [category_name2]:
-        ...
-
-  [screenplay2]:
-    ...
 ```
 
 *(I've created three versions of outputs already. If someone has a better idea for how to best improve readability for the output, please let me know!)*
@@ -331,15 +309,18 @@ floor of the deck.
                with you!?"
 ```
 
+*(I have chosen to forgo including any example screenplays here until I receive express permission from one of the creators of Adastra. These will have to be generated on your end for the time being.)*
+
+
 -----
 
 
 ### Wordclouds
-Save custom wordclouds based off of subsets of text and masked over specific images from the game (and elsewhere). These can be populated by lines from a specific where-filter of the data (e.g. only text from a specific file, only text spoken by Amicus, etc). These can even be specified down to specific scenes, if you know the file and line numbers. These are saved as PNG files.
+Save custom wordclouds based off of subsets of dialogue text and masked over specific images (both from the game and external). These can be populated by lines from a specific where-filter of the data (e.g. only text from a specific file, only text spoken by Amicus, etc), or even by specific scenes if you know the file and line numbers. Wordclouds are saved as PNG files.
 
-Specific wordclouds can be provided. Otherwise, all are run.
+Names of specific wordclouds can be provided on the command line. Otherwise, all are run.
 ```
-python main.py run --wordclouds [wordcloud1 [wordcloud2 ...]]
+python -m adastra_analysis run --wordclouds [wordcloud1 [wordcloud2 ...]]
 ```
 
 These are defined in `adastra_analytics.wordclouds` in the configs file.
@@ -353,26 +334,22 @@ Wordcloud arguments are entirely customizable based on `wordcloud.Wordcloud` kwa
 ```
 wordclouds:
 
-  output_directory      [REQUIRED] base output directory to save wordclouds
-  where                 [OPTIONAL] where-clause to apply to the dataset before every wordcloud
-  documents_column      [REQUIRED] name of 'documents' column in the dataset that will build the wordclouds
-  filter_columns        [REQUIRED] column subset used in where-filters below
-  tfidf_args:           [REQUIRED] sklearn `CountVectorizer` kwargs used to build term-frequencies
-  wordcloud_args:       [OPTIONAL] `wordcloud.Wordcloud` kwargs applied to all wordclouds
+  [YAML DEFINITIONS SANDBOX]
 
   wordclouds:
 
-    [wordcloud1]:       [REQUIRED] key to query, accessible via `--wordclouds wordcloud1`
-      file              [REQUIRED] output subpath under {output_directory}
-      image_file        [OPTIONAL] path to image mask; uses internal game file at `file` if unspecified
-      where             [REQUIRED] where-clause to subset text used in the wordcloud
-      wordcloud_args:   [OPTIONAL] `wordcloud.Wordcloud` kwargs applied to this specific wordcloud
-
-    [wordcloud2]:
-      ...
+  - !Wordcloud
+     name                : key to query, accessible via `--wordclouds wordcloud1`
+     file                : output path for wordcloud
+     dataset             : dataset to build term frequencies out of for the wordcloud
+     image               : path to image mask
+     where               : where-clause to subset term frequencies used in the wordcloud
+     documents_col       : text column to use for building term frequencies
+     countvectorizer_args: `sklearn.CountVectorizer` kwargs to use when building the term frequencies
+     wordcloud_args      : `wordcloud.Wordcloud` kwargs to define the wordcloud
 ```
 
-(See `examples/wordclouds` for a preselected list of generated clouds.)
+*(See `examples/wordclouds` for a predefined list of generated clouds.)*
 
 -----
 

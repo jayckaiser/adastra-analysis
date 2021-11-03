@@ -675,6 +675,7 @@ screenplays:
     #   contexts:
     #     - name               : name of the category; only used to track progress
     #       where              : where-clause to filter which lines use the given category style
+    #       justify            : (optional) custom justify-width that overwrites the screenplay-global one defined above
     #       style              : shape of the output with columns used (i.e. "{column1}: {column2}")
     #       textwrap_offset    : (default 0); how far should wrapped text be indented; defaults to 0
     # 
