@@ -1,10 +1,10 @@
 import gc
 
-from classes.dataset import Dataset
-from classes.run import Run
+from adastra_analysis.common.dataset import Dataset
+from adastra_analysis.common.run import Run
 
-from util.tfidf_utils import get_term_freqs, filter_term_freqs, build_filtered_tfidf_word_freqs
-from util.wordcloud_utils import word_freqs_to_wordcloud
+from adastra_analysis.runs.util import tfidf_utils
+from adastra_analysis.runs.util import wordcloud_utils
 
 
 class Wordcloud(Run):
@@ -44,7 +44,7 @@ class Wordcloud(Run):
         """
         _data = Dataset(**self.dataset).build_dataset(datasets=datasets)
 
-        _term_freqs = get_term_freqs(
+        _term_freqs = tfidf_utils.get_term_freqs(
             data=_data.copy(),
             doc_col=self.documents_col,
             countvectorizer_args=self.countvectorizer_args
@@ -52,16 +52,16 @@ class Wordcloud(Run):
 
         # The documents are sourced by a subset of rows in the dataset.
         # Use these to build TF-IDF word frequencies.
-        _filtered_term_freqs = filter_term_freqs(
+        _filtered_term_freqs = tfidf_utils.filter_term_freqs(
             _term_freqs,
             where=self.where
         )
         
-        _word_freqs = build_filtered_tfidf_word_freqs(
+        _word_freqs = tfidf_utils.build_filtered_tfidf_word_freqs(
             _term_freqs, _filtered_term_freqs
         )
         
-        return word_freqs_to_wordcloud(
+        return wordcloud_utils.word_freqs_to_wordcloud(
             _word_freqs,
             image=self.image,
             wordcloud_args=self.wordcloud_args
@@ -76,6 +76,6 @@ class Wordcloud(Run):
         result.to_file(self.file)
         
         # Reset the wordcloud to prevent memory overflows.
-        wordcloud = None
+        result = None
         gc.collect()
     

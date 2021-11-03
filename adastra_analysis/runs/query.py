@@ -1,5 +1,5 @@
-from classes.dataset import Dataset
-from classes.run import Run
+from adastra_analysis.common.dataset import Dataset
+from adastra_analysis.common.run import Run
 
 
 class Query(Run):
@@ -31,4 +31,4 @@ class Query(Run):
         
         """
         self.prepare_directories(self.file)
-        Dataset.to_disk(result, self.file)
+        Dataset.save(result, self.file)

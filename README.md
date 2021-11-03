@@ -1,7 +1,7 @@
 # adastra-analysis
-TL;DR: What started as a goal to write the contents of the visual novel Adastra into screenplays has now become a ~two-week-long~ **six-week-long** project culminating in a system to dynamically interact with text and images from Adastra. Through a set of scripts, you can parse the game's files into a cleaned dataset and other generated files. These include formatted screenplays, wordclouds, and relation plots.
+TL;DR: What started as a goal to write the contents of the visual novel Adastra into screenplays has now become a ~two-week-long~ **two-month-long** project culminating in a system to dynamically interact with text and images from Adastra. Through a set of scripts, you can parse the game's files into a cleaned dataset and other generated files. These include formatted screenplays, wordclouds, and relation plots.
 
-![amicus](/examples/wordclouds/sprites/amicus/amicus.png)
+![amicus](/examples/wordclouds/sprites/amicus.png)
 
 -----
 
@@ -34,6 +34,11 @@ Example wordclouds are found in `examples/wordclouds`. Example relational plots 
 Read on to learn how you can play with this data yourself!
 
 -----
+
+![islandday](examples/wordclouds/backgrounds/islandday.png)
+
+-----
+
 
 # Setup
 
@@ -115,6 +120,10 @@ Once a dataset is built and saved, it can be queried in runs.
 
 -----
 
+![nefandcat2](examples/wordclouds/illustrations/nefandcat2.PNG)
+
+-----
+
 ## Run
 There are four types of runs I have defined in this library. The functionality of each is defined in the configs file.
 
@@ -124,8 +133,9 @@ To run the processes:
 python main.py run [--queries] [--relplots] [--screenplays] [--wordclouds]
 ```
 
-If no arguments are specified after `--run`, all will be run.
-Regardless of what is selected, they will be run in order of fastest to slowest (the order defined above).
+If no arguments are specified after `--run`, everything in the configs file will be run.
+
+*(Regardless of what is selected, they will be run in order of fastest to slowest in the order listed above.)*
 
 
 
@@ -158,7 +168,7 @@ queries:
       ...
 ```
 
-(See `examples/queries` for a preselected list of generated queries.)
+*(See `examples/queries` for a preselected list of generated queries.)*
 
 
 
@@ -198,8 +208,10 @@ relplots:
       ...
 ```
 
-(See `examples/relplots` for a preselected list of generated plots.)
+*(See `examples/relplots` for a preselected list of generated plots.)*
 
+
+![a1s7_sentiment](examples/relplots/sentiment/a1s7.png)
 
 
 -----
@@ -253,75 +265,74 @@ screenplays:
     ...
 ```
 
-I've created three versions of outputs already. If someone has a better idea for how to best improve readability for the output, please let me know!
+*(I've created three versions of outputs already. If someone has a better idea for how to best improve readability for the output, please let me know!)*
 
-  - style1
-  ```
-  Amicus turns his head to look at me again, then looks away, letting out
-  another groan.
+#### style1
+```
+Amicus turns his head to look at me again, then looks away, letting out
+another groan.
 
-  AMICUS
-    "Ohh, my stomach. What did you do?"
+AMICUS
+  "Ohh, my stomach. What did you do?"
 
-  MARCO
-    "Exactly what you did to me."
+MARCO
+  "Exactly what you did to me."
 
-  I hold up my taser, turning it in the light so that the wolf can fully see
-  it.
+I hold up my taser, turning it in the light so that the wolf can fully see
+it.
 
-  Amicus stares at it for a moment before letting his face fall back to the
-  floor of the deck.
+Amicus stares at it for a moment before letting his face fall back to the
+floor of the deck.
 
-  AMICUS
-    "Oh Gods, I feel like I'm on fire...did you use it at full power? What
-  the hell is wrong with you!?"
-  ```
+AMICUS
+  "Oh Gods, I feel like I'm on fire...did you use it at full power? What
+the hell is wrong with you!?"
+```
 
-  - style2
-  ```
-  Amicus turns his head to look at me again, then looks away, letting out
-  another groan.
+#### style2
+```
+Amicus turns his head to look at me again, then looks away, letting out
+another groan.
 
-  AMICUS: "Ohh, my stomach. What did you do?"
+AMICUS: "Ohh, my stomach. What did you do?"
 
-  MARCO: "Exactly what you did to me."
+MARCO: "Exactly what you did to me."
 
-  I hold up my taser, turning it in the light so that the wolf can fully see
-  it.
+I hold up my taser, turning it in the light so that the wolf can fully see
+it.
 
-  Amicus stares at it for a moment before letting his face fall back to the
-  floor of the deck.
+Amicus stares at it for a moment before letting his face fall back to the
+floor of the deck.
 
-  AMICUS: "Oh Gods, I feel like I'm on fire...did you use it at full power?
-      What the hell is wrong with you!?"
-  ```
+AMICUS: "Oh Gods, I feel like I'm on fire...did you use it at full power?
+    What the hell is wrong with you!?"
+```
 
-  - style3
-  ```
-  Amicus turns his head to look at me again, then looks away, letting out
-  another groan.
+#### style3
+```
+Amicus turns his head to look at me again, then looks away, letting out
+another groan.
 
-                 AMICUS
-                 "Ohh, my stomach. What did you do?"
+               AMICUS
+               "Ohh, my stomach. What did you do?"
 
-                 MARCO
-                 "Exactly what you did to me."
+               MARCO
+               "Exactly what you did to me."
 
-  I hold up my taser, turning it in the light so that the wolf can fully see
-  it.
+I hold up my taser, turning it in the light so that the wolf can fully see
+it.
 
-  Amicus stares at it for a moment before letting his face fall back to the
-  floor of the deck.
+Amicus stares at it for a moment before letting his face fall back to the
+floor of the deck.
 
-                 AMICUS
-                 "Oh Gods, I feel like I'm on fire...did you
-                 use it at full power? What the hell is wrong
-                 with you!?"
-  ```
-
-
+               AMICUS
+               "Oh Gods, I feel like I'm on fire...did you
+               use it at full power? What the hell is wrong
+               with you!?"
+```
 
 -----
+
 
 ### Wordclouds
 Save custom wordclouds based off of subsets of text and masked over specific images from the game (and elsewhere). These can be populated by lines from a specific where-filter of the data (e.g. only text from a specific file, only text spoken by Amicus, etc). These can even be specified down to specific scenes, if you know the file and line numbers. These are saved as PNG files.

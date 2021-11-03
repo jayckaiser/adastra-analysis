@@ -1,7 +1,7 @@
 import sys
 
-from classes.dataset import Dataset
-from util.yaml_utils import load_yaml
+from adastra_analysis.common.dataset import Dataset
+from adastra_analysis.common.util import yaml_utils
 
 
 class AdastraAnalysis:
@@ -9,7 +9,7 @@ class AdastraAnalysis:
 
     def __init__(self, configs_filepath):
         
-        self.yaml_configs = load_yaml(configs_filepath)
+        self.yaml_configs = yaml_utils.load_yaml(configs_filepath)
 
         self.dataset_configs    = self.yaml_configs.get('datasets'   , {}).get('datasets')
         self.query_configs      = self.yaml_configs.get('queries'    , {}).get('queries')

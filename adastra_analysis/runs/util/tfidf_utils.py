@@ -4,7 +4,12 @@ import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.preprocessing import normalize
 
-from classes.dataset import Dataset
+from adastra_analysis.common.dataset import Dataset
+
+
+# JK:: Build another method to just SUM precomputed TF-IDF values.
+# Compare to the output of the method below.
+# How similar are they?
 
 
 def _get_doc_freqs(term_freqs):
@@ -12,12 +17,6 @@ def _get_doc_freqs(term_freqs):
     Convert a dataframe of term-freqs of tokens by line into doc-freq counts.
     """
     return np.array( term_freqs.astype(bool).sum() )
-
-
-
-# JK:: Build another method to just SUM precomputed TF-IDF values.
-# Compare to the output of the method below.
-# How similar are they?
 
 
 
@@ -57,6 +56,7 @@ def get_term_freqs(data, doc_col, countvectorizer_args):
     return term_freqs
 
 
+
 def filter_term_freqs(term_freqs, where):
     """
     Subset term-freqs of a dataframe by specified filters.
@@ -86,6 +86,7 @@ def filter_term_freqs(term_freqs, where):
     )
 
     return filtered_term_freqs
+
 
 
 def build_filtered_tfidf_word_freqs(

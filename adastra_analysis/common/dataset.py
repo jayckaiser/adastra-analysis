@@ -3,7 +3,7 @@ import sys
 import pandas as pd
 import pandasql as psql
 
-from classes.run import Run
+from adastra_analysis.common.run import Run
 
 
 class Dataset(Run):

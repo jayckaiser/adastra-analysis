@@ -1,9 +1,9 @@
 import argparse
+from pathlib import Path
 
-from adastra_analysis import AdastraAnalysis
+from adastra_analysis.common.adastra_analysis import AdastraAnalysis
 
-
-def main():
+def run():
 
     parser = argparse.ArgumentParser()
 
@@ -22,7 +22,7 @@ def main():
 
     # A custom configs path can be supplied.
     # Otherwise, it defaults to a library-internal one.
-    default_configs_path = './configs.yaml'
+    default_configs_path = (Path(__file__).parent / '../run_configs.yaml').resolve()
     parser.add_argument('--configs', required=False, type=str, default=default_configs_path)
 
     args = parser.parse_args()
@@ -80,8 +80,3 @@ def main():
 
             # Apply the specified lambda using the provided arguments.
             run_lambdas[run_type](run_args)
-        
-
-
-if __name__ == '__main__':
-    main()

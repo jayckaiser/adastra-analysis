@@ -1,7 +1,7 @@
-from classes.dataset import Dataset
+from adastra_analysis.common.dataset import Dataset
 
-from util.adastra_dataset_utils import build_adastra_data
-from util.adastra_dataset_nlp_utils import nlp_augment_adastra_data
+from adastra_analysis.adastra.util import base_utils
+from adastra_analysis.adastra.util import nlp_utils
 
 
 class AdastraDataset(Dataset):
@@ -28,7 +28,7 @@ class AdastraDataset(Dataset):
 
     def build_dataset(self, datasets=None):
         print(f"\nBuilding Adastra dataset using script files in `{self.adastra_dir}`...")
-        adastra_dataset = build_adastra_data(
+        adastra_dataset = base_utils.build_adastra_data(
             adastra_directory=self.adastra_dir,
             main_character=self.main_character
         )
@@ -39,7 +39,7 @@ class AdastraDataset(Dataset):
             print(
                 "@ Augmenting dataset with NLP... (This process takes about a minute.)"
             )
-            adastra_dataset = nlp_augment_adastra_data(adastra_dataset)
+            adastra_dataset = nlp_utils.nlp_augment_adastra_data(adastra_dataset)
             print("@ Dataset augmented!")
 
         self.result = adastra_dataset

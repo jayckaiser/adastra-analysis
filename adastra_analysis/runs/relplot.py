@@ -1,12 +1,7 @@
-import gc
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
+from adastra_analysis.common.dataset import Dataset
+from adastra_analysis.common.run import Run
 
-from scipy import stats
-
-from classes.dataset import Dataset
-from classes.run import Run
+from adastra_analysis.runs.util import relplot_utils
 
 
 class Relplot(Run):
@@ -47,28 +42,18 @@ class Relplot(Run):
 
         # Remove outliers if option marked.
         if self.remove_outliers:
-            y = self.relplot_args['y']
-            _data = _data[
-                (np.abs(stats.zscore(_data[y])) < 3)
-            ]
+            y_col = self.relplot_args['y']
+            _data = relplot_utils.remove_outliers(_data, y_col)
 
         # Establish and build the figure.
-        plt.figure()
-        sns.relplot(data=_data, **self.relplot_args)
-
-        # Set the style if specified (defaults to 'darkgrid' such that Cassius can be seen).
-        sns.set_theme(style=self.style)
-
-        # Add a title if specified.
-        plt.title(self.title)
-
-        # Add a custom horizontal line if specified.
-        if self.axhline:
-            plt.axhline(self.axhline, linestyle='--', color='black', alpha=0.5)
-
-        # Set the output size and return.
-        fig = plt.gcf()
-        fig.set_size_inches(*self.figsize)
+        fig = relplot_utils.build_seaborn_relplot(
+            data=_data,
+            relplot_args=self.relplot_args,
+            figsize=self.figsize,
+            title=self.title,
+            style=self.style,
+            axhline=self.axhline,
+        )
 
         return fig
 
@@ -81,5 +66,4 @@ class Relplot(Run):
         result.savefig(self.file, bbox_inches='tight')
     
         # Reset the environment (Pyplot is memory-hungry).
-        plt.close('all')
-        gc.collect()
+        relplot_utils.reset_pyplot()

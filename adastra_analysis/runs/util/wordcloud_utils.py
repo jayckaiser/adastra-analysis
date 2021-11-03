@@ -14,6 +14,7 @@ def _get_image_mask(image_path):
     return image_mask
 
 
+
 def word_freqs_to_wordcloud(word_freqs, image, wordcloud_args):
     """
     Create a word-frequency wordcloud from the user-provided arguments.

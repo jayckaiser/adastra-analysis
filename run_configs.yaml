@@ -35,23 +35,21 @@ datasets:
 # Run `--queries` to run SQL queries and save outputs to JSONL files.
 queries:
 
-  ### [SANDBOX] ###
+  ### [YAML DEFINITIONS SANDBOX] ###
   queries_dir: &queries_dir /home/jayckaiser/adastra_v3/queries
 
   # Get most important columns of read lines.
   # (This query is beneficial for isolating scenes for wordclouds.)
   get_read_content: &get_read_content |
       select 
-          file,
-          line_idx,
-          is_read,
-          is_choice,
-          is_branch,
+          file, line_idx,
+          is_read, is_choice, is_branch,
           line
       from adastra
       where is_read
 
 
+  ### [RUNS] ###
   # Create one output per key.
   queries:
 
@@ -60,6 +58,7 @@ queries:
     #   name   : key to query, accessible via `--queries name`
     #   file   : output path for Query .jsonl file
     #   dataset: dataset of the query
+
 
     - !Query
       name: lines_per_file
@@ -265,7 +264,7 @@ queries:
 # Run `--relplots` to run SQL queries to create Seaborn relational plots.
 relplots:
 
-  ### [SANDBOX] ###
+  ### [YAML DEFINITIONS SANDBOX] ###
   relplots_dir: &relplots_dir /home/jayckaiser/adastra_v3/relplots
 
   # Universal arguments to feed to all relplots.
@@ -278,17 +277,18 @@ relplots:
   # File filters are externally applied to each dataset.
   rolling_sentiment: &rolling_sentiment |
       select
-          line_idx,
+          file, line_idx,
           speaker,
           avg(sentiment) over (
               partition by speaker
-              order by line_idx
+              order by file, line_idx
               rows between 9 preceding and current row
           ) as rolling_sentiment
       from adastra
           inner join characters using(speaker)
     
 
+  ### [RUNS] ###
   # Create one output per key.
   relplots:
 
@@ -299,9 +299,13 @@ relplots:
     #   file           : output path for Relplot .png file
     #   dataset        : dataset for the relplot
     #   relplot_args   : custom `seaborn.relplot` kwargs to define the relplot
-    #   axhline        : (default None ) apply a horizontal line to the relplot
-    #   remove_outliers: (default False) apply smoothing to the output by filtering within three-sigmas
+    #   figsize        : (default (16, 10))  ; set the size of the relplot figure
+    #   title          : (default None)      ; add a custom title to the relplot
+    #   style          : (default 'darkgrid'); set the background style of the relplot
+    #   axhline        : (default None)      ; apply a horizontal line to the relplot
+    #   remove_outliers: (default False)     ; apply smoothing to the output by filtering within three-sigmas
     
+
     - !Relplot
       name: lines_per_character
       file: !PATH_JOIN [*relplots_dir, lines_per_character.png]
@@ -637,7 +641,7 @@ relplots:
 # Run `--screenplays` to create normalized text of the game in a specified format.
 screenplays:
 
-  ### [SANDBOX] ###
+  ### [YAML DEFINITIONS SANDBOX] ###
   screenplays_dir: &screenplays_dir /home/jayckaiser/adastra_v3/screenplays
 
   # Default formatting args for each column that builds a screenplay line.
@@ -653,28 +657,31 @@ screenplays:
   # Default style of a screenplay line built only from the `line` column.
   default_line : &default_line "{line}"
 
-
+  ### [RUNS] ###
   # Create one output per key.
   screenplays:
 
     # Here is the structure of a typical `screenplay`:
     #
     # !Screenplay
-    #   name    : key to query, accessible via `--screenplays screenplay_style1`
-    #   folder  : output subfolder under {output_directory}
-    #   data    : data for the screenplay
-    #   justify : how wide should the output be (justify-width)
-    #   line_sep: how should lines be separated
+    #   name          : key to query, accessible via `--screenplays screenplay_style1`
+    #   folder        : output subfolder under {output_directory}
+    #   dataset       : dataset for the screenplay
+    #   justify       : how wide should the output be (justify-width)
+    #   line_sep      : how should lines be separated
+    #   file_col      : name of the column to split into files based on unique values
+    #   screenplay_col: name of the column to output formatting to
     # 
     #   contexts:
     #     - name               : name of the category; only used to track progress
     #       where              : where-clause to filter which lines use the given category style
     #       style              : shape of the output with columns used (i.e. "{column1}: {column2}")
-    #       textwrap_offset    : how far should wrapped text be indented; defaults to 0
+    #       textwrap_offset    : (default 0); how far should wrapped text be indented; defaults to 0
     # 
     #       columns:
     #         - name           : name of the column to be inserted into the style
     #           screenplay_args: formatting arguments to apply the the text of the column
+
 
     # Emulates 'The Cursed Child'
     - !Screenplay
@@ -915,9 +922,9 @@ screenplays:
 # Run `--wordclouds` to create TF-IDF wordclouds using custom filters. 
 wordclouds:
 
-  ### [SANDBOX] ###
-  wordclouds_dir : &wordclouds_dir  /home/jayckaiser/adastra_v3/wordclouds
-  images_dir     : &images_dir      !PATH_JOIN [*adastra_dir, 'game/images']
+  ### [YAML DEFINITIONS SANDBOX] ###
+  wordclouds_dir : &wordclouds_dir /home/jayckaiser/adastra_v3/wordclouds
+  images_dir     : &images_dir     !PATH_JOIN [*adastra_dir, 'game/images']
 
   # Standard kwargs to feed to the CountVectorizer.
   countvectorizer_args: &countvectorizer_args 
@@ -943,40 +950,47 @@ wordclouds:
     dataset:
       sql: |
           select
-              file, line_idx, speaker, is_branch, sentiment,
+              file, line_idx,
+              speaker, is_branch, sentiment,
               content_words
           from adastra
           where is_read
     documents_col: content_words
     countvectorizer_args: *countvectorizer_args
 
-    # Note: wordclouds use a defined `documents_col`.
-    # This specifies the text column to be used to build the wordclouds.
-    # Prebuilt options are 'line', 'words', or 'content_words'.
-    # * 'line' is the cleaned text of the line.
-    # * 'words' is the line with punctuation removed.
-    # * 'content_words' is the line with punctuation and stop-words removed, and all words converted to lowercase.
+  # Note: wordclouds use a defined `documents_col`.
+  # This specifies the text column to be used to build the wordclouds.
+  # Prebuilt options are 'line', 'words', or 'content_words'.
+  # * 'line' is the cleaned text of the line.
+  # * 'words' is the line with punctuation removed.
+  # * 'content_words' is the line with punctuation and stop-words removed, and all words converted to lowercase.
 
-    # Filter to isolate certain characters' speech.
-    is_alexios : &is_alexios  "speaker = 'alexios'"
-    is_amicus  : &is_amicus   "speaker = 'amicus'"
-    is_cassius : &is_cassius  "speaker = 'cassius'"
-    is_cato    : &is_cato     "speaker = 'cato'"
-    is_marco   : &is_marco    "speaker = 'marco'"
-    is_neferu  : &is_neferu   "speaker = 'neferu'"
-    is_virginia: &is_virginia "speaker = 'virginia'"
+  # Filter to isolate certain characters' speech.
+  is_alexios : &is_alexios  "speaker = 'alexios'"
+  is_amicus  : &is_amicus   "speaker = 'amicus'"
+  is_cassius : &is_cassius  "speaker = 'cassius'"
+  is_cato    : &is_cato     "speaker = 'cato'"
+  is_marco   : &is_marco    "speaker = 'marco'"
+  is_neferu  : &is_neferu   "speaker = 'neferu'"
+  is_virginia: &is_virginia "speaker = 'virginia'"
 
+
+  ### [RUNS] ###
   # Create one output per key.
   wordclouds:
 
     # Here is the structure of a typical `wordcloud`.
     #
     # !Wordcloud
-    #   name          : key to query, accessible via `--wordclouds wordcloud1`
-    #   file          : output path for wordcloud
-    #   image         : path to image mask
-    #   where         : where-clause to subset term frequencies used in the wordcloud
-    #   wordcloud_args: `wordcloud.Wordcloud` kwargs to define the wordcloud
+    #   name                : key to query, accessible via `--wordclouds wordcloud1`
+    #   file                : output path for wordcloud
+    #   dataset             : dataset to build term frequencies out of for the wordcloud
+    #   image               : path to image mask
+    #   where               : where-clause to subset term frequencies used in the wordcloud
+    #   documents_col       : text column to use for building term frequencies
+    #   countvectorizer_args: `sklearn.CountVectorizer` kwargs to use when building the term frequencies
+    #   wordcloud_args      : `wordcloud.Wordcloud` kwargs to define the wordcloud
+
 
     # Alexios
     - !Wordcloud

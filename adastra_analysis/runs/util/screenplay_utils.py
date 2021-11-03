@@ -1,111 +1,8 @@
-import os
 import textwrap
 
 from dataclasses import dataclass
 
-from classes.dataset import Dataset
-from classes.run import Run
-
-
-class Screenplay(Run):
-    """
-​
-    """
-    def __init__(
-        self,
-
-        name,
-        folder, 
-        dataset,
-
-        justify,
-        line_sep,
-        file_col,
-        screenplay_col,
-        contexts,
-
-    ):
-        self.name = name
-        self.folder = folder
-        self.dataset = dataset
-
-        self.justify = justify
-        self.line_sep = line_sep
-        self.file_col = file_col
-        self.screenplay_col = screenplay_col
-        self.contexts = contexts
-
-
-    def build(self, datasets):
-        """
-        
-        """
-        _data = Dataset(**self.dataset).build_dataset(datasets=datasets)
-
-
-        # For each format, subset the dataframe and format each line.
-        for context_config in self.contexts:
-
-            context = Context(**context_config)
-            
-            # Subset the screenplay dataset and format those lines.
-            _screenplay_subset = Dataset.filter_where(_data, context.where)
-            
-            # Perform transformations on the lines, based on the config logic provided.
-            _screenplay_subset[self.screenplay_col] = _screenplay_subset.apply(
-                lambda row: build_formatted_line(
-                    row,
-                    context.columns,
-                    style=context.style,
-                    justify=context.justify or self.justify,
-                    textwrap_offset=context.textwrap_offset,
-                    add_bar=context.add_bar,
-                ),
-                axis=1
-            )
-
-            # Update the original dataset with those changes.
-            col_x = f'{self.screenplay_col}_x'
-            col_y = f'{self.screenplay_col}_y'
-
-            merged = _data.merge(
-                _screenplay_subset[['file', 'line_idx', self.screenplay_col]],
-                how='left',
-                on=['file', 'line_idx'],
-            )
-            merged[self.screenplay_col] = (
-                merged[col_y]
-                    .fillna(merged[col_x])
-            )
-            _data = merged.drop([col_x, col_y], axis=1)
-            
-            print(f"* `{context.name}` logic applied.", flush=True, end='\r')
-
-            return _data
-
-
-    def save(self, result):
-        """
-        Screenplays differ from other Runs.
-        They are written out to a folder as many files.
-        
-        `file_col` determines how to divide the files.
-        (i.e. `file` for acts, `speaker` for monologues, etc.)
-        """
-        # Iterate the file names and output each as a separate file.
-        for file in result[self.file_col].unique():
-            where = f'{self.file_col} = "{file}"'
-
-            file_data = Dataset.filter_where(result, where)
-            file_lines = file_data[self.screenplay_col].tolist()
-
-            file_path = os.path.join(self.folder, file + '.txt')
-            self.prepare_directories(file_path)
-            with open(file_path, 'w') as fp:
-                fp.write(
-                    self.line_sep.join(file_lines)
-                )
-            
+from adastra_analysis.common.dataset import Dataset
 
 
 @dataclass
@@ -135,6 +32,50 @@ class ScreenplayArgs:
     offset: int = 0
     prefix: str = ""
     postfix: str = ""
+
+
+
+def apply_screenplay_context(data, context_config, screenplay_col, justify):
+    """
+    
+    """
+    context = Context(**context_config)
+            
+    # Subset the screenplay dataset and format those lines.
+    _screenplay_subset = Dataset.filter_where(data, context.where)
+    
+    # Perform transformations on the lines, based on the config logic provided.
+    _screenplay_subset[screenplay_col] = _screenplay_subset.apply(
+        lambda row: _build_formatted_line(
+            row,
+            context.columns,
+            style=context.style,
+            justify=context.justify or justify,
+            textwrap_offset=context.textwrap_offset,
+            add_bar=context.add_bar,
+        ),
+        axis=1
+    )
+
+    # Update the original dataset with those changes.
+    # I'd prefer a cleaner method for this, but I'm not familiar enough with Pandas.
+    col_x = f'{screenplay_col}_x'
+    col_y = f'{screenplay_col}_y'
+
+    merged = data.merge(
+        _screenplay_subset[['file', 'line_idx', screenplay_col]],
+        how='left',
+        on=['file', 'line_idx'],
+    )
+    merged[screenplay_col] = (
+        merged[col_y]
+            .fillna(merged[col_x])
+    )
+    data = merged.drop([col_x, col_y], axis=1)
+    
+    print(f"* `{context.name}` logic applied.", flush=True, end='\r')
+    return data
+
 
 
 
@@ -189,7 +130,6 @@ def _format_line_part(line_part, configs):
         return formatted
 
 
-
 def _justify_text(text, justify, textwrap_offset=0):
     """
     Justify the text to a given size, accouting for custom offset on wrapped lines.
@@ -230,8 +170,9 @@ def _justify_text(text, justify, textwrap_offset=0):
     return '\n'.join(justified_lines)
 
 
+
 # Main method applied across rows in the dataset.
-def build_formatted_line(
+def _build_formatted_line(
     row,
     column_configs,
     style,
