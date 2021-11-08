@@ -1,7 +1,7 @@
-# [REQUIRED] Define datasets to build and save using `build`.
+# Define datasets to build and save using `build`.
 datasets:
 
-  ### [SANDBOX] ###
+  ### [YAML ANCHORS SANDBOX] ###
   dataset_dir: &dataset_dir /home/jayckaiser/adastra_v3/data
   adastra_dir: &adastra_dir /home/jayckaiser/adastra/Adastra-17-linux
 
@@ -35,7 +35,7 @@ datasets:
 # Run `--queries` to run SQL queries and save outputs to JSONL files.
 queries:
 
-  ### [YAML DEFINITIONS SANDBOX] ###
+  ### [YAML ANCHORS SANDBOX] ###
   queries_dir: &queries_dir /home/jayckaiser/adastra_v3/queries
 
   # Get most important columns of read lines.
@@ -264,7 +264,7 @@ queries:
 # Run `--relplots` to run SQL queries to create Seaborn relational plots.
 relplots:
 
-  ### [YAML DEFINITIONS SANDBOX] ###
+  ### [YAML ANCHORS SANDBOX] ###
   relplots_dir: &relplots_dir /home/jayckaiser/adastra_v3/relplots
 
   # Universal arguments to feed to all relplots.
@@ -641,7 +641,7 @@ relplots:
 # Run `--screenplays` to create normalized text of the game in a specified format.
 screenplays:
 
-  ### [YAML DEFINITIONS SANDBOX] ###
+  ### [YAML ANCHORS SANDBOX] ###
   screenplays_dir: &screenplays_dir /home/jayckaiser/adastra_v3/screenplays
 
   # Default formatting args for each column that builds a screenplay line.
@@ -923,7 +923,7 @@ screenplays:
 # Run `--wordclouds` to create TF-IDF wordclouds using custom filters. 
 wordclouds:
 
-  ### [YAML DEFINITIONS SANDBOX] ###
+  ### [YAML ANCHORS SANDBOX] ###
   wordclouds_dir : &wordclouds_dir /home/jayckaiser/adastra_v3/wordclouds
   images_dir     : &images_dir     !PATH_JOIN [*adastra_dir, 'game/images']
 
