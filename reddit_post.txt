@@ -1,0 +1,52 @@
+### Introductions
+
+Howdy everyone! I've spent the last two months building a Python program designed to convert the text from Adastra's game files into customizable screenplays and wordcloud images. I seriously don't know how it got this far, but it's now a serious project, and I hope someone finds use of it!
+
+[Here is the Github repo](https://github.com/jayckaiser/adastra-analysis) to this project. It's a part of my personal account, because building this out and then not attributing it to myself feels foolish.
+
+I reached out to Howly months ago to request permission to share the text contents of the game, but I never got a response. If someone can verify to me that I won't be breaking any copyright laws by sharing the screenplays, then I'll attach them as well to the repo. Otherwise, you can generate them yourself.
+
+If you don't care about the scripts or about generating screenplays, I've still attached [here an album with all the wordclouds I've pre-generated](https://imgur.com/a/KaewHTx). I hope you enjoy them!
+
+
+
+### What is this?
+
+This is a Python module with code to convert the text of Adastra into a cleaned dataset with additional metadata (speaker, is optional content, etc). Using this dataset, you can:
+* Run SQL queries to output as other JSON files
+* Build relation plots (i.e. rolling sentiment over time, total dialogue per speaker by chapter, etc)
+* Create customizable formatted text screenplays of Adastra, separated by chapter (or by character, or by some other metric)
+* Create customizable wordclouds based off of word frequencies from the text of the game, built around in-game (or external) images and specifiable subsets of dialogue
+
+I've predefined a number of these in the configs. If you get the environment up and running, you should be able to just kick it off and get these on your local machine as well.
+
+
+
+### How did I do this?
+
+This is a Python module that uses a config YAML file to define the types of plots, screenplays, and wordclouds you want to make. I've included plenty of information in both the repo and the configs file itself on how to interact with the code.
+
+I have *not* done enough testing here. I know that everything I've predefined in the configs works as expected in the environment I shared, but I cannot promise anything else. If you run into an error using the script itself after environment setup, please reach out.
+
+
+
+### Why did I do this?
+
+This entire project was initially conceived because of a post by user u/TOTALLY_NOT_A_FURRY4, who expressed interest in manually typing out the entirety of Adastra into a screenplay. I believed that doing so would be both impractical and tedious, which are exactly the type of things that programming is supposed to solve. (In retrospect, this was the right call; the full text of Adastra in an average playthrough translates to something like 500-700 pages of content, depending on page density.)
+
+The project started off as a series of Jupyter notebooks to play with the game's text files, but they quickly spiraled into something much bigger. (IDK blame my Amicus pillow for whispering encouragements to me as I slept each night.)
+
+I've had a lot of fun fleshing out and expanding this project, although to be honest I'm excited to move on to something new.
+
+
+
+### Who am I?
+
+I'm just a data engineer with a very specific set of interests and a serious love for Adastra. In all honesty, I'm a little worried about sharing my real identity to Reddit. However, I want to make sure this project is shared, and I feel as though what I've learned from working on this project should supersede the cringe I experience if anyone at my workplace asks me about this someday.
+
+
+
+
+### TL;DR:
+
+I made some Adastra wordclouds (and a whole bunch of code). Enjoy!
