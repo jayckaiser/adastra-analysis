@@ -26,12 +26,12 @@ def build_seaborn_relplot(
     """
     
     """
+    # Set the style if specified (defaults to 'darkgrid' such that Cassius can be seen).
+    sns.set_theme(style=style)
+
     # Establish and build the figure.
     plt.figure()
     sns.relplot(data=data, **relplot_args)
-
-    # Set the style if specified (defaults to 'darkgrid' such that Cassius can be seen).
-    sns.set_theme(style=style)
 
     # Add a title if specified.
     plt.title(title)

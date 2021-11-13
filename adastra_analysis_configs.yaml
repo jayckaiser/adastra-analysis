@@ -305,25 +305,6 @@ relplots:
     #   axhline        : (default None)      ; apply a horizontal line to the relplot
     #   remove_outliers: (default False)     ; apply smoothing to the output by filtering within three-sigmas
     
-
-    - !Relplot
-      name: lines_per_character
-      file: !PATH_JOIN [*relplots_dir, lines_per_character.png]
-      dataset:
-        sql: |
-            select
-                file,
-                speaker,
-                count(*) as num_lines
-            from adastra
-            inner join characters using(speaker)
-            group by 1, 2
-            order by 1, 2
-      relplot_args:
-        <<: *relplot_args
-        x: file
-        y: num_lines
-    
     - !Relplot
       name: proportion_lines_per_character
       file: !PATH_JOIN [*relplots_dir, proportion_lines_per_character.png]
@@ -348,6 +329,24 @@ relplots:
         <<: *relplot_args
         x: file
         y: proportion_lines
+
+    - !Relplot
+      name: lines_per_character
+      file: !PATH_JOIN [*relplots_dir, lines_per_character.png]
+      dataset:
+        sql: |
+            select
+                file,
+                speaker,
+                count(*) as num_lines
+            from adastra
+            inner join characters using(speaker)
+            group by 1, 2
+            order by 1, 2
+      relplot_args:
+        <<: *relplot_args
+        x: file
+        y: num_lines
         
     - !Relplot
       name: words_per_character
