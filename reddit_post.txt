@@ -6,7 +6,7 @@ Howdy everyone! I've spent the last two months building a Python program designe
 
 I reached out to Howly months ago to request permission to share the text contents of the game, but I never got a response. If someone can verify to me that I won't be breaking any copyright laws by sharing the screenplays, then I'll attach them as well to the repo. Otherwise, you can generate them yourself.
 
-If you don't care about the scripts or about generating screenplays, I've still attached [here an album with all the wordclouds I've pre-generated](https://imgur.com/a/KaewHTx). I hope you enjoy them!
+If you don't care about the scripts or about generating screenplays, I've still attached [here an album with all the wordclouds I've pre-generated](https://imgur.com/a/KaewHTx), as well as [some relation plots](https://imgur.com/a/3PajKzB). I hope you enjoy them!
 
 
 
