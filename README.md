@@ -29,9 +29,9 @@ Adastra contains a total of 15,577 lines across 14 chapters of content, translat
 
 The average Harry Potter book is 250 words per page; the average Brandon Sanderson novel is 350. This means that the average playthrough of Adastra is between *516 and 723 pages* of content, depending on your preference of page-density.
 
-I have reached out to Howly for permission to share the formatted full text contents of the game. Until I receive a response, I'm not including the screenplays or cleaned dataset in this library. It'll have to be generated from your end. If I receive permission in the future (or if someone can educate me on licensing to prove this content is already freely available to share), I will add these files to the repo.
+I have reached out to Howly for permission to share the formatted full text contents of the game. ~~Until I receive a response, I'm not including the screenplays or cleaned dataset in this library. It'll have to be generated from your end. If I receive permission in the future (or if someone can educate me on licensing to prove this content is already freely available to share), I will add these files to the repo.~~ Update: I still have not received explicit permission, but another Redditor has clarified for me that this content is shareable under RenPy and Itch.io licenses. These have been included in three different styles in the repo.
 
-Example wordclouds are found in `examples/wordclouds`. Example relational plots are found in `examples/relplots`. Example query outputs are found in `examples/queries`.
+Example wordclouds are found in `examples/wordclouds`. Example relational plots are found in `examples/relplots`. Example query outputs are found in `examples/queries`. Example screenplays are found in `examples/screenplays`.
 
 Read on to learn how you can play with this data yourself!
 
@@ -362,7 +362,9 @@ floor of the deck.
                with you!?"
 ```
 
-*(I have chosen to forgo including any example screenplays in the library until I receive express permission from one of the creators of Adastra. These will have to be generated on your end for the time being.)*
+~~*(I have chosen to forgo including any example screenplays in the library until I receive express permission from one of the creators of Adastra. These will have to be generated on your end for the time being.)*~~
+
+*(See `examples/screenplays` for three predefined styles of screenplays.)*
 
 
 -----
