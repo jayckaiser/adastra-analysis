@@ -2,7 +2,7 @@ import textwrap
 
 from dataclasses import dataclass
 
-from adastra_analysis.common.dataset import Dataset
+from src.common.dataset import Dataset
 
 
 @dataclass

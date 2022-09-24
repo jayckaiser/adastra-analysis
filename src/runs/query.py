@@ -1,5 +1,5 @@
-from adastra_analysis.common.dataset import Dataset
-from adastra_analysis.common.run import Run
+from src.common.dataset import Dataset
+from src.common.run import Run
 
 
 class Query(Run):

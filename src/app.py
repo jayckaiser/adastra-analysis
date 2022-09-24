@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-from adastra_analysis.common.adastra_analysis import AdastraAnalysis
+from src.common.adastra_analysis import AdastraAnalysis
 
 def run():
 

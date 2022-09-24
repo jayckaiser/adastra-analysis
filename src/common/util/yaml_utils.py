@@ -1,13 +1,13 @@
 import os
 import yaml
 
-from adastra_analysis.common.dataset import Dataset
-from adastra_analysis.adastra.adastra_dataset import AdastraDataset
+from src.common.dataset import Dataset
+from src.adastra.adastra_dataset import AdastraDataset
 
-from adastra_analysis.runs.query import Query
-from adastra_analysis.runs.relplot import Relplot
-from adastra_analysis.runs.screenplay import Screenplay
-from adastra_analysis.runs.wordcloud import Wordcloud
+from src.runs.query import Query
+from src.runs.relplot import Relplot
+from src.runs.screenplay import Screenplay
+from src.runs.wordcloud import Wordcloud
 
 
 

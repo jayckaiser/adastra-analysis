@@ -1,9 +1,9 @@
 import os
 
-from adastra_analysis.common.dataset import Dataset
-from adastra_analysis.common.run import Run
+from src.common.dataset import Dataset
+from src.common.run import Run
 
-from adastra_analysis.runs.util import screenplay_utils
+from src.runs.util import screenplay_utils
 
 
 class Screenplay(Run):

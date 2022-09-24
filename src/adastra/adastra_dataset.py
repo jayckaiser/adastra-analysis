@@ -1,7 +1,7 @@
-from adastra_analysis.common.dataset import Dataset
+from src.common.dataset import Dataset
 
-from adastra_analysis.adastra.util import base_utils
-from adastra_analysis.adastra.util import nlp_utils
+from src.adastra.util import base_utils
+from src.adastra.util import nlp_utils
 
 
 class AdastraDataset(Dataset):

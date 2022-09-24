@@ -1,7 +1,7 @@
 import sys
 
-from adastra_analysis.common.dataset import Dataset
-from adastra_analysis.common.util import yaml_utils
+from src.common.dataset import Dataset
+from src.common.util import yaml_utils
 
 
 class AdastraAnalysis:

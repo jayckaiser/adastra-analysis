@@ -4,7 +4,7 @@ import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.preprocessing import normalize
 
-from adastra_analysis.common.dataset import Dataset
+from src.common.dataset import Dataset
 
 
 # JK:: Build another method to just SUM precomputed TF-IDF values.
